@@ -36,7 +36,7 @@ The entire backend is also saved as code in this repo: `supabase/schema.sql` cre
 
 ### Option A: Use the live app (no setup)
 
-1. Open **https://YOUR-APP.vercel.app**.
+1. Open **https://autopalv01.vercel.app**.
 2. Tap **Create account**, enter an email, a username and a password (8+ characters), then **Create Account**.
 3. Open the confirmation email and click the link. It brings you back to the live app, signed in.
 4. You'll land on the Home screen. Tap the **+** circle to add your first car.
@@ -62,7 +62,7 @@ This local copy talks to the same hosted Supabase project as the live site; the 
 
 ### Opening the hosted projects (team members)
 
-- **Code:** https://github.com/YOUR-GITHUB-USERNAME/Autopal
+- **Code:** https://github.com/Fadedmaze/Autopal-main
 - **Database / auth / storage:** Supabase dashboard → project **Autopal** (`hrcthuqltodogsglfatt`). Use **Table Editor** to see the data.
 - **Hosting:** Vercel dashboard → project **autopal**. Pushing to `main` redeploys.
 
