@@ -45,6 +45,9 @@ const db = (window.__db = {
     { id: 4, category: "dashboard", slug: "oil-pressure", title: "Oil pressure warning", summary: "Not enough oil pressure.", steps: ["Pull over and turn off the engine."], tools: [], time_estimate: null, severity: "stop", sort_order: 2 },
   ],
 });
+// Discover catalog comes from the same seed file the database uses.
+db.warning_lights = (await (await fetch("/supabase/seed/warning_lights.json")).json()).map((l, i) => ({ id: i + 1, ...l }));
+db.light_scans = [];
 const storage = (window.__storage = new Map());
 const calls = (window.__calls = []);
 let nextId = 100;
@@ -221,9 +224,25 @@ async function rpc(name, args) {
   return { data: null, error: { message: `unknown rpc ${name}` } };
 }
 
+// Fake identification: pretends the crops are these lights, in order.
+const FAKE_IDS = ["check-engine", "oil-pressure", "tpms", "unknown", "service-wrench", "abs"];
 const functions = {
   async invoke(name, { body }) {
     calls.push({ fn: name, body });
+    if (name === "identify-warning-lights") {
+      await new Promise((r) => setTimeout(r, 400));
+      if (window.__failIdentify) {
+        window.__failIdentify = false;
+        const res = new Response(JSON.stringify({ error: "The scanner is unavailable right now. Please try again." }), { status: 502 });
+        return { data: null, error: { message: "non-2xx", context: res } };
+      }
+      const results = body.crops.map((_, i) => {
+        const slug = FAKE_IDS[i % FAKE_IDS.length];
+        return { index: i + 1, is_warning_light: slug !== "unknown", slug, confidence: i === 2 ? "low" : "high", observed_color: "amber",
+          vehicle_note: slug === "service-wrench" ? "Stub note: brand-specific meaning." : "" };
+      });
+      return { data: { results }, error: null };
+    }
     if (body.username === "andrew" && body.password === "correct-horse") return { data: { access_token: "a", refresh_token: "r" }, error: null };
     const res = new Response(JSON.stringify({ error: "The username or password is incorrect." }), { status: 401 });
     return { data: null, error: { message: "Edge Function returned a non-2xx status code", context: res } };
@@ -248,3 +267,37 @@ const storageApi = {
 };
 
 export const supabase = { from: (t) => new Query(t), rpc, auth, functions, storage: storageApi };
+
+
+// Fake rear camera for the Discover scanner: a dark dashboard with glowing symbols.
+window.__autopalFakeCamera = async () => {
+  const c = document.createElement("canvas");
+  c.width = 1280; c.height = 720;
+  const g = c.getContext("2d");
+  let t = 0;
+  const drawFrame = () => {
+    t++;
+    g.fillStyle = "#111318"; g.fillRect(0, 0, c.width, c.height);
+    g.strokeStyle = "#2a2f38"; g.lineWidth = 10;
+    g.beginPath(); g.arc(380, 380, 210, Math.PI * 0.8, Math.PI * 2.2); g.stroke();
+    g.beginPath(); g.arc(900, 380, 210, Math.PI * 0.8, Math.PI * 2.2); g.stroke();
+    const jitter = Math.sin(t / 5) * 2;
+    // amber "engine" block
+    g.fillStyle = "#ffb000"; g.fillRect(560 + jitter, 300, 70, 44); g.fillRect(575 + jitter, 288, 40, 14);
+    // red "oil can"
+    g.fillStyle = "#ff2a2a"; g.beginPath(); g.ellipse(650 + jitter, 470, 40, 22, 0, 0, Math.PI * 2); g.fill();
+    g.fillRect(686 + jitter, 455, 30, 8);
+    // amber "(!)" made of three strokes
+    g.fillStyle = "#ffb000";
+    g.lineWidth = 6; g.strokeStyle = "#ffb000";
+    g.beginPath(); g.arc(470 + jitter, 470, 26, 0, Math.PI * 2); g.stroke();
+    g.beginPath(); g.arc(470 + jitter, 470, 38, Math.PI * 0.7, Math.PI * 1.3); g.stroke();
+    g.beginPath(); g.arc(470 + jitter, 470, 38, -Math.PI * 0.3, Math.PI * 0.3); g.stroke();
+    g.fillRect(467 + jitter, 455, 6, 18); g.fillRect(467 + jitter, 477, 6, 6);
+    // blue high beam
+    g.fillStyle = "#2f6bff"; g.fillRect(760 + jitter, 300, 50, 36);
+  };
+  drawFrame();
+  setInterval(drawFrame, 66);
+  return c.captureStream(15);
+};

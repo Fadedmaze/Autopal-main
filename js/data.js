@@ -272,3 +272,35 @@ export async function listGuides() {
     .order("category")
     .order("sort_order"));
 }
+
+// ---- Discover: warning lights --------------------------------------------
+
+let warningLightsCache = null;
+
+// Catalog of dashboard lights (read-only reference data), cached for the session.
+export async function listWarningLights() {
+  warningLightsCache ??= await supabase
+    .from("warning_lights")
+    .select("id, slug, name, colors, severity, symbol_hint, meaning, action, drive_advice, brand_notes, brand_severity, sort_order")
+    .order("sort_order")
+    .then(check)
+    .catch((err) => { warningLightsCache = null; throw err; });
+  return warningLightsCache;
+}
+
+// Sends base64 JPEG crops (no data: prefix) to the identify-warning-lights Edge
+// Function; returns [{ index, is_warning_light, slug, confidence, observed_color, vehicle_note }].
+export async function identifyLights(vehicleId, crops) {
+  const { data, error } = await supabase.functions.invoke("identify-warning-lights", {
+    body: { vehicle_id: vehicleId, crops },
+  });
+  if (error) {
+    // invoke() hides the JSON body on non-2xx responses; surface the real message.
+    let message = "The scanner is unavailable right now. Please try again.";
+    try {
+      message = (await error.context.json()).error || message;
+    } catch { /* network failure: keep the generic message */ }
+    throw new Error(message);
+  }
+  return data.results;
+}

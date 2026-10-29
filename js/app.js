@@ -23,6 +23,7 @@ const ROUTES = [
   { path: "/tasks/:id", view: () => import("./views/taskForm.js"), nav: false },
   { path: "/budget", view: () => import("./views/budget.js") },
   { path: "/mechanics", view: () => import("./views/mechanics.js"), tab: "mechanics" },
+  { path: "/discover", view: () => import("./views/discover.js"), tab: "discover" },
   { path: "/library", view: () => import("./views/library.js"), tab: "library" },
   { path: "/library/:slug", view: () => import("./views/library.js"), tab: "library" },
   { path: "/profile", view: () => import("./views/profile.js"), tab: "profile" },
@@ -35,6 +36,7 @@ const TABS = [
   { id: "profile", label: "Profile", icon: "user", href: "#/profile" },
   { id: "garage", label: "Garage", icon: "garage", href: "#/garage" },
   { id: "mechanics", label: "Find Mechanic", icon: "pin", href: "#/mechanics" },
+  { id: "discover", label: "Discover", icon: "scan", href: "#/discover" },
   { id: "library", label: "Library", icon: "book", href: "#/library" },
 ];
 

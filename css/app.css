@@ -105,7 +105,7 @@ body.has-nav #nav {
 #nav .brand { display: none; }
 #nav .tab {
   flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
-  color: var(--ink-3); font-size: 11px; font-weight: 600; text-decoration: none; white-space: nowrap; min-width: 0;
+  color: var(--ink-3); font-size: 10.5px; font-weight: 600; text-decoration: none; white-space: nowrap; min-width: 0; letter-spacing: -.01em;
 }
 #nav .tab.tab-home { display: none; } /* bottom bar is the spec's four items; Home shows on the desktop rail */
 #nav .tab.active { color: var(--brand); }
@@ -333,6 +333,12 @@ input[type=date] { min-height: 48px; }
 .viewing { display: none; font-size: 11px; font-weight: 700; color: var(--brand); letter-spacing: .04em; text-transform: uppercase; margin-top: 8px; }
 .car.selected .viewing { display: block; }
 .chev { color: var(--ink-3); }
+
+/* ---------- Sections ---------- */
+
+.section { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+.section-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 2px; }
+.section-head h3 { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: -.01em; }
 
 /* ---------- Tasks ---------- */
 
@@ -676,6 +682,76 @@ body.has-nav .map-screen { height: calc(100dvh - var(--nav-h) - var(--safe-b)); 
 .card { background: var(--surface); border: 1.5px solid var(--line); border-radius: 20px; padding: 16px; display: flex; flex-direction: column; gap: 12px; width: 100%; }
 .card h3 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 16px; font-weight: 700; }
 .card h3 .icon { color: var(--brand); }
+
+/* ---------- Discover ---------- */
+
+.scan-hero {
+  display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px;
+  padding: 22px 18px; border-radius: 22px; background: var(--surface); border: 1.5px solid var(--line); box-shadow: var(--shadow);
+}
+.scan-hero-icon { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 20px; background: #fff7cc; color: #a16207; }
+.scan-hero h2 { margin: 0; font-size: 20px; letter-spacing: -.02em; }
+.scan-hero p { margin: 0; color: var(--ink-2); font-size: 14px; }
+.scan-hero .btn { margin-top: 4px; }
+.scan-vehicle { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 13px; color: var(--ink-3); width: 100%; }
+.scan-vehicle strong { color: var(--ink); font-size: 14px; }
+.scan-vehicle select { min-height: 42px; font-size: 14px; }
+
+.light-list { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.light-list li + li { border-top: 1px solid var(--line); }
+.light-row { width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 0; background: none; text-align: left; cursor: pointer; color: var(--ink); }
+.light-row:hover { background: var(--surface-2); }
+.light-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.light-text small { color: var(--ink-3); font-size: 12.5px; }
+.light-text .brand-flag { display: inline-flex; align-items: center; gap: 4px; color: var(--brand); font-weight: 600; }
+.light-dots { display: inline-flex; gap: 3px; flex: none; }
+.cdot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; box-shadow: 0 0 0 1.5px var(--surface); }
+.c-red { background: #ef4444; } .c-amber { background: #f59e0b; } .c-green { background: #22c55e; }
+.c-blue { background: #3b82f6; } .c-white { background: #e5e7eb; outline: 1px solid #9ca3af; }
+.sev-pill { flex: none; padding: 4px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 700; white-space: nowrap; }
+.sev-stop { background: var(--danger-soft); color: var(--danger-strong); }
+.sev-soon { background: var(--warn-soft); color: var(--warn); }
+.sev-info { background: var(--ok-soft); color: var(--ok); }
+
+/* Full-screen scanner */
+body.scanning { overflow: hidden; }
+body.scanning #nav { display: none !important; }
+.scanner { position: fixed; inset: 0; z-index: 40; background: #000; color: #fff; overflow: hidden; touch-action: manipulation; }
+.scanner video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.scanner-overlay { position: absolute; inset: 0; width: 100%; height: 100%; cursor: crosshair; }
+.scanner-top {
+  position: absolute; left: 12px; right: 12px; top: calc(env(safe-area-inset-top, 0px) + 12px);
+  display: flex; align-items: center; gap: 10px; pointer-events: none;
+}
+.scanner-top > * { pointer-events: auto; }
+.scanner-car { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 999px; background: rgba(0,0,0,.55); font-size: 13px; font-weight: 600; backdrop-filter: blur(8px); }
+.scanner-msg {
+  position: absolute; left: 16px; right: 16px; bottom: calc(var(--safe-b) + 120px); margin: 0 auto; max-width: 420px;
+  padding: 10px 14px; border-radius: 14px; background: rgba(0,0,0,.6); text-align: center; font-size: 14px; font-weight: 500;
+  backdrop-filter: blur(8px); pointer-events: none;
+}
+.scanner-bottom {
+  position: absolute; left: 0; right: 0; bottom: calc(var(--safe-b) + 24px);
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+}
+.scanner-bottom .btn-sm { background: rgba(255,255,255,.92); color: #121826; }
+.shutter {
+  display: grid; place-items: center; width: 74px; height: 74px; border-radius: 50%; cursor: pointer;
+  border: 4px solid #fff; background: #FFD400; color: #121826; box-shadow: 0 6px 20px rgba(0,0,0,.4);
+}
+.shutter:active { transform: scale(.95); }
+
+/* Info card */
+.light-card .light-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 13px; }
+.light-section h3 { margin: 0 0 4px; font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+.light-section p { margin: 0; color: var(--ink-2); }
+.light-section.brand-note { padding: 12px 14px; border-radius: 14px; background: var(--brand-soft); }
+.light-section.brand-note h3 { color: var(--brand); }
+.light-section.brand-note p + p { margin-top: 6px; }
+.light-note { padding: 10px 12px; border-radius: 12px; background: var(--surface-2); }
+.light-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
+.light-actions:has(> :only-child) { grid-template-columns: 1fr; }
+.light-card { max-height: 85vh; overflow-y: auto; }
 
 /* ---------- Dialog & toasts ---------- */
 
