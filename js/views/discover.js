@@ -26,13 +26,17 @@ let listFilter = "all";
 
 export default async function render(root, ctx) {
   root.innerHTML = loading();
-  const [profile, vehicles, lights] = await Promise.all([getProfile(), listVehicles(), listWarningLights()]);
+  // The camera and yellow squares work without the catalog, so a catalog error
+  // shouldn't take the whole page down.
+  const [profile, vehicles, lights] = await Promise.all([
+    getProfile(), listVehicles(), listWarningLights().catch(() => null),
+  ]);
   if (!ctx.isCurrent()) return;
 
   if (!vehicles.some((v) => v.id === chosenVehicleId)) {
     chosenVehicleId = vehicles.some((v) => v.id === profile.active_vehicle_id) ? profile.active_vehicle_id : vehicles[0]?.id ?? null;
   }
-  const bySlug = new Map(lights.map((l) => [l.slug, l]));
+  const bySlug = new Map((lights ?? []).map((l) => [l.slug, l]));
   const vehicle = () => vehicles.find((v) => v.id === chosenVehicleId) ?? null;
   const brandKey = () => (vehicle()?.brand ?? "").trim().toLowerCase();
 
@@ -41,7 +45,7 @@ export default async function render(root, ctx) {
   const draw = () => {
     const v = vehicle();
     const brand = brandKey();
-    const shown = lights.filter((l) => listFilter === "all" || severityFor(l, brand) === listFilter);
+    const shown = (lights ?? []).filter((l) => listFilter === "all" || severityFor(l, brand) === listFilter);
     root.innerHTML = `
       ${appBar({ title: "Discover", sub: "Point your camera at the dashboard to identify warning lights.", back: { href: "#/home", label: "Home" } })}
       <div class="content">
@@ -60,7 +64,7 @@ export default async function render(root, ctx) {
             : `<p class="hint">Add your car in the <a href="#/garage">Garage</a> so results can be tuned to its make.</p>`}
         </section>
 
-        <section class="section">
+        ${lights ? `<section class="section">
           <div class="section-head"><h3>All warning lights</h3><span class="tone-muted">${lights.length}</span></div>
           <div class="chips scroll" role="group" aria-label="Filter lights">
             ${[["all", "All"], ["stop", "Stop now"], ["soon", "Check soon"], ["info", "Good to know"]].map(([id, label]) =>
@@ -81,7 +85,7 @@ export default async function render(root, ctx) {
               </li>`).join("")}
           </ul>
           <p class="hint center">AutoPal's results are a guide, not a diagnosis. Check your owner's manual or a mechanic if you're unsure.</p>
-        </section>
+        </section>` : `<p class="muted-box">The warning-light list isn't available right now. You can still use the scanner.</p>`}
       </div>`;
 
     root.querySelector("#start-scan").addEventListener("click", () => {
