@@ -20,16 +20,22 @@ export default async function render(root, ctx) {
   }
 
   const presetVehicle = Number(ctx.query.get("vehicle")) || null;
+  // Coming from a Library guide: ?name= prefills the task, ?guide= is where Back and Cancel return.
+  const presetName = (ctx.query.get("name") ?? "").trim().slice(0, 80);
+  const fromGuide = /^[a-z0-9-]+$/.test(ctx.query.get("guide") ?? "") ? ctx.query.get("guide") : null;
+  const backLink = !editing && fromGuide
+    ? { href: `#/library/${fromGuide}`, label: "Guide" }
+    : { href: "#/tasks", label: "Tasks" };
   const t = task ?? {
     vehicle_id: vehicles.some((v) => v.id === presetVehicle) ? presetVehicle : vehicles[0].id,
-    task_name: "",
+    task_name: presetName,
     due_date: "",
     estimated_cost: null,
     notes: "",
   };
 
   root.innerHTML = `
-    ${appBar({ title: editing ? "Edit Task" : "New Task", sub: editing ? "" : "Add maintenance that isn't already on your list.", back: { href: "#/tasks", label: "Tasks" } })}
+    ${appBar({ title: editing ? "Edit Task" : "New Task", sub: editing ? "" : "Add maintenance that isn't already on your list.", back: backLink })}
     <form class="form content" novalidate>
       ${vehicles.length > 1 ? `
         <label class="field">
@@ -56,13 +62,14 @@ export default async function render(root, ctx) {
       </label>
       <p class="form-error" role="alert" hidden></p>
       <div class="form-actions">
-        <a class="btn btn-ghost" href="#/tasks">Cancel</a>
+        <a class="btn btn-ghost" href="${backLink.href}">Cancel</a>
         <button class="btn" type="submit">${editing ? "Save Changes" : "Add Task"}</button>
       </div>
       ${editing ? `<div class="danger-zone"><button type="button" class="btn-text danger" id="delete-task">${icon("trash", 16, 2)}Delete task</button></div>` : ""}
     </form>`;
 
   const form = root.querySelector("form");
+  if (!editing && presetName) form.elements.due_date.focus();
   const errEl = root.querySelector(".form-error");
   const fail = (msg) => { errEl.textContent = msg; errEl.hidden = false; };
 
