@@ -657,6 +657,48 @@ body.has-nav .map-screen { height: calc(100dvh - var(--nav-h) - var(--safe-b)); 
 .steps li::marker { font-weight: 800; color: var(--brand); }
 .tools { margin: 6px 0 0; padding-left: 20px; color: var(--ink-2); }
 
+.guide-search {
+  position: relative;
+  width: 100%;
+  margin: 20px 0;
+}
+
+.guide-search .search-icon {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2563eb;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.guide-search input {
+  width: 100%;
+  padding: 14px 18px 14px 52px;
+  box-sizing: border-box;
+}
+
+.guide-search input#guide-search {
+  padding-left: 60px;
+}
+
+/* Bring search bar and result cards closer together */
+.guide-search {
+  margin-bottom: 0 !important;
+}
+
+.guide-list {
+  margin-top: 0 !important;
+  padding-top: 0;
+}
+
+.guide-search + .guide-list {
+  margin-top: 0 !important;
+}
 /* ---------- Profile ---------- */
 
 .profile { align-items: center; }
