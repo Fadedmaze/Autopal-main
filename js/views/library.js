@@ -17,6 +17,72 @@ let guidesCache = null;
 let category = "diy";
 let searchQuery = "";
 
+function dashboardIcon(guide) {
+  const name = `${guide.title} ${guide.slug}`.toLowerCase();
+
+  const svg = (content) => `
+    <svg width="28" height="28" viewBox="0 0 24 24"
+      fill="none" stroke="currentColor" stroke-width="1.8"
+      stroke-linecap="round" stroke-linejoin="round"
+      aria-hidden="true">
+      ${content}
+    </svg>`;
+
+  // Oil pressure: oil can with a drop
+  if (name.includes("oil")) {
+    return svg(`
+      <path d="M3 11h11l3-3 2 2-3 4v3H6l-3-3z"/>
+      <path d="M7 11V7h5"/>
+      <path d="M20 15c0 1-1.5 2-1.5 3.5a1.5 1.5 0 0 0 3 0C21.5 17 20 16 20 15z"/>
+    `);
+  }
+
+  // Battery
+  if (name.includes("battery") || name.includes("charging")) {
+    return svg(`
+      <rect x="3" y="7" width="18" height="11" rx="1"/>
+      <path d="M7 7V5h3v2M14 7V5h3v2"/>
+      <path d="M7 12h4M9 10v4M15 12h4"/>
+    `);
+  }
+
+  // Check engine
+  if (name.includes("engine")) {
+    return svg(`
+      <path d="M5 9h3V6h7v3h3l2 3v6H5l-2-3v-4z"/>
+      <path d="M10 6V4h5M20 12h2"/>
+    `);
+  }
+
+  // Brakes
+  if (name.includes("brake") || name.includes("abs")) {
+    return svg(`
+      <circle cx="12" cy="12" r="7"/>
+      <path d="M3 7a10 10 0 0 0 0 10M21 7a10 10 0 0 1 0 10"/>
+      <path d="M12 8v5M12 16h.01"/>
+    `);
+  }
+
+  // Tire pressure
+  if (name.includes("tire") || name.includes("tpms")) {
+    return svg(`
+      <path d="M6 5C3 8 3 16 6 19h12c3-3 3-11 0-14"/>
+      <path d="M12 8v6M12 17h.01"/>
+    `);
+  }
+
+  // Temperature
+  if (name.includes("temperature") || name.includes("coolant")) {
+    return svg(`
+      <path d="M10 14V5a2 2 0 0 1 4 0v9a4 4 0 1 1-4 0z"/>
+      <path d="M12 9v8"/>
+    `);
+  }
+
+  // Other warnings keep the existing alert icon
+  return icon("alert", 24, 2);
+}
+
 export default async function render(root, ctx) {
   root.innerHTML = loading();
   try {
@@ -73,7 +139,7 @@ export default async function render(root, ctx) {
             ${guides.map((g) => `
               <li>
                 <a class="guide-card" href="#/library/${encodeURIComponent(g.slug)}">
-                  <span class="guide-icon ${g.severity ? `sev-${g.severity}` : ""}">${icon(g.category === "diy" ? "wrench" : "alert", 20, 2)}</span>
+                  <span class="guide-icon ${g.severity ? `sev-${g.severity}` : ""}">${g.category === "diy" ? icon("wrench", 20, 2) : dashboardIcon(g)}</span>
                   <span class="guide-text">
                     <strong>${escapeHtml(g.title)}</strong>
                     <span>${escapeHtml(g.summary)}</span>
