@@ -13,7 +13,7 @@ Many drivers, especially students and first-time car owners, don't know what mai
 The diagram is our Step 1 design. While building, we kept the same core structure and added a few supporting tables and columns:
 - `USER` became `profiles`, linked to Supabase Auth, which stores and hashes passwords so we don't keep a `password_hash` column.
 - `maintenance_catalog` holds the standard tasks every new car gets.
-- `guides` holds the Library content.
+- `guides` holds the Library content: step-by-step DIY guides with difficulty, safety notes, and a YouTube search phrase.
 - `receipt_path` on tasks, `avatar_path` and `distance_unit` on profiles, and `average_repair_price` / `services` on shops support the final screens.
 
 ## Tech Stack
@@ -94,6 +94,8 @@ js/views/             One file per screen
 sw.js                 Service worker (bump CACHE on each release)
 docs/erd.png          ERD
 supabase/schema.sql   Full database: tables, triggers, views, security rules, storage, seed data
-supabase/functions/   Edge Function for username sign-in
+supabase/functions/   Edge Functions (username sign-in, warning-light identification)
+supabase/migrations/  Database changes made after the initial schema; run each in the SQL Editor
+supabase/seed/        Source data for the warning-light catalog and the Library's DIY guides
 harness/              Local fake-backend test harness (not deployed)
 ```

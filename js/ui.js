@@ -139,6 +139,8 @@ const PATHS = {
   pin: '<path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
   user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  play: '<rect x="2.5" y="5" width="19" height="14" rx="4"/><path d="m10.2 9.2 4.8 2.8-4.8 2.8z"/>',
   back: '<path d="M15 5l-7 7 7 7"/>',
   chevron: '<path d="M9 5l7 7-7 7"/>',
   check: '<path d="M5 12.5l4.5 4.5L19 7"/>',

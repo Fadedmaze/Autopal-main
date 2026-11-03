@@ -128,6 +128,9 @@ Deno.serve(async (req) => {
       content.push({ type: "image", source: { type: "base64", media_type: "image/jpeg", data } });
     });
 
+    if (!Deno.env.get("ANTHROPIC_API_KEY")) {
+      return json({ error: "The scanner isn't set up yet. Ask the app owner to add the AI key.", code: "not_configured" }, 503);
+    }
     const client = new Anthropic(); // reads ANTHROPIC_API_KEY
     const response = await client.beta.messages.create({
       model: "claude-opus-5-5",
