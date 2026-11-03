@@ -104,7 +104,7 @@ export default async function render(root, ctx) {
   } catch {
     if (!ctx.isCurrent()) return;
     root.innerHTML = `
-      ${appBar({ title: "Library", back: { href: "#/home", label: "Home" } })}
+      ${appBar({ title: "Discover", back: { href: "#/home", label: "Home" } })}
       <div class="error-state">
         ${icon("book", 40, 1.6)}
         <h2>Couldn't load the guides</h2>
@@ -158,7 +158,7 @@ export default async function render(root, ctx) {
     : guidesCache.filter((g) => g.category === "diy");
 
     root.innerHTML = `
-      ${appBar({ title: "Library", sub: "Learn the basics of keeping your car healthy.", back: { href: "#/home", label: "Home" } })}
+      ${appBar({ title: "Discover", sub: "Learn the basics of keeping your car healthy.", back: { href: "#/home", label: "Home" } })}
       <div class="content">
         <div class="segmented" role="tablist" aria-label="Guide categories">
           ${CATEGORIES.map((c) => `<button role="tab" type="button" data-cat="${c.id}" aria-selected="${c.id === category}">${c.label}</button>`).join("")}
@@ -303,7 +303,7 @@ async function renderGuide(root, ctx, g) {
   const detailed = Array.isArray(g.step_details) && g.step_details.length > 0;
 
   root.innerHTML = `
-    ${appBar({ title: g.title, back: { href: "#/library", label: "Library" } })}
+    ${appBar({ title: g.title, back: { href: "#/library", label: "Discover" } })}
     <article class="content guide ${isDiy ? "has-fab" : ""}">
       <p class="guide-summary">${escapeHtml(g.summary)}</p>
       ${isDiy && (g.difficulty || g.time_estimate) ? `
