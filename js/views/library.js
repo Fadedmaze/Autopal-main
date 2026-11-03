@@ -1,6 +1,6 @@
 // Library: guides grouped into DIY Maintenance and Dashboard Lights. /library/:slug
 // opens one guide. Every DIY guide carries a "see a mechanic" note.
-import { listGuides } from "../data.js";
+import { listGuides, listWarningLights } from "../data.js";
 import { appBar, escapeHtml, icon, loading } from "../ui.js";
 
 const CATEGORIES = [
@@ -14,6 +14,7 @@ const SEVERITY = {
 };
 
 let guidesCache = null;
+let warningLightsCache = null;
 let category = "diy";
 let searchQuery = "";
 
@@ -86,7 +87,13 @@ function dashboardIcon(guide) {
 export default async function render(root, ctx) {
   root.innerHTML = loading();
   try {
-    guidesCache ??= await listGuides();
+    const [guides, lights] = await Promise.all([
+      guidesCache ?? listGuides(),
+      warningLightsCache ?? listWarningLights()
+    ]);
+  
+    guidesCache = guides;
+    warningLightsCache = lights;
   } catch {
     if (!ctx.isCurrent()) return;
     root.innerHTML = `
@@ -102,10 +109,47 @@ export default async function render(root, ctx) {
   }
   if (!ctx.isCurrent()) return;
 
-  if (ctx.params.slug) return renderGuide(root, ctx, guidesCache.find((g) => g.slug === ctx.params.slug));
+  if (ctx.params.slug) {
+  const guide = guidesCache.find((g) => g.slug === ctx.params.slug);
+
+  if (guide) return renderGuide(root, ctx, guide);
+
+  const light = warningLightsCache.find(
+    (l) => `warning-${l.slug}` === ctx.params.slug
+  );
+
+  if (light) {
+    return renderGuide(root, ctx, {
+      slug: `warning-${light.slug}`,
+      category: "dashboard",
+      title: light.name,
+      summary: light.meaning,
+      severity: light.severity,
+      steps: [light.action, light.drive_advice].filter(Boolean)
+    });
+  }
+
+  return ctx.navigate("#/library", { replace: true });
+}
 
   const draw = () => {
-    const guides = guidesCache.filter((g) => g.category === category);
+  const dashboardGuides = warningLightsCache.map((light) => ({
+    slug: `warning-${light.slug}`,
+    category: "dashboard",
+    title: light.name,
+    summary: light.meaning,
+    severity: light.severity,
+    steps: [
+      light.action,
+      light.drive_advice
+    ].filter(Boolean),
+    warningLight: light
+  }));
+
+  const guides = category === "dashboard"
+    ? dashboardGuides
+    : guidesCache.filter((g) => g.category === "diy");
+
     root.innerHTML = `
       ${appBar({ title: "Library", sub: "Learn the basics of keeping your car healthy.", back: { href: "#/home", label: "Home" } })}
       <div class="content">
