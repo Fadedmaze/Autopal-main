@@ -676,6 +676,22 @@ body.has-nav .map-screen { height: calc(100dvh - var(--nav-h) - var(--safe-b)); 
   padding-left: 52px !important;
 }
 
+.guide-icon.sev-stop {
+  color: #dc2626;
+}
+
+.guide-icon.sev-soon {
+  color: #d97706;
+}
+
+.guide-icon.sev-info {
+  color: #2563eb;
+}
+
+.guide-icon svg {
+  flex-shrink: 0;
+}
+
 /* ---------- Profile ---------- */
 
 .profile { align-items: center; }
