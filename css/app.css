@@ -686,9 +686,10 @@ body.has-nav .map-screen { height: calc(100dvh - var(--nav-h) - var(--safe-b)); 
   padding-left: 60px;
 }
 
-/* Bring search bar and result cards closer together */
 .guide-search {
-  margin-bottom: 0 !important;
+  position: relative;
+  width: 100%;
+  margin: -4px 0 0;
 }
 
 .guide-list {
