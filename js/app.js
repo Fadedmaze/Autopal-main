@@ -37,7 +37,7 @@ const TABS = [
   { id: "garage", label: "Garage", icon: "garage", href: "#/garage" },
   { id: "mechanics", label: "Find Mechanic", icon: "pin", href: "#/mechanics" },
   { id: "discover", label: "Discover", icon: "scan", href: "#/discover" },
-  { id: "library", label: "Library", icon: "book", href: "#/library" },
+  { id: "library", label: "Discover", icon: "book", href: "#/library" },
 ];
 
 const navEl = document.getElementById("nav");
