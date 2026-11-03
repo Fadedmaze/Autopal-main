@@ -175,8 +175,8 @@ export default async function render(root, ctx) {
             type="search"
             id="guide-search"
             placeholder="${category === "diy"
-              ? "Search DIY maintenance..."
-              : "Search dashboard lights..."}"
+              ? "Search DIY Maintenance..."
+              : "Search Dashboard Lights..."}"
             aria-label="Search guides"
             value="${escapeHtml(searchQuery)}"
           />
