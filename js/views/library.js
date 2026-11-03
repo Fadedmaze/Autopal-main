@@ -15,6 +15,7 @@ const SEVERITY = {
 
 let guidesCache = null;
 let category = "diy";
+let searchQuery = "";
 
 export default async function render(root, ctx) {
   root.innerHTML = loading();
@@ -45,6 +46,28 @@ export default async function render(root, ctx) {
         <div class="segmented" role="tablist" aria-label="Guide categories">
           ${CATEGORIES.map((c) => `<button role="tab" type="button" data-cat="${c.id}" aria-selected="${c.id === category}">${c.label}</button>`).join("")}
         </div>
+
+        <div class="guide-search">
+          <span class="search-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="m21 21-4.35-4.35"></path>
+            </svg>
+          </span>
+          <input
+            type="search"
+            id="guide-search"
+            placeholder="${category === "diy"
+              ? "Search DIY maintenance..."
+              : "Search dashboard lights..."}"
+            aria-label="Search guides"
+            value="${escapeHtml(searchQuery)}"
+          />
+        </div>
+
+        ${category === "dashboard" ? `
+          <p class="notice notice-info">${icon("scan", 18, 2)}<span>Not sure which light you're seeing? <a href="#/discover">Scan your dashboard</a> to identify it.</span></p>` : ""}
+
         ${guides.length ? `
           <ul class="guide-list">
             ${guides.map((g) => `
@@ -62,8 +85,49 @@ export default async function render(root, ctx) {
               </li>`).join("")}
           </ul>` : `<p class="muted-box">No guides in this category yet.</p>`}
       </div>`;
-    root.querySelectorAll("[data-cat]").forEach((b) => b.addEventListener("click", () => { category = b.dataset.cat; draw(); }));
+
+      const searchInput = root.querySelector("#guide-search");
+      const guideCards = root.querySelectorAll(".guide-list li");
+  
+      const filterGuides = () => {
+        const query = searchInput.value.toLowerCase().trim();
+        searchQuery = searchInput.value;
+  
+        let visibleCount = 0;
+  
+        guideCards.forEach((item) => {
+          const matches = item.textContent.toLowerCase().includes(query);
+          item.hidden = !matches;
+          if (matches) visibleCount++;
+        });
+  
+        const list = root.querySelector(".guide-list");
+        if (!list) return;
+  
+        let emptyMessage = root.querySelector("#search-empty");
+        if (!emptyMessage) {
+          emptyMessage = document.createElement("p");
+          emptyMessage.id = "search-empty";
+          emptyMessage.className = "muted-box";
+          list.after(emptyMessage);
+        }
+  
+        emptyMessage.textContent = "No matching guides found.";
+        emptyMessage.hidden = visibleCount > 0;
+      };
+  
+      searchInput.addEventListener("input", filterGuides);
+      filterGuides();
+
+    root.querySelectorAll("[data-cat]").forEach((b) => {
+      b.addEventListener("click", () => {
+        category = b.dataset.cat;
+        searchQuery = "";
+        draw();
+      });
+    });
   };
+
   draw();
 }
 
