@@ -265,12 +265,16 @@ export async function nearbyShops(lat, lng, limit = 50) {
 
 // ---- Library -----------------------------------------------------------
 
+const GUIDE_COLS = "id, category, slug, title, summary, steps, tools, time_estimate, severity, sort_order";
+const GUIDE_DIY_COLS = "difficulty, task_name, video_query, safety, image_path, intro, prep, step_details, wrap_up";
+
+// The DIY columns come from migrations/20261102_library_diy_guides.sql. If that
+// hasn't been run yet, fall back to the original columns so the Library still loads.
 export async function listGuides() {
-  return check(await supabase
-    .from("guides")
-    .select("id, category, slug, title, summary, steps, tools, time_estimate, severity, sort_order")
-    .order("category")
-    .order("sort_order"));
+  const query = (cols) => supabase.from("guides").select(cols).order("category").order("sort_order");
+  const full = await query(`${GUIDE_COLS}, ${GUIDE_DIY_COLS}`);
+  if (!full.error) return full.data;
+  return check(await query(GUIDE_COLS)).map((g) => ({ ...g, safety: [], step_details: [] }));
 }
 
 // ---- Discover: warning lights --------------------------------------------

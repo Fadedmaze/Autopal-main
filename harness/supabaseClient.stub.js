@@ -39,12 +39,14 @@ const db = (window.__db = {
     latitude, longitude, average_rating, average_repair_price, services,
   })),
   guides: [
-    { id: 1, category: "diy", slug: "check-oil-level", title: "Check your oil level", summary: "A 2-minute check that catches low oil early.", steps: ["Park on level ground.", "Pull the dipstick, wipe, reinsert, read."], tools: ["Rag"], time_estimate: "5 minutes", severity: null, sort_order: 1 },
-    { id: 2, category: "diy", slug: "wiper-blades", title: "Replace wiper blades", summary: "Streaky wipers? New blades take minutes.", steps: ["Lift the arm.", "Slide off the old blade.", "Click in the new one."], tools: ["New blades"], time_estimate: "10 minutes", severity: null, sort_order: 2 },
     { id: 3, category: "dashboard", slug: "check-engine", title: "Check engine light", summary: "The engine computer found a problem.", steps: ["Steady: get the code read soon.", "Flashing: get to a mechanic right away."], tools: [], time_estimate: null, severity: "soon", sort_order: 1 },
     { id: 4, category: "dashboard", slug: "oil-pressure", title: "Oil pressure warning", summary: "Not enough oil pressure.", steps: ["Pull over and turn off the engine."], tools: [], time_estimate: null, severity: "stop", sort_order: 2 },
   ],
 });
+// Library DIY guides come from the same seed file the database uses.
+db.guides.push(...(await (await fetch("/supabase/seed/diy_guides.json")).json())
+  .map((g, i) => ({ id: 100 + i, category: "diy", severity: null, image_path: null, ...g,
+    steps: g.steps.map((st) => st.title), step_details: g.steps })));
 // Discover catalog comes from the same seed file the database uses.
 db.warning_lights = (await (await fetch("/supabase/seed/warning_lights.json")).json()).map((l, i) => ({ id: i + 1, ...l }));
 db.light_scans = [];
