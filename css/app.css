@@ -605,6 +605,20 @@ body.has-nav .map-screen { height: calc(100dvh - var(--nav-h) - var(--safe-b)); 
 .map-list button span:first-child { display: flex; flex-direction: column; min-width: 0; }
 .map-list small { color: var(--ink-3); }
 .map-list-price { font-weight: 800; color: var(--brand); }
+/* Live location: pulsing blue dot; target button turns blue while following */
+.you-dot { background: none; border: 0; }
+.you-dot span {
+  position: absolute; inset: 2px; border-radius: 50%;
+  background: #1f6feb; border: 3px solid #fff; box-shadow: 0 1px 6px rgba(0,0,0,.35);
+}
+.you-dot span::after {
+  content: ""; position: absolute; inset: -9px; border-radius: 50%;
+  background: rgba(31,111,235,.35); animation: you-pulse 2s ease-out infinite; z-index: -1;
+}
+@keyframes you-pulse { from { transform: scale(.5); opacity: 1; } to { transform: scale(1.6); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .you-dot span::after { animation: none; opacity: .4; } }
+.map-locate.following { color: #1f6feb; }
+.map-locate.following .icon { fill: rgba(31,111,235,.15); }
 .map-locate { position: absolute; z-index: 500; right: 12px; bottom: 110px; }
 .map-note { position: absolute; z-index: 400; left: 12px; bottom: 6px; margin: 0; font-size: 11px; color: #4b5565; background: rgba(255,255,255,.8); padding: 2px 8px; border-radius: 8px; }
 .map-error { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: var(--ink-2); text-align: center; padding: 24px; background: var(--bg); }

@@ -1,5 +1,6 @@
 // Map (Find Mechanic): full-screen map with a pin per shop. Tapping a pin shows the shop
 // name and its average repair price. The filter tab at the top narrows the pins.
+// A live blue dot tracks the user's location and the map follows it until they pan.
 import { nearbyShops } from "../data.js";
 import { escapeHtml, icon, stars, formatMoney, formatDistance, errorMessage, toast } from "../ui.js";
 
@@ -13,6 +14,8 @@ const PRICES = [
   { id: "high", label: "$300+", test: (p) => p > 300 },
 ];
 const RATINGS = [{ id: 0, label: "Any rating" }, { id: 4, label: "4.0+" }, { id: 4.5, label: "4.5+" }];
+const REFETCH_MILES = 0.5; // refresh shop distances after moving this far
+const FOLLOW_ZOOM = 14;
 
 // Filters persist while moving around the app; location is kept in memory only.
 const filters = { price: "any", rating: 0, services: new Set() };
@@ -50,7 +53,7 @@ export default async function render(root, ctx) {
         </div>
       </div>
 
-      <button type="button" class="map-fab map-locate" id="locate" aria-label="Use my location">${icon("locate", 22, 2)}</button>
+      <button type="button" class="map-fab map-locate" id="locate" aria-label="Follow my location" aria-pressed="false">${icon("locate", 22, 2)}</button>
 
       <div class="map-list" id="map-list" hidden></div>
       <p class="map-note">Sample shop data for demonstration</p>
@@ -64,6 +67,17 @@ export default async function render(root, ctx) {
   let map = null;
   let layer = null;
   let L = null;
+
+  // Live location state
+  const locateBtn = root.querySelector("#locate");
+  let watchId = null;
+  let me = null;          // latest { lat, lng, accuracy } from the GPS
+  let meLayer = null;     // blue dot + accuracy circle
+  let following = false;  // map recenters on each update until the user pans
+  let deniedNotice = false;
+  let lastFetchPoint = null;
+  let fetchSeq = 0;       // only the newest shop lookup may redraw the map
+  let resizeObserver = null;
 
   const matches = (s) => {
     const price = PRICES.find((p) => p.id === filters.price);
@@ -106,8 +120,6 @@ export default async function render(root, ctx) {
     if (!map) return;
     layer?.remove();
     layer = L.layerGroup().addTo(map);
-    L.circleMarker([point.lat, point.lng], { radius: 8, color: "#fff", weight: 3, fillColor: "#1f6feb", fillOpacity: 1 })
-      .bindTooltip("You are here").addTo(layer);
     const markers = new Map();
     for (const s of visible) {
       const price = s.average_repair_price !== null ? `$${Math.round(Number(s.average_repair_price))}` : "—";
@@ -130,12 +142,102 @@ export default async function render(root, ctx) {
     }
   };
 
-  const show = async (point) => {
+  const show = async (point, { fit = true } = {}) => {
+    const seq = ++fetchSeq;
     lastPoint = point;
-    shops = await nearbyShops(point.lat, point.lng, 100);
-    if (!ctx.isCurrent()) return;
+    lastFetchPoint = point;
+    const found = await nearbyShops(point.lat, point.lng, 100);
+    if (!ctx.isCurrent() || seq !== fetchSeq) return;
+    shops = found;
     syncFilterUi();
-    drawPins(point, { fit: true });
+    drawPins(point, { fit });
+  };
+
+  const setFollowing = (on) => {
+    following = on;
+    locateBtn.classList.toggle("following", on);
+    locateBtn.setAttribute("aria-pressed", String(on));
+    locateBtn.setAttribute("aria-label", on ? "Following your location" : "Follow my location");
+  };
+
+  // Draw or move the blue dot and its accuracy circle.
+  const drawMe = () => {
+    if (!map || !me) return;
+    const ll = [me.lat, me.lng];
+    const radius = Math.min(me.accuracy || 0, 1500);
+    if (!meLayer) {
+      meLayer = {
+        circle: L.circle(ll, { radius, color: "#1f6feb", weight: 1, opacity: 0.35, fillColor: "#1f6feb", fillOpacity: 0.12, interactive: false }).addTo(map),
+        dot: L.marker(ll, {
+          icon: L.divIcon({ className: "you-dot", html: "<span></span>", iconSize: [22, 22], iconAnchor: [11, 11] }),
+          keyboard: false, zIndexOffset: 1000, title: "You are here",
+        }).addTo(map),
+      };
+    } else {
+      meLayer.circle.setLatLng(ll).setRadius(radius);
+      meLayer.dot.setLatLng(ll);
+    }
+  };
+
+  const onPosition = async (pos) => {
+    if (!ctx.isCurrent()) return;
+    const first = !me;
+    me = { lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy };
+    drawMe();
+    if (first) {
+      // First fix: center on the user, load shops around them, then zoom so the
+      // nearest few shops are in view while the user stays in the middle.
+      setFollowing(true);
+      // Instant (not animated): Leaflet ignores a new zoom while a zoom animation runs.
+      map?.setView([me.lat, me.lng], FOLLOW_ZOOM, { animate: false });
+      await show({ lat: me.lat, lng: me.lng }, { fit: false }).catch((err) => toast(errorMessage(err), "error"));
+      if (map && following) {
+        const near = shops.filter(matches).slice(0, 3);
+        if (near.length) {
+          // Mirror each shop around the user so the bounds stay centered on them.
+          const pts = near.flatMap((s) => {
+            const lat = Number(s.latitude), lng = Number(s.longitude);
+            return [[lat, lng], [2 * me.lat - lat, 2 * me.lng - lng]];
+          });
+          const zoom = map.getBoundsZoom(L.latLngBounds(pts), false, L.point(60, 120));
+          map.setView([me.lat, me.lng], Math.max(10, Math.min(zoom, 15)), { animate: false });
+        }
+      }
+      return;
+    }
+    if (following) map?.panTo([me.lat, me.lng], { animate: true });
+    // Refresh distances once they've moved a meaningful amount, unless a popup is open.
+    const moved = lastFetchPoint ? milesBetween(lastFetchPoint, me) : Infinity;
+    if (moved >= REFETCH_MILES && !root.querySelector(".leaflet-popup")) {
+      await show({ lat: me.lat, lng: me.lng }, { fit: false }).catch(() => {});
+    }
+  };
+
+  const onPositionError = (err) => {
+    if (!ctx.isCurrent()) return;
+    setFollowing(false);
+    stopTracking();
+    if (deniedNotice) return;
+    deniedNotice = true;
+    toast(err?.code === 1
+      ? "Location is off, so we're showing shops near Provo. Tap the target button to try again."
+      : "We couldn't find your location. Showing shops near Provo.", "error");
+  };
+
+  const startTracking = () => {
+    if (!navigator.geolocation) {
+      toast("Your browser can't share its location.", "error");
+      return;
+    }
+    if (watchId !== null) return;
+    watchId = navigator.geolocation.watchPosition(onPosition, onPositionError, {
+      enableHighAccuracy: true, timeout: 20000, maximumAge: 5000,
+    });
+  };
+
+  const stopTracking = () => {
+    if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+    watchId = null;
   };
 
   // Filter tab
@@ -166,13 +268,14 @@ export default async function render(root, ctx) {
     panel.hidden = true;
   });
 
-  root.querySelector("#locate").addEventListener("click", () => {
-    if (!navigator.geolocation) return toast("Your browser can't share its location.", "error");
-    navigator.geolocation.getCurrentPosition(
-      (pos) => show({ lat: pos.coords.latitude, lng: pos.coords.longitude }).catch((err) => toast(errorMessage(err), "error")),
-      () => toast("Location permission was denied. Showing shops near Provo.", "error"),
-      { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 },
-    );
+  // Target button: re-center and follow again (and start tracking if it isn't running).
+  locateBtn.addEventListener("click", () => {
+    deniedNotice = false;
+    startTracking();
+    if (me) {
+      setFollowing(true);
+      map?.setView([me.lat, me.lng], Math.max(map.getZoom(), FOLLOW_ZOOM), { animate: true });
+    }
   });
 
   try {
@@ -184,14 +287,36 @@ export default async function render(root, ctx) {
       maxZoom: 19,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(map);
+    // Panning by hand stops following; the target button turns it back on.
+    map.on("dragstart", () => setFollowing(false));
+    // The map can be created before the screen finishes laying out; re-measure on any
+    // size change so "center" (and following) means the visible center.
+    resizeObserver = new ResizeObserver(() => {
+      map.invalidateSize({ pan: false });
+      if (following && me) map.setView([me.lat, me.lng], map.getZoom(), { animate: false });
+    });
+    resizeObserver.observe(mapEl);
   } catch {
     mapEl.innerHTML = `<div class="map-error">${icon("alert", 28, 2)}<p>The map couldn't load. Check your connection.</p><button type="button" class="btn btn-sm" id="map-retry">Try again</button></div>`;
     mapEl.querySelector("#map-retry").addEventListener("click", () => ctx.navigate(location.hash));
     listEl.hidden = false;
   }
 
-  await show(lastPoint ?? DEFAULT_POINT);
-  return () => map?.remove();
+  startTracking();
+  if (!me) await show(lastPoint ?? DEFAULT_POINT);
+  return () => {
+    stopTracking();
+    resizeObserver?.disconnect();
+    map?.remove();
+  };
+}
+
+// Great-circle distance in miles.
+function milesBetween(a, b) {
+  const rad = (d) => (d * Math.PI) / 180;
+  const h = Math.sin(rad(b.lat - a.lat) / 2) ** 2 +
+    Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(rad(b.lng - a.lng) / 2) ** 2;
+  return 3958.8 * 2 * Math.asin(Math.sqrt(h));
 }
 
 let leafletPromise = null;
