@@ -338,7 +338,11 @@ function videoUrl(guide, vehicle) {
 }
 
 function addTaskHref(guide, vehicle) {
-  const params = new URLSearchParams({ name: guide.task_name || guide.title, guide: guide.slug });
+  const name = guide.task_name || guide.title;
+  const taskName = guide.category === "dashboard"
+    ? name.replace(/(^|[\s/-])([a-z])/g, (_, separator, letter) => `${separator}${letter.toUpperCase()}`)
+    : name;
+  const params = new URLSearchParams({ name: taskName, guide: guide.slug });
   if (vehicle) params.set("vehicle", vehicle.id);
   return `#/tasks/new?${params}`;
 }
