@@ -30,7 +30,7 @@ values
   ('diy', 'check-oil-level', 'Check your oil level', 'A two-minute check that catches low oil before it damages the engine. Do it about once a month.',
     array['Park on flat ground and turn off the engine', 'Open the hood and find the dipstick', 'Pull it out and wipe it clean', 'Put it back in, then pull it out again', 'Read the level', 'Look at the color', 'Add oil if it''s low', 'Wait, recheck, and close everything up']::text[],
     array['Paper towel or rag', 'A quart of the right oil, only if you need to add some', 'Funnel']::text[],
-    '5 minutes', null, 1, 'easy', 'Check oil level', 'how to check engine oil level',
+    '5 minutes', null, 1, 'easy', 'Check Oil Level', 'how to check engine oil level',
     array['If you''ve just been driving, parts of the engine stay hot for a while. Keep your hands away from the metal pipes and the radiator, and give the car a few minutes to cool before reaching in.']::text[],
     'Oil is what keeps the metal parts inside your engine from grinding against each other. Most cars slowly use a little oil between oil changes, and some leak or burn it faster as they get older. If the level gets too low, the engine can overheat and wear out quickly, which is one of the most expensive things that can go wrong with a car.
 
@@ -41,7 +41,7 @@ The good news is that checking it takes about two minutes and no special skills.
   ('diy', 'tire-pressure', 'Check and fill tire pressure', 'The right tire pressure improves gas mileage, handling, and tire life. Check it monthly and before long trips.',
     array['Find the right pressure for your car', 'Check while the tires are cold', 'Take the cap off the valve stem', 'Measure the pressure', 'Add air if it''s low', 'Let some out if it''s too high', 'Put the cap back on and repeat']::text[],
     array['Tire pressure gauge', 'Air pump']::text[],
-    '10 minutes', null, 2, 'easy', 'Tire pressure check', 'how to check and fill tire pressure',
+    '10 minutes', null, 2, 'easy', 'Tire Pressure Check', 'how to check and fill tire pressure',
     '{}'::text[],
     'Tires slowly lose air over time, even when nothing is wrong with them, and they lose it faster when the weather turns cold. Driving on tires without enough air makes the car use more gas, wears the tires out faster, makes the steering feel sluggish, and in the worst case can cause a tire to overheat and fail on the highway.
 
@@ -52,7 +52,7 @@ Checking the pressure is quick and costs almost nothing. Plan on doing it once a
   ('diy', 'tire-tread', 'Check tire tread depth', 'Worn tread makes it much harder to stop and steer on wet or snowy roads. A coin is all you need to check it.',
     array['Turn the steering wheel to see the front tires', 'Do the penny test', 'Try the quarter test for a stricter check', 'Check several spots on each tire', 'Look for the wear bars', 'Notice how the tire is wearing']::text[],
     array['A penny', 'A quarter']::text[],
-    '5 minutes', null, 3, 'easy', 'Check tire tread', 'how to check tire tread depth penny test',
+    '5 minutes', null, 3, 'easy', 'Check Tire Tread', 'how to check tire tread depth penny test',
     '{}'::text[],
     'The grooves cut into your tires, called the tread, are what grip the road. When it rains or snows, those grooves push water out from under the tire so the rubber can stay in contact with the pavement. As tires wear down, the grooves get shallower, and the car takes longer to stop and is much more likely to slide or hydroplane on a wet road.
 
@@ -63,7 +63,7 @@ Tires wear slowly, so it''s easy to not notice until it''s a problem. A quick ch
   ('diy', 'wiper-blades', 'Replace wiper blades', 'Streaking, skipping, or squeaking wipers are worn out. New blades usually snap on in a few minutes with no tools.',
     array['Lift the wiper arm', 'Find how the blade attaches', 'Remove the old blade', 'Get the new blade ready', 'Attach the new blade', 'Lower the arm gently', 'Test them']::text[],
     array['New wiper blades', 'A towel']::text[],
-    '10 minutes', null, 4, 'easy', 'Wiper blades', 'how to replace windshield wiper blades',
+    '10 minutes', null, 4, 'easy', 'Wiper Blades', 'how to replace windshield wiper blades',
     array['When the blade is off, the bare metal wiper arm is spring-loaded. If it slips and snaps down onto the glass, it can crack your windshield. Lay a folded towel on the windshield under the arm while you work, just in case.']::text[],
     'Wiper blades are strips of rubber, and sun, heat, and cold slowly harden and crack them. Old blades leave streaks, skip across the glass, squeak, or leave a blurry film that makes it hard to see at night or in the rain. Most blades last about six months to a year.
 
@@ -74,7 +74,7 @@ This is one of the easiest jobs on any car. Auto parts stores will often even do
   ('diy', 'washer-fluid', 'Refill windshield washer fluid', 'One of the easiest jobs on a car. Keep the washer fluid full so you can clear road grime and salt in bad weather.',
     array['Open the hood', 'Find the washer fluid reservoir', 'Fill it up', 'Close the cap and test the sprayers']::text[],
     array['Windshield washer fluid', 'Funnel']::text[],
-    '5 minutes', null, 5, 'easy', 'Refill washer fluid', 'how to refill windshield washer fluid',
+    '5 minutes', null, 5, 'easy', 'Refill Washer Fluid', 'how to refill windshield washer fluid',
     array['Washer fluid is poisonous if swallowed and often brightly colored, so store the jug where kids and pets can''t get to it.']::text[],
     'Washer fluid is the cleaning liquid that sprays onto your windshield when you pull the wiper lever. You''ll use a lot of it in winter, when road salt and slush coat the glass, and in summer, when bugs pile up. Running out at the wrong moment can leave you squinting through a smeared windshield on the highway.
 
@@ -85,7 +85,7 @@ Refilling it is about as easy as car maintenance gets, so it''s a great first jo
   ('diy', 'coolant-level', 'Check your coolant level', 'Coolant keeps the engine from overheating in summer and freezing in winter. Check the level a few times a year.',
     array['Make sure the engine is cold', 'Find the coolant reservoir', 'Look at the level', 'Top it off if it''s low', 'Watch for signs of a leak']::text[],
     array['The right coolant for your car', 'Rag']::text[],
-    '5 minutes', null, 6, 'easy', 'Check coolant level', 'how to check engine coolant level',
+    '5 minutes', null, 6, 'easy', 'Check Coolant Level', 'how to check engine coolant level',
     array['Only check coolant when the engine is completely cold. When the engine is warm, the coolant is hot and under pressure, and opening the cap can make it spray out and cause serious burns. The safest time is first thing in the morning, before you''ve driven anywhere.', 'Coolant tastes sweet but is poisonous to people and pets. Wipe up any spills right away.']::text[],
     'An engine produces a huge amount of heat. Coolant, sometimes called antifreeze, is a liquid that flows through the engine, soaks up that heat, and carries it to the radiator at the front of the car, where it cools off. Without enough coolant, the engine can overheat, and an overheated engine can be damaged badly enough that it''s not worth repairing.
 
@@ -96,7 +96,7 @@ The system is sealed, so the level shouldn''t drop much. Checking it a few times
   ('diy', 'engine-air-filter', 'Replace the engine air filter', 'A clogged air filter can hurt acceleration and fuel economy. Swapping it is usually a few clips and no tools.',
     array['Find the air filter box', 'Open the box', 'Take out the old filter', 'Decide if it really needs replacing', 'Clean out the box', 'Drop in the new filter', 'Close it up']::text[],
     array['New engine air filter', 'Screwdriver, only if needed']::text[],
-    '10 minutes', null, 7, 'easy', 'Engine air filter', 'how to replace engine air filter',
+    '10 minutes', null, 7, 'easy', 'Engine Air Filter', 'how to replace engine air filter',
     '{}'::text[],
     'Your engine breathes in a lot of air to burn fuel, and the engine air filter keeps dust, dirt, leaves, and bugs from getting sucked inside along with it. Over time the filter fills up, and a clogged filter can make the engine work harder, which can hurt acceleration and gas mileage.
 
@@ -107,7 +107,7 @@ Most cars need a new air filter about once a year or every 15,000 to 30,000 mile
   ('diy', 'cabin-air-filter', 'Replace the cabin air filter', 'This filter cleans the air coming through your vents. A dirty one causes weak airflow and musty smells.',
     array['Find where your filter lives', 'Empty the glove box and let it drop down', 'Open the filter cover', 'Slide out the old filter', 'Slide in the new filter', 'Put everything back']::text[],
     array['New cabin air filter', 'Flashlight']::text[],
-    '15 minutes', null, 8, 'easy', 'Cabin air filter', 'how to replace cabin air filter',
+    '15 minutes', null, 8, 'easy', 'Cabin Air Filter', 'how to replace cabin air filter',
     '{}'::text[],
     'The cabin air filter cleans the air that blows into the car through your vents, catching dust, pollen, and pollution before you breathe it. When it gets clogged, the air coming out of the vents gets weak even with the fan on high, the windows take longer to defog, and the car can start to smell musty.
 
@@ -118,7 +118,7 @@ Most cars should get a new one about once a year. It''s usually hidden behind th
   ('diy', 'headlight-bulb', 'Replace a headlight or taillight bulb', 'A burned-out bulb can get you pulled over. On many cars it''s a twist-and-pull job from under the hood or through the trunk.',
     array['Find the back of the light', 'Unplug the wire connector', 'Remove the old bulb', 'Handle the new bulb carefully', 'Put in the new bulb and reconnect it', 'Test it']::text[],
     array['Replacement bulb', 'Clean gloves or paper towel', 'Screwdriver, on some cars']::text[],
-    '15 to 30 minutes', null, 9, 'easy', 'Replace light bulb', 'how to replace headlight bulb',
+    '15 to 30 minutes', null, 9, 'easy', 'Replace Light Bulb', 'how to replace headlight bulb',
     array['Turn the car and the lights off before you start. Bulbs get very hot, so if the light was just on, give it a few minutes to cool.']::text[],
     'Working lights help you see at night and help other drivers see you, and a burned-out headlight, taillight, or brake light is also an easy reason for police to pull you over. On many cars, replacing a bulb is a quick twist-and-pull job from under the hood or inside the trunk.
 
@@ -129,7 +129,7 @@ On some newer cars, though, the bulbs are packed in tightly or the lights use LE
   ('diy', 'oil-change', 'Change your oil and filter', 'The single most important maintenance job. Doing it yourself saves money and teaches you a lot about your car.',
     array['Get the car ready', 'Raise the front of the car safely', 'Loosen the oil fill cap', 'Find the drain plug', 'Drain the old oil', 'Put the drain plug back in', 'Remove the old oil filter', 'Check for the old gasket', 'Install the new filter', 'Lower the car and add new oil', 'Check the level', 'Run the engine and look for leaks', 'Final check and clean up']::text[],
     array['New oil', 'New oil filter', 'New drain plug washer', 'Wrench or socket for the drain plug', 'Oil filter wrench', 'Drain pan', 'Funnel, gloves, rags', 'Ramps or a floor jack and jack stands', 'Wheel chocks']::text[],
-    '45 to 60 minutes', null, 10, 'moderate', 'Oil change', 'how to change oil and oil filter',
+    '45 to 60 minutes', null, 10, 'moderate', 'Oil Change', 'how to change oil and oil filter',
     array['Never get under a car that''s held up only by a jack. Jacks can slip or fail without warning. Always use ramps or jack stands, and always on solid, flat ground like a driveway or garage floor, never on grass or gravel.', 'Oil that was just in a running engine can be hot enough to burn. If you''ve been driving, let the car sit for 20 to 30 minutes first. Warm oil drains better, but hot oil can hurt you.', 'Used oil is toxic and can''t be thrown in the trash or poured down a drain. Most auto parts stores take used oil and old filters for free.']::text[],
     'Engine oil breaks down as you drive. It gets dirty, thins out, and stops protecting the engine as well as it should. Changing it on schedule is the single most important thing you can do to keep an engine running for a long time. Most modern cars need an oil change every 5,000 to 10,000 miles, and your owner''s manual or the car''s maintenance reminder will tell you the right interval.
 
@@ -142,7 +142,7 @@ You''ll also need a wrench or socket that fits your drain plug (often 14 mm or 1
   ('diy', 'tire-rotation', 'Rotate your tires', 'Moving tires to different positions helps them wear evenly and last longer. Most cars need it every 5,000 to 7,500 miles.',
     array['Learn your rotation pattern', 'Park and chock the wheels', 'Loosen the lug nuts while the car is on the ground', 'Lift the car and set it on jack stands', 'Move the wheels', 'Start the lug nuts by hand', 'Lower the car and tighten fully', 'Set the tire pressure', 'Recheck after a short drive']::text[],
     array['Floor jack', 'Jack stands', 'Lug wrench or breaker bar', 'Torque wrench', 'Wheel chocks', 'Tire pressure gauge']::text[],
-    '45 to 60 minutes', null, 11, 'moderate', 'Tire rotation', 'how to rotate tires',
+    '45 to 60 minutes', null, 11, 'moderate', 'Tire Rotation', 'how to rotate tires',
     array['Never put any part of your body under a car that''s held up only by a jack. Lower it onto jack stands before you take a wheel off.', 'Work on flat, solid ground, like a driveway or garage floor. A jack can sink into grass or slide on gravel or a slope.']::text[],
     'Your front tires and back tires don''t wear at the same speed. On most cars, the front tires do most of the steering and braking, so they wear faster. Rotating the tires means moving them to different spots on the car so they all wear down evenly, which helps the whole set last longer and keeps the car handling predictably.
 
@@ -155,7 +155,7 @@ Check your owner''s manual for two things: the rotation pattern your car uses, a
   ('diy', 'battery-check', 'Clean and test your battery', 'Corroded terminals and a weak battery are the most common causes of a car that won''t start. Check it before winter.',
     array['Turn the car off and find the battery', 'Look it over', 'Disconnect the negative cable first', 'Then disconnect the positive cable', 'Scrub away the corrosion', 'Rinse and dry', 'Reconnect positive first, then negative', 'Test the battery', 'Get a professional test if you''re unsure']::text[],
     array['Safety glasses and gloves', 'Wrench for the battery clamps', 'Wire brush', 'Baking soda and water', 'Multimeter, optional']::text[],
-    '20 to 30 minutes', null, 12, 'moderate', 'Battery check', 'how to clean car battery terminals and test battery',
+    '20 to 30 minutes', null, 12, 'moderate', 'Battery Check', 'how to clean car battery terminals and test battery',
     array['Wear your glasses and gloves the whole time, and avoid touching your face while you work.', 'Batteries can give off a flammable gas, so keep sparks, cigarettes, and flames away.', 'Never let a metal tool touch both battery terminals at the same time, or touch the positive terminal and any metal part of the car at the same time. That creates a short circuit that can spark, damage the battery, or burn you.']::text[],
     'Your car''s battery provides the burst of power that starts the engine. Over time, a crusty buildup called corrosion can form on the battery''s metal connection points, called terminals, and that buildup gets in the way of the electricity. Batteries also simply wear out, usually after 3 to 5 years. Both are among the most common reasons a car won''t start, and cold weather makes them worse.
 
@@ -166,7 +166,7 @@ Cleaning the terminals and testing the battery before winter can save you from b
   ('diy', 'jump-start', 'Jump-start a dead battery', 'Know this before you need it. With jumper cables and a second car, you can get going in a few minutes.',
     array['Position the cars', 'Find the battery terminals on both cars', 'Connect red to the dead battery', 'Connect red to the good battery', 'Connect black to the good battery', 'Connect the last black clamp to bare metal on the dead car', 'Start the working car', 'Try to start the dead car', 'Remove the cables in reverse order', 'Keep the car running']::text[],
     array['Jumper cables or a portable jump starter', 'A second car']::text[],
-    '15 minutes', null, 13, 'moderate', 'Get battery tested', 'how to jump start a car',
+    '15 minutes', null, 13, 'moderate', 'Get Battery Tested', 'how to jump start a car',
     array['Don''t try to jump a battery that is cracked, leaking, or frozen. Call for roadside help instead.', 'Once the cables are connected to a car, never let the metal clamps touch each other.', 'Hybrids and electric cars have their own procedures for jump-starting. Check the owner''s manual before jumping one, or before using one to jump another car.']::text[],
     'If you turn the key and hear clicking, or the dashboard lights up but the engine won''t turn over, the battery has probably run down. It happens to everyone eventually, often after leaving headlights or an interior light on. A jump-start borrows power from another car''s battery for long enough to get your engine running.
 
@@ -177,7 +177,7 @@ It''s worth reading this before you ever need it, so you''re not figuring it out
   ('diy', 'brake-pads', 'Check your brake pads', 'Learn the signs of worn brakes and how to see how much pad is left, so you can replace them before they damage the rotors.',
     array['Listen while you drive', 'Pay attention to how the car feels', 'Take a look through the wheel', 'Find the pad and judge its thickness', 'Take the wheel off for a better view, if needed', 'Look at the rotor too', 'Check the brake fluid', 'Put everything back']::text[],
     array['Flashlight', 'Floor jack, jack stands, and lug wrench, optional']::text[],
-    '15 to 30 minutes', null, 14, 'moderate', 'Brake inspection', 'how to check brake pads',
+    '15 to 30 minutes', null, 14, 'moderate', 'Brake Inspection', 'how to check brake pads',
     array['If you hear a grinding noise when braking, the brake pedal feels soft or sinks toward the floor, or the brake warning light is on, don''t wait. Have the brakes checked right away and drive as little as possible until then.', 'If you take a wheel off, the car must be resting on a jack stand, never only on a jack.', 'Actually replacing brake pads is a job for an experienced DIYer or a shop. Brakes are the most important safety system on your car, so there''s no shame in leaving that part to a professional.']::text[],
     'When you press the brake pedal, brake pads squeeze against a metal disc attached to each wheel, called a rotor, and the friction slows the car down. The pads are designed to wear away slowly, and they need to be replaced every so often, typically somewhere between 25,000 and 70,000 miles depending on the car and how you drive. If they wear all the way down, metal grinds on metal, which damages the rotors, turns a modest repair into an expensive one, and makes the car take longer to stop.
 
@@ -188,7 +188,7 @@ You don''t need to be a mechanic to keep an eye on them. Knowing what to listen 
   ('diy', 'spark-plugs', 'Replace spark plugs', 'Worn spark plugs cause rough idling, misfires, and poor fuel economy. On many 4-cylinder engines this is a doable afternoon job.',
     array['Let the engine cool and take off the cover', 'Work on one cylinder at a time', 'Remove the first ignition coil', 'Clean out the spark plug well', 'Remove the old spark plug', 'Check the gap on the new plug', 'Thread the new plug in by hand', 'Tighten it to the right torque', 'Reinstall the coil', 'Repeat for the remaining cylinders', 'Start the engine and listen']::text[],
     array['New spark plugs', 'Ratchet and extensions', 'Spark plug socket', 'Torque wrench', 'Gap gauge', 'Compressed air or vacuum', 'Dielectric grease, optional']::text[],
-    '1 to 2 hours', null, 15, 'advanced', 'Spark plugs', 'how to replace spark plugs',
+    '1 to 2 hours', null, 15, 'advanced', 'Spark Plugs', 'how to replace spark plugs',
     array['Only do this on a completely cold engine. Spark plugs screw into soft aluminum on most engines, and taking them out while it''s hot can damage the threads, which is an expensive repair. Let the car sit for several hours, or overnight, first.', 'Before you start, look up a video for your exact engine. If it shows removing the intake manifold or other major parts to reach the plugs, have a shop do it instead.']::text[],
     'Spark plugs create the small spark that ignites the fuel inside each of your engine''s cylinders, thousands of times a minute. Over time, their tips wear down and the spark gets weaker. Worn plugs can cause a rough or shaky idle, hesitation when you accelerate, worse gas mileage, a harder time starting, and eventually a check engine light for a misfire.
 
