@@ -133,10 +133,10 @@ Deno.serve(async (req) => {
     }
     const client = new Anthropic(); // reads ANTHROPIC_API_KEY
     const response = await client.beta.messages.create({
-      model: "claude-opus-5-5",
+      // Haiku 5.5: roughly 1/40th the cost of Opus per scan. It has no server-side
+      // fallback, so a declined request comes back as stop_reason "refusal" (handled below).
+      model: "claude-haiku-5-5",
       max_tokens: 4000,
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
       output_config: { effort: "low", format: { type: "json_schema", schema: outputSchema(slugs) } },
       system: [{ type: "text", text: systemPrompt(catalog as CatalogRow[]), cache_control: { type: "ephemeral" } }],
       messages: [{ role: "user", content }],

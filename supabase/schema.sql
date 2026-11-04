@@ -138,6 +138,9 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
+-- Only the trigger should run this, not the API (see migrations/20261103_security_advisor_fixes.sql).
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
+
 -- New vehicle -> copy the standard schedule from maintenance_catalog.
 create or replace function public.seed_vehicle_tasks()
 returns trigger

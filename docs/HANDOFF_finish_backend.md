@@ -44,7 +44,7 @@ An AI assistant should not create, view or paste this key. Ask the human to do i
 3. Name it exactly `ANTHROPIC_API_KEY` and paste the key as the value. Save.
 4. No redeploy is needed. The function reads the secret on every request.
 
-**Cost:** the function calls Claude Opus 5.5 (`claude-opus-5-5`, effort `low`), roughly 1–3 cents per scan. Each user is capped at **40 scans per rolling 24 hours** (`DAILY_SCAN_LIMIT` in the function). To spend much less, switch the model string to `claude-haiku-5-5` (about 1/40th the price, likely less accurate on blurry crops). That's the team's call; nothing else needs to change.
+**Cost:** the function calls Claude Haiku 5.5 (`claude-haiku-5-5`, effort `low`), roughly a tenth of a cent per scan or less. Each user is capped at **40 scans per rolling 24 hours** (`DAILY_SCAN_LIMIT` in the function). It was switched from Opus 5.5 (`claude-opus-5-5`, about 1–3 cents per scan) to save money; if identification on blurry or dim crops isn't accurate enough, switch the model string back and also restore `betas: ["server-side-fallback-2026-07-01"]` and `fallbacks: "default"`, which only Opus supports.
 
 ## 2. Rotate the exposed secret key (human only)
 
