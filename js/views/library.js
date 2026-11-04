@@ -347,6 +347,7 @@ async function renderGuide(root, ctx, g) {
   if (!g) return ctx.navigate("#/library", { replace: true });
   category = g.category;
   const isDiy = g.category === "diy";
+  const isDashboard = g.category === "dashboard";
   const sev = g.severity ? SEVERITY[g.severity] : null;
 
   // The car tunes the video search and the Add Task button. If this fails (offline,
@@ -369,7 +370,7 @@ async function renderGuide(root, ctx, g) {
 
   root.innerHTML = `
     ${appBar({ title: g.title, back: { href: "#/library", label: "Discover" } })}
-    <article class="content guide ${isDiy ? "has-fab" : ""}">
+    <article class="content guide ${isDiy || isDashboard ? "has-fab" : ""}">
       <p class="guide-summary">${escapeHtml(g.summary)}</p>
       ${isDiy && (g.difficulty || g.time_estimate) ? `
         <p class="guide-meta guide-tags">
@@ -423,8 +424,8 @@ async function renderGuide(root, ctx, g) {
         <p class="hint">Every car is a little different. Check your owner's manual for the exact parts, fluids, and amounts for yours.</p>
         <div class="notice notice-info">${icon("wrench", 18, 2)}
           <span>Not comfortable doing this yourself? That's completely fine. <a href="#/mechanics">See a mechanic</a> near you.</span>
-        </div>
-        <a class="fab" id="add-task" href="${addTaskHref(g, null)}">${icon("plus", 20, 2.6)}<span>Add task</span></a>` : ""}
+        </div>` : ""}
+      ${isDiy || isDashboard ? `<a class="fab" id="add-task" href="${addTaskHref(g, null)}">${icon("plus", 20, 2.6)}<span>Add task</span></a>` : ""}
     </article>`;
 
   if (!isDiy) return;
