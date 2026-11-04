@@ -910,3 +910,86 @@ body.has-nav .fab { bottom: calc(var(--nav-h) + var(--safe-b) + 16px); }
 @media (min-width: 900px) {
   body.has-nav .fab { bottom: 28px; right: max(24px, calc((100vw - 220px - 640px) / 2 + 16px)); }
 }
+/* ---------- Discover: scanner card on the Dashboard Lights tab ---------- */
+.scan-hero-compact { margin-bottom: 4px; }
+
+/* ---------- DIY guide diagrams (js/guideDiagrams.js) ---------- */
+.guide-diagram { margin: 0; gap: 10px; }
+.guide-diagram > h3 { margin: 0; font-size: 18px; font-weight: 800; letter-spacing: -.01em; }
+.guide-diagram figcaption { font-size: 14px; line-height: 1.5; color: var(--ink-2); }
+.diagram svg { display: block; width: 100%; height: auto; }
+.diagram text { font-family: Inter, -apple-system, system-ui, sans-serif; }
+.dg-panel { fill: var(--surface-2); stroke: none; }
+.dg-text { fill: var(--ink); font-size: 12px; font-weight: 600; }
+.dg-strong { fill: var(--ink); font-size: 12px; font-weight: 800; }
+.dg-sub { fill: var(--ink-3); font-size: 11px; font-weight: 600; letter-spacing: .02em; }
+.dg-sub2 { fill: var(--ink-2); font-size: 12px; font-weight: 600; }
+.dg-tiny { fill: var(--ink-2); font-size: 10px; font-weight: 700; letter-spacing: .03em; }
+.dg-tiny-inv { fill: var(--surface); font-size: 10px; font-weight: 700; letter-spacing: .03em; }
+.dg-ok-t { fill: var(--ok); font-size: 12px; font-weight: 700; }
+.dg-bad-t { fill: var(--danger-strong); font-size: 12px; font-weight: 700; }
+.dg-warn-t { fill: var(--warn); font-size: 13px; font-weight: 800; }
+.dg-warn-t2 { fill: var(--ink-2); font-size: 11px; font-weight: 600; }
+.dg-term { fill: #fff; font-size: 15px; font-weight: 800; }
+.dg-num { fill: var(--brand); }
+.dg-num-t { fill: var(--brand-ink); font-size: 11px; font-weight: 800; }
+
+.dg-body { fill: var(--surface); stroke: var(--line-strong); stroke-width: 2; }
+.dg-body2, .dg-box { fill: var(--surface); stroke: var(--ink-3); stroke-width: 2; }
+.dg-box { fill: color-mix(in srgb, var(--ink) 14%, var(--surface)); }
+.dg-metal { fill: color-mix(in srgb, var(--ink-3) 30%, var(--surface)); stroke: var(--ink-3); stroke-width: 1.5; }
+.dg-card { fill: var(--surface); stroke: var(--line-strong); stroke-width: 1.5; }
+.dg-icon { fill: none; stroke: var(--ink-2); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.dg-hl { fill: var(--warn-soft); stroke: var(--warn); stroke-width: 2.5; }
+.dg-hl-line { fill: none; stroke: var(--warn); stroke-width: 4; stroke-linecap: round; }
+.dg-hl-blue { fill: var(--brand-soft); stroke: var(--brand); stroke-width: 3; }
+.dg-lead { fill: none; stroke: var(--ink-3); stroke-width: 1.2; }
+.dg-dot { fill: var(--ink-3); }
+.dg-mark { fill: none; stroke: var(--ink); stroke-width: 2; }
+.dg-arrow, .dg-arrow-strong, .dg-arrow-alt { fill: none; stroke: var(--brand); stroke-width: 2.5; stroke-linecap: round; }
+.dg-arrow-strong { stroke-width: 3.5; }
+.dg-arrow-alt { stroke: var(--purple); stroke-width: 3; }
+.dg-head { fill: var(--brand); fill: context-stroke; }
+.dg-ok-line { fill: none; stroke: var(--ok); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.dg-bad-line { fill: none; stroke: var(--danger); stroke-width: 3; stroke-linecap: round; }
+.dg-ok-fill { fill: var(--ok-soft); stroke: var(--ok); stroke-width: 2; }
+.dg-warn-box { fill: var(--warn-soft); stroke: var(--warn); stroke-width: 1.5; }
+
+.dg-oil { fill: #b7791f; }
+.dg-tire, .dg-tread-cover { fill: #2b2f36; stroke: var(--ink-3); stroke-width: 2; }
+.dg-tread-line { stroke: #6b7280; stroke-width: 2; }
+.dg-penny { fill: #c47a3a; stroke: #8a4e1e; stroke-width: 2; }
+.dg-head-shape { fill: none; stroke: #6b3d14; stroke-width: 2.5; }
+.dg-glass { fill: color-mix(in srgb, var(--brand) 10%, var(--surface)); stroke: var(--line-strong); stroke-width: 1.5; }
+.dg-towel { fill: var(--purple-soft); stroke: var(--purple); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.dg-arm { fill: none; stroke: var(--ink-2); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; }
+.dg-blade { fill: var(--ink); }
+.dg-tank { fill: color-mix(in srgb, var(--surface) 70%, transparent); stroke: var(--ink-3); stroke-width: 2.5; }
+.dg-coolant { fill: color-mix(in srgb, #22c55e 55%, var(--surface)); }
+.dg-filter { fill: #f5f1e6; stroke: #b9ae8f; stroke-width: 2; }
+.dg-pleat { fill: none; stroke: #b9ae8f; stroke-width: 1.5; }
+.dg-tube { fill: none; stroke: color-mix(in srgb, var(--ink) 30%, var(--surface)); stroke-width: 18; stroke-linecap: round; stroke-linejoin: round; }
+.dg-wire { fill: none; stroke: var(--ink-2); stroke-width: 3; stroke-linecap: round; }
+.dg-glass-bulb { fill: color-mix(in srgb, #fde68a 60%, var(--surface)); stroke: var(--danger); stroke-width: 2; stroke-dasharray: 4 3; }
+.dg-ground { stroke: var(--line-strong); stroke-width: 2; stroke-dasharray: 6 5; }
+.dg-filter-can { fill: #2563eb; stroke: #1e40af; stroke-width: 1.5; }
+.dg-pan { fill: color-mix(in srgb, var(--ink-3) 30%, var(--surface)); stroke: var(--ink-3); stroke-width: 1.5; }
+.dg-drip { fill: none; stroke: #b7791f; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 4 5; }
+.dg-car { fill: var(--surface); stroke: var(--ink-3); stroke-width: 2.5; }
+.dg-battery { fill: #1f2937; stroke: var(--ink-3); stroke-width: 2; }
+.dg-pos { fill: #dc2626; }
+.dg-neg { fill: #111827; stroke: #6b7280; stroke-width: 1; }
+.dg-cable-red, .dg-cable-black { fill: none; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+.dg-cable-red { stroke: #dc2626; }
+.dg-cable-black { stroke: #4b5563; }
+.dg-corrosion { fill: #d9f99d; stroke: #84cc16; stroke-width: 1; }
+.dg-rotor { fill: #9ca3af; stroke: #6b7280; stroke-width: 2; }
+.dg-caliper { fill: #dc2626; stroke: #991b1b; stroke-width: 1.5; }
+.dg-pad { fill: #78716c; }
+.dg-pad-worn { fill: #a8a29e; stroke: var(--danger); stroke-width: 1.5; }
+.dg-well { fill: color-mix(in srgb, var(--ink) 22%, var(--surface)); }
+.dg-plug-ins { fill: #f8fafc; stroke: #94a3b8; stroke-width: 1.5; }
+.dg-electrode { fill: #6b7280; }
+.dg-electrode-g { fill: none; stroke: #6b7280; stroke-width: 6; stroke-linejoin: round; }
+.dg-inv { fill: #fff; font-size: 11px; font-weight: 800; letter-spacing: .06em; }
+.dg-gap { fill: none; stroke: var(--warn); stroke-width: 2.5; stroke-linecap: round; }

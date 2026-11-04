@@ -1,8 +1,11 @@
-// Library: guides grouped into DIY Maintenance and Dashboard Lights. /library/:slug
-// opens one guide. Every DIY guide carries a "see a mechanic" note.
+// Discover (formerly Library): guides grouped into DIY Maintenance and Dashboard
+// Lights. /library/:slug opens one guide. The Dashboard Lights tab also opens the
+// camera scanner (views/discover.js). Every DIY guide carries a "see a mechanic" note.
 // DIY guides show difficulty, safety notes, a YouTube search for the selected car, and an "Add task" button that prefills the New Task form.
 import { listGuides, listWarningLights, getProfile, listVehicles, listTasks } from "../data.js";
 import { appBar, escapeHtml, icon, loading, formatDate, vehicleSpec } from "../ui.js";
+import { openScanner } from "./discover.js";
+import { diagramFor } from "../guideDiagrams.js";
 
 const CATEGORIES = [
   { id: "diy", label: "DIY Maintenance", icon: "wrench" },
@@ -116,6 +119,9 @@ export default async function render(root, ctx) {
   }
   if (!ctx.isCurrent()) return;
 
+  const wantedTab = ctx.query.get("tab");
+  if (CATEGORIES.some((c) => c.id === wantedTab)) category = wantedTab;
+
   if (ctx.params.slug) {
   const guide = guidesCache.find((g) => g.slug === ctx.params.slug);
 
@@ -138,6 +144,22 @@ export default async function render(root, ctx) {
 
   return ctx.navigate("#/library", { replace: true });
 }
+
+  // Cars, so the scanner can be tuned to the selected car's make. Optional:
+  // the lists and the scanner still work without them.
+  let vehicles = [];
+  try {
+    const [profile, list] = await Promise.all([getProfile(), listVehicles()]);
+    vehicles = list;
+    if (!vehicles.some((v) => v.id === chosenVehicleId)) {
+      chosenVehicleId = vehicles.some((v) => v.id === profile.active_vehicle_id) ? profile.active_vehicle_id : vehicles[0]?.id ?? null;
+    }
+  } catch { /* scan without car tuning */ }
+  if (!ctx.isCurrent()) return;
+  const vehicle = () => vehicles.find((v) => v.id === chosenVehicleId) ?? null;
+  const brandKey = () => (vehicle()?.brand ?? "").trim().toLowerCase();
+  const bySlug = new Map(warningLightsCache.map((l) => [l.slug, l]));
+  let scanner = null;
 
   const draw = () => {
   const dashboardGuides = warningLightsCache.map((light) => ({
@@ -182,8 +204,7 @@ export default async function render(root, ctx) {
           />
         </div>
 
-        ${category === "dashboard" ? `
-          <p class="notice notice-info">${icon("scan", 18, 2)}<span>Not sure which light you're seeing? <a href="#/discover">Scan your dashboard</a> to identify it.</span></p>` : ""}
+        ${category === "dashboard" ? scanCard(vehicles, vehicle()) : ""}
 
 
         ${guides.length ? `
@@ -248,9 +269,53 @@ export default async function render(root, ctx) {
         draw();
       });
     });
+
+    root.querySelector("#start-scan")?.addEventListener("click", () => {
+      scanner?.close();
+      scanner = openScanner({ vehicle, brandKey, bySlug, ctx, onClose: () => { scanner = null; } });
+    });
+    root.querySelector("#scan-vehicle")?.addEventListener("change", (e) => {
+      chosenVehicleId = Number(e.target.value);
+      draw();
+    });
   };
 
   draw();
+  return () => scanner?.close(); // turn the camera off when leaving the page
+}
+
+// Top of the Dashboard Lights tab: open the camera scanner.
+function scanCard(vehicles, v) {
+  return `
+    <section class="scan-hero scan-hero-compact">
+      <span class="scan-hero-icon">${icon("scan", 30, 1.8)}</span>
+      <h2>Scan your dashboard</h2>
+      <p>Turn the car on so the lights are glowing, then hold your phone about a foot from the dashboard. Yellow squares appear around the lights we find. Tap one to see what it means.</p>
+      <button type="button" class="btn" id="start-scan">${icon("camera", 18, 2)}Scan My Dashboard</button>
+      ${vehicles.length ? `
+        <div class="scan-vehicle">
+          <span>Tuned for</span>
+          ${vehicles.length > 1
+            ? `<select id="scan-vehicle" aria-label="Vehicle to tune results for">${vehicles.map((x) => `<option value="${x.id}" ${x.id === v?.id ? "selected" : ""}>${escapeHtml(x.label)} · ${escapeHtml(vehicleSpec(x))}</option>`).join("")}</select>`
+            : `<strong>${escapeHtml(v.label)} · ${escapeHtml(vehicleSpec(v))}</strong>`}
+        </div>`
+        : `<p class="hint">Add your car in the <a href="#/garage">Garage</a> so results can be tuned to its make.</p>`}
+    </section>`;
+}
+
+// Labeled diagram for a DIY guide (js/guideDiagrams.js), or an image file if a
+// guide's image_path is set in the database.
+function guideFigure(g) {
+  const d = g.category === "diy" ? diagramFor(g.slug) : null;
+  if (d) {
+    return `
+      <figure class="card guide-diagram">
+        <h3>What to look for</h3>
+        <div class="diagram" role="img" aria-label="${escapeHtml(d.alt)}">${d.svg}</div>
+        ${d.caption ? `<figcaption>${escapeHtml(d.caption)}</figcaption>` : ""}
+      </figure>`;
+  }
+  return g.image_path ? `<figure class="guide-figure"><img src="${escapeHtml(g.image_path)}" alt="Diagram for ${escapeHtml(g.title)}" loading="lazy"></figure>` : "";
 }
 
 // Text fields use a blank line between paragraphs.
@@ -326,7 +391,7 @@ async function renderGuide(root, ctx, g) {
         <section class="card">
           <div><strong>You'll need</strong><ul class="tools">${g.tools.map((t) => `<li>${escapeHtml(t)}</li>`).join("")}</ul></div>
         </section>` : ""}
-      ${g.image_path ? `<figure class="guide-figure"><img src="${escapeHtml(g.image_path)}" alt="Diagram for ${escapeHtml(g.title)}" loading="lazy"></figure>` : ""}
+      ${guideFigure(g)}
       ${g.safety?.length ? `
         <div class="notice notice-warn guide-safety">${icon("alert", 18, 2)}
           <div><strong>Safety first</strong>${g.safety.map((s) => `<p>${escapeHtml(s)}</p>`).join("")}</div>

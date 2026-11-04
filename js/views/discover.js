@@ -1,10 +1,11 @@
-// Discover: point the camera at the dashboard, see yellow squares around glowing
-// warning lights (found on the device, live), then tap to identify them (AI, via
-// the identify-warning-lights Edge Function) and read what each light means for
-// the selected car. Also lists every light in the catalog.
-import { getProfile, listVehicles, listWarningLights, identifyLights, createTask } from "../data.js";
+// Dashboard light scanner: point the camera at the dashboard, see yellow squares
+// around glowing warning lights (found on the device, live), then tap to identify
+// them (AI, via the identify-warning-lights Edge Function) and read what each light
+// means for the selected car. The scanner opens from the Discover page's Dashboard
+// Lights tab (views/library.js); the old #/discover address redirects there.
+import { identifyLights, createTask } from "../data.js";
 import { detectLights, BoxTracker } from "../lightDetector.js";
-import { appBar, escapeHtml, icon, loading, toast, errorMessage, todayISO, vehicleSpec, withBusy } from "../ui.js";
+import { escapeHtml, icon, toast, errorMessage, todayISO, withBusy } from "../ui.js";
 
 const SEVERITY = {
   stop: { label: "Stop now", tone: "danger" },
@@ -16,98 +17,21 @@ const DETECT_EVERY_MS = 120;
 const CROP_SIZE = 224;
 const MAX_IDENTIFY = 8;
 
-let chosenVehicleId = null; // remembered for this visit
-
 // A symbol can be more urgent on some makes (e.g. Ford's amber wrench).
-function severityFor(light, brandKey) {
+export function severityFor(light, brandKey) {
   return light.brand_severity?.[brandKey] ?? light.severity;
 }
-let listFilter = "all";
 
+// The scanner now lives on the Discover page's Dashboard Lights tab.
 export default async function render(root, ctx) {
-  root.innerHTML = loading();
-  // The camera and yellow squares work without the catalog, so a catalog error
-  // shouldn't take the whole page down.
-  const [profile, vehicles, lights] = await Promise.all([
-    getProfile(), listVehicles(), listWarningLights().catch(() => null),
-  ]);
-  if (!ctx.isCurrent()) return;
-
-  if (!vehicles.some((v) => v.id === chosenVehicleId)) {
-    chosenVehicleId = vehicles.some((v) => v.id === profile.active_vehicle_id) ? profile.active_vehicle_id : vehicles[0]?.id ?? null;
-  }
-  const bySlug = new Map((lights ?? []).map((l) => [l.slug, l]));
-  const vehicle = () => vehicles.find((v) => v.id === chosenVehicleId) ?? null;
-  const brandKey = () => (vehicle()?.brand ?? "").trim().toLowerCase();
-
-  let scanner = null;
-
-  const draw = () => {
-    const v = vehicle();
-    const brand = brandKey();
-    const shown = (lights ?? []).filter((l) => listFilter === "all" || severityFor(l, brand) === listFilter);
-    root.innerHTML = `
-      ${appBar({ title: "Discover", sub: "Point your camera at the dashboard to identify warning lights.", back: { href: "#/home", label: "Home" } })}
-      <div class="content">
-        <section class="scan-hero">
-          <span class="scan-hero-icon">${icon("scan", 34, 1.8)}</span>
-          <h2>Dashboard light scanner</h2>
-          <p>Turn the car on so the lights are glowing, then hold your phone about a foot from the dashboard. Yellow squares appear around the lights we find. Tap one to see what it means.</p>
-          <button type="button" class="btn" id="start-scan">${icon("camera", 18, 2)}Scan My Dashboard</button>
-          ${vehicles.length ? `
-            <div class="scan-vehicle">
-              <span>Tuned for</span>
-              ${vehicles.length > 1
-                ? `<select id="scan-vehicle" aria-label="Vehicle to tune results for">${vehicles.map((x) => `<option value="${x.id}" ${x.id === chosenVehicleId ? "selected" : ""}>${escapeHtml(x.label)} · ${escapeHtml(vehicleSpec(x))}</option>`).join("")}</select>`
-                : `<strong>${escapeHtml(v.label)} · ${escapeHtml(vehicleSpec(v))}</strong>`}
-            </div>`
-            : `<p class="hint">Add your car in the <a href="#/garage">Garage</a> so results can be tuned to its make.</p>`}
-        </section>
-
-        ${lights ? `<section class="section">
-          <div class="section-head"><h3>All warning lights</h3><span class="tone-muted">${lights.length}</span></div>
-          <div class="chips scroll" role="group" aria-label="Filter lights">
-            ${[["all", "All"], ["stop", "Stop now"], ["soon", "Check soon"], ["info", "Good to know"]].map(([id, label]) =>
-              `<button type="button" class="chip ${listFilter === id ? "on" : ""}" data-filter="${id}">${label}</button>`).join("")}
-          </div>
-          <ul class="light-list">
-            ${shown.map((l) => `
-              <li>
-                <button type="button" class="light-row" data-slug="${escapeHtml(l.slug)}">
-                  <span class="light-dots">${l.colors.map((c) => `<i class="cdot c-${escapeHtml(c)}"></i>`).join("")}</span>
-                  <span class="light-text">
-                    <strong>${escapeHtml(l.name)}</strong>
-                    <small>${escapeHtml(l.symbol_hint)}</small>
-                    ${brand && l.brand_notes?.[brand] ? `<small class="brand-flag">${icon("car", 12, 2)} Specific to your ${escapeHtml(v.brand)}</small>` : ""}
-                  </span>
-                  <span class="sev-pill sev-${severityFor(l, brand)}">${SEVERITY[severityFor(l, brand)].label}</span>
-                </button>
-              </li>`).join("")}
-          </ul>
-          <p class="hint center">AutoPal's results are a guide, not a diagnosis. Check your owner's manual or a mechanic if you're unsure.</p>
-        </section>` : `<p class="muted-box">The warning-light list isn't available right now. You can still use the scanner.</p>`}
-      </div>`;
-
-    root.querySelector("#start-scan").addEventListener("click", () => {
-      scanner?.close();
-      scanner = openScanner({ vehicle, brandKey, bySlug, ctx, onClose: () => { scanner = null; } });
-    });
-    root.querySelector("#scan-vehicle")?.addEventListener("change", (e) => {
-      chosenVehicleId = Number(e.target.value);
-      draw();
-    });
-    root.querySelectorAll("[data-filter]").forEach((b) => b.addEventListener("click", () => { listFilter = b.dataset.filter; draw(); }));
-    root.querySelectorAll(".light-row").forEach((b) => b.addEventListener("click", () =>
-      openLightCard({ light: bySlug.get(b.dataset.slug), vehicle: vehicle(), brandKey: brandKey(), ctx })));
-  };
-
-  draw();
-  return () => scanner?.close();
+  ctx.navigate("#/library?tab=dashboard", { replace: true });
 }
+
+const isRecognized = (r) => Boolean(r && r.is_warning_light && r.slug !== "unknown");
 
 // ---- Scanner overlay -------------------------------------------------------
 
-function openScanner({ vehicle, brandKey, bySlug, ctx, onClose }) {
+export function openScanner({ vehicle, brandKey, bySlug, ctx, onClose }) {
   const el = document.createElement("div");
   el.className = "scanner";
   el.setAttribute("role", "dialog");
@@ -174,23 +98,19 @@ function openScanner({ vehicle, brandKey, bySlug, ctx, onClose }) {
     for (const b of boxes) {
       const q = screenSquare(b, L);
       const result = b.result;
-      const unknown = result && (!result.is_warning_light || result.slug === "unknown");
       octx.lineWidth = 3;
-      octx.strokeStyle = unknown ? "rgba(255,255,255,.75)" : "#FFD400";
-      octx.setLineDash(unknown ? [6, 5] : []);
+      octx.strokeStyle = "#FFD400";
       octx.shadowColor = "rgba(0,0,0,.5)";
       octx.shadowBlur = 6;
       roundRect(octx, q.x, q.y, q.s, q.s, 8);
       octx.stroke();
-      octx.setLineDash([]);
       octx.shadowBlur = 0;
       if (b.pending) {
         badge(octx, q, L.cw, "Identifying…", "#FFD400", "#121826");
       } else if (result) {
         const light = bySlug.get(result.slug);
-        const label = unknown ? "Not recognized" : light?.name ?? "Unknown";
         const sev = light && severityFor(light, brandKey());
-        badge(octx, q, L.cw, label, sev === "stop" ? "#dc2626" : sev === "soon" ? "#FFD400" : unknown ? "#e5e7eb" : "#34d399", sev === "stop" ? "#fff" : "#121826");
+        badge(octx, q, L.cw, light?.name ?? "Warning light", sev === "stop" ? "#dc2626" : sev === "soon" ? "#FFD400" : "#34d399", sev === "stop" ? "#fff" : "#121826");
       }
     }
   };
@@ -239,12 +159,20 @@ function openScanner({ vehicle, brandKey, bySlug, ctx, onClose }) {
       const results = await identifyLights(vehicle()?.id ?? null, crops);
       if (closed) return;
       batch.forEach((b, i) => { b.pending = false; b.result = results[i]; });
-      const found = batch.filter((b) => b.result?.is_warning_light).length;
-      setMsg(found
-        ? `Identified ${found} light${found === 1 ? "" : "s"}. Tap a square for details, or tap any other light to check it.`
-        : "We couldn't match these to warning lights. Tap directly on a light to try again, or scan again.");
-      const focus = batch.find((b) => b.id === focusId) ?? (batch.length === 1 ? batch[0] : null);
-      if (focus?.result) showResult(focus.result);
+      // Anything the AI couldn't match (glare, reflections, other icons) is removed
+      // instead of drawn, so it doesn't crowd the yellow squares.
+      const recognized = batch.filter((b) => isRecognized(b.result));
+      frozen.boxes = frozen.boxes.filter((b) => b.pending || isRecognized(b.result));
+      const total = frozen.boxes.filter((b) => !b.pending).length;
+      const focus = recognized.find((b) => b.id === focusId) ?? (recognized.length === 1 && batch.length === 1 ? recognized[0] : null);
+      if (recognized.length) {
+        setMsg(`Identified ${total} light${total === 1 ? "" : "s"}. Tap a square for details, or tap any other light to check it.`);
+      } else if (focusId && batch.length === 1) {
+        setMsg("That spot didn't match a warning light. Tap right on the glowing symbol, or scan again closer to the dashboard.");
+      } else {
+        setMsg("We couldn't match these to warning lights. Tap directly on a light to try again, or scan again.");
+      }
+      if (focus) showResult(focus.result);
     } catch (err) {
       if (closed) return;
       frozen.boxes = frozen.boxes.filter((b) => !batch.includes(b));
@@ -374,7 +302,7 @@ function badge(c, q, screenWidth, text, bg, fg) {
 
 // ---- Info card -------------------------------------------------------------
 
-function openLightCard({ light, result = null, vehicle, brandKey, ctx }) {
+export function openLightCard({ light, result = null, vehicle, brandKey, ctx }) {
   const unknown = !light || (result && (!result.is_warning_light || result.slug === "unknown"));
   const brandNote = !unknown && brandKey ? light.brand_notes?.[brandKey] : null;
   const aiNote = result?.vehicle_note?.trim();
