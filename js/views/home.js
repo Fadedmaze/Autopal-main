@@ -30,7 +30,7 @@ export default async function render(root, ctx) {
   const photos = await Promise.all(vehicles.map((v) => listPhotos(v.id).then((p) => p[0]?.url ?? null).catch(() => null)));
   if (!ctx.isCurrent()) return cleanup;
 
-  const name = profile.username || "driver";
+  const name = profile.display_name || profile.username || "driver";
 
   root.innerHTML = `
     <header class="home-head">

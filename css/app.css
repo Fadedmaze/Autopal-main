@@ -733,7 +733,10 @@ body.has-nav .map-screen { height: calc(100dvh - var(--nav-h) - var(--safe-b)); 
   position: absolute; right: 2px; bottom: 2px; display: grid; place-items: center; width: 36px; height: 36px;
   border-radius: 50%; background: var(--brand); color: #fff; border: 3px solid var(--bg);
 }
-.profile-username { margin: 4px 0 8px; font-size: 22px; font-weight: 800; letter-spacing: -.02em; }
+.profile-name { display: flex; align-items: center; gap: 10px; margin: 4px 0 0; }
+.profile-display { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -.02em; overflow-wrap: anywhere; text-align: center; }
+.profile-name-form { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+.profile-username { margin: 2px 0 8px; font-size: 14px; font-weight: 500; color: var(--ink-3); }
 .profile-actions { width: 100%; display: flex; flex-direction: column; gap: 10px; }
 .menu-row {
   display: flex; align-items: center; gap: 12px; padding: 16px; border-radius: var(--radius);

@@ -1,6 +1,6 @@
 // Profile (/profile): picture, username, Change Password, Notification Settings, Log Out.
 // Sub-screens: /profile/password and /profile/notifications (ctx.mode).
-import { getProfile, getSettings, updateSettings, uploadAvatar, avatarUrl } from "../data.js";
+import { getProfile, getSettings, updateSettings, uploadAvatar, avatarUrl, saveDisplayName } from "../data.js";
 import { prepareUpload } from "../components.js";
 import { verifyPassword, updatePassword, signOut } from "../auth.js";
 import { appBar, escapeHtml, icon, loading, toast, confirmDialog, errorMessage, withBusy } from "../ui.js";
@@ -26,7 +26,23 @@ export default async function render(root, ctx) {
         <span class="avatar-edit">${icon("camera", 16, 2)}</span>
       </label>
       <p class="form-error center" role="alert" hidden></p>
-      <h2 class="profile-username">${escapeHtml(profile.username ?? "")}</h2>
+      <div class="profile-name" id="name-view">
+        <h2 class="profile-display">${escapeHtml(profile.display_name || profile.username || "")}</h2>
+        <button class="btn btn-ghost btn-sm" type="button" id="name-edit">${icon("edit", 14, 2)}Edit</button>
+      </div>
+      <form class="profile-name-form" id="name-form" novalidate hidden>
+        <label class="field">
+          <span>Display name</span>
+          <input name="display_name" maxlength="40" autocomplete="nickname" value="${escapeHtml(profile.display_name ?? "")}">
+          <small class="hint">1 to 40 characters. Shown on Home instead of your username.</small>
+        </label>
+        <p class="form-error" role="alert" hidden></p>
+        <div class="form-actions compact">
+          <button class="btn btn-ghost btn-sm" type="button" id="name-cancel">Cancel</button>
+          <button class="btn btn-sm" type="submit">Save</button>
+        </div>
+      </form>
+      <p class="profile-username">@${escapeHtml(profile.username ?? "")}</p>
 
       <div class="profile-actions">
         <a class="menu-row" href="#/profile/password">${icon("lock", 20, 2)}<span>Change Password</span>${icon("chevron", 18, 2)}</a>
@@ -59,6 +75,45 @@ export default async function render(root, ctx) {
     } finally {
       avatarEl.classList.remove("busy");
     }
+  });
+
+  // Display name: view / inline edit. Username stays the login name and is not editable here.
+  const nameView = root.querySelector("#name-view");
+  const nameForm = root.querySelector("#name-form");
+  const nameErr = nameForm.querySelector(".form-error");
+  const nameInput = nameForm.elements.display_name;
+  const showNameEdit = (on) => {
+    nameView.hidden = on;
+    nameForm.hidden = !on;
+    nameErr.hidden = true;
+    if (on) {
+      nameInput.value = profile.display_name ?? "";
+      nameInput.focus();
+    }
+  };
+  root.querySelector("#name-edit").addEventListener("click", () => showNameEdit(true));
+  root.querySelector("#name-cancel").addEventListener("click", () => showNameEdit(false));
+  nameForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const name = nameInput.value.trim();
+    nameErr.hidden = true;
+    if (name.length < 1 || name.length > 40) {
+      nameErr.textContent = "Enter a name between 1 and 40 characters.";
+      nameErr.hidden = false;
+      return;
+    }
+    withBusy(nameForm.querySelector("button[type=submit]"), async () => {
+      try {
+        const saved = await saveDisplayName(name);
+        profile.display_name = saved.display_name;
+        root.querySelector(".profile-display").textContent = saved.display_name;
+        showNameEdit(false);
+        toast("Name updated", "ok");
+      } catch (err) {
+        nameErr.textContent = `Couldn't save your name: ${errorMessage(err)}`;
+        nameErr.hidden = false;
+      }
+    });
   });
 
   root.querySelector("#logout").addEventListener("click", async () => {

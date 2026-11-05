@@ -6,7 +6,7 @@ import { PHOTO_BUCKET, RECEIPT_BUCKET, AVATAR_BUCKET } from "./config.js";
 
 const VEHICLE_COLS = "id, vehicle_nickname, brand, make, model, model_year, current_mileage, description, created_at";
 const TASK_COLS = "id, vehicle_id, shop_id, catalog_id, task_name, due_date, estimated_cost, is_completed, completed_date, notes, receipt_path, created_at";
-const PROFILE_COLS = "id, username, avatar_path, distance_unit, active_vehicle_id";
+const PROFILE_COLS = "id, username, display_name, avatar_path, distance_unit, active_vehicle_id";
 
 function check({ data, error }) {
   if (error) throw error;
@@ -30,6 +30,11 @@ export async function updateProfile(fields) {
     .eq("id", currentUserId())
     .select(PROFILE_COLS)
     .single());
+}
+
+// Display name: 1-40 characters after trimming (checked here and in the database).
+export async function saveDisplayName(name) {
+  return updateProfile({ display_name: name });
 }
 
 export async function getSettings() {
