@@ -4,7 +4,7 @@
 
 ## App Summary
 
-Many drivers, especially students and first-time car owners, don't know what maintenance their car needs or when it's due. They usually find out only when something breaks and the repair costs far more than the routine service would have. Keeping track by memory, receipts in a glovebox, or a dashboard light they don't understand doesn't work, and it's hard to know what a repair should cost or which nearby shop to trust. AutoPal is a mobile-friendly web app that keeps all of this in one place. Users add their vehicles to a garage, and AutoPal automatically sets up a standard maintenance schedule (oil changes, tire rotations, inspections) that they can add their own tasks to. Upcoming tasks show on the home screen, overdue ones turn red, and checking a task off moves it to the car's history with an optional receipt photo. A budget screen totals the estimated cost of upcoming and past repairs, a map shows nearby mechanic shops with ratings and average repair prices, and a library explains basic DIY jobs and what each dashboard warning light means.
+Many drivers, especially students and first-time car owners, don't know what maintenance their car needs or when it's due, and they usually find out only when something breaks and the repair costs far more than routine service would have. Keeping track by memory or a glovebox full of receipts doesn't work, a dashboard warning light is hard to understand in the moment, and it's hard to know what a repair should cost or which nearby shop to trust. AutoPal is a mobile-friendly, installable web app that keeps all of this in one place. Users add their vehicles to a garage, and AutoPal automatically sets up a standard maintenance schedule (oil changes, tire rotations, inspections) that they can add their own tasks to. Upcoming tasks show on the home screen, overdue ones turn red, and checking a task off moves it to the car's history with an optional receipt photo, while a budget screen totals the cost of upcoming and past repairs. A map shows nearby mechanic shops with ratings and average repair prices. The Discover tab teaches the basics: 15 beginner-friendly DIY guides with labeled diagrams, safety notes, how-to videos for the user's exact car, and a one-tap "Add task" button. It also explains every common dashboard warning light, and its camera scanner can identify the lights glowing on a user's own dashboard.
 
 ## ERD
 
@@ -13,10 +13,13 @@ Many drivers, especially students and first-time car owners, don't know what mai
 The diagram is our Step 1 design. While building, we kept the same core structure and added a few supporting tables and columns:
 - `USER` became `profiles`, linked to Supabase Auth, which stores and hashes passwords so we don't keep a `password_hash` column.
 - `maintenance_catalog` holds the standard tasks every new car gets.
-- `guides` holds the Library content: step-by-step DIY guides with difficulty, safety notes, and a YouTube search phrase.
+- `guides` holds the Discover tab's DIY guides: plain-language walkthroughs with difficulty, safety notes, step-by-step explanations and a YouTube search phrase.
+- `warning_lights` is the catalog of 47 dashboard warning lights (meaning, what to do, how urgent, and notes for specific car brands), and `light_scans` logs each camera scan so usage can be capped per user.
 - `receipt_path` on tasks, `avatar_path` and `distance_unit` on profiles, and `average_repair_price` / `services` on shops support the final screens.
 
 ## Tech Stack
+
+![AutoPal architecture diagram](docs/autopal-architecture.png)
 
 | Layer | What we used | Why it fits our team |
 |---|---|---|
@@ -26,11 +29,13 @@ The diagram is our Step 1 design. While building, we kept the same core structur
 | Authentication | Supabase Auth + a small Edge Function for username sign-in | Secure password handling and sessions out of the box. The Edge Function lets people log in with a username, as our design called for. |
 | File storage | Supabase Storage (private buckets) | Vehicle photos, receipts and profile pictures are stored privately per user. |
 | Map | Leaflet + OpenStreetMap | A free, Google-Maps-style map with no API key or billing account. |
-| Hosting | Vercel (static site, connected to GitHub) | Every push to `main` deploys automatically in under a minute. Free tier. |
+| Dashboard light scanner | On-device light detection in JavaScript, plus Anthropic's Claude Haiku 5.5 called from a Supabase Edge Function | Finding the glowing lights runs on the phone for free. Only the small cropped images are sent to the AI to name each light, and the API key stays on the server. Haiku keeps each scan to a fraction of a cent, with a cap of 40 scans per user per day. |
+| How-to videos | YouTube search links | Each DIY guide links to a YouTube search for that job on the user's exact car (for example "how to change oil 2013 Honda Civic"), with no API key needed. |
+| Hosting | Vercel (static site, connected to GitHub) | Pushes to `main` deploy automatically in under a minute. Free tier (which only auto-deploys the account owner's pushes; see the notes below). |
 
 Supabase and Vercel both have free tiers, and together they cover everything a "backend" would normally need. That lets a small student team spend its time on the app instead of on servers.
 
-The entire backend is also saved as code in this repo: `supabase/schema.sql` creates every table, trigger, view, security rule, storage bucket and the starter data, and `supabase/functions/username-sign-in/` is the sign-in Edge Function.
+The entire backend is also saved as code in this repo: `supabase/schema.sql` creates the original tables, triggers, views, security rules, storage buckets and starter data; `supabase/migrations/` holds every change made since (run in order); and `supabase/functions/` holds the two Edge Functions, `username-sign-in` and `identify-warning-lights`.
 
 ## How to Get It Running
 
@@ -38,7 +43,7 @@ The entire backend is also saved as code in this repo: `supabase/schema.sql` cre
 
 1. Open **https://autopalv01.vercel.app**.
 2. Tap **Create account**, enter an email, a username and a password (8+ characters), then **Create Account**.
-3. Open the confirmation email and click the link. It brings you back to the live app, signed in.
+3. Open the confirmation email and click the link (check your spam folder if it doesn't arrive within a few minutes). It brings you back to the live app, signed in.
 4. You'll land on the Home screen. Tap the **+** circle to add your first car.
 
 ### Option B: Run a copy of the code on your computer
@@ -47,8 +52,8 @@ You need [Git](https://git-scm.com/) and Python 3, which is already installed on
 
 1. Get the code:
    ```bash
-   git clone https://github.com/YOUR-GITHUB-USERNAME/Autopal.git
-   cd Autopal
+   git clone https://github.com/Fadedmaze/Autopal-main.git
+   cd Autopal-main
    ```
 2. Start a local web server in that folder:
    ```bash
@@ -67,6 +72,12 @@ This local copy talks to the same hosted Supabase project as the live site; the 
 - **Hosting:** Vercel dashboard → project **autopal**. Pushing to `main` redeploys.
 
 Every team member should be invited to the Supabase organization (**Organization settings → Team**), the GitHub repo and the Vercel team, so no single account holds the only access.
+
+**Things to know when making changes:**
+- **Pull before you edit.** In GitHub Desktop, click **Fetch origin** and **Pull** before changing any file (or edit on github.com, which is always current). Editing an old copy and pushing it overwrites teammates' work.
+- **Website changes deploy from GitHub, but database and Edge Function changes don't.** Run new files in `supabase/migrations/` in the Supabase **SQL Editor**, and redeploy a changed Edge Function in **Edge Functions → (function) → Deploy**.
+- **Vercel's free plan only auto-deploys commits from the account owner.** If a teammate's push shows as blocked, the owner can push any commit (or click **Redeploy** in Vercel) to publish it.
+- **The scanner needs the `ANTHROPIC_API_KEY` secret** in **Edge Functions → Secrets**. Never put that key in the code or the repo.
 
 ## Verifying the Vertical Slice
 
@@ -90,9 +101,13 @@ js/app.js             Router and bottom navigation bar
 js/data.js            All database and storage calls
 js/auth.js            Sign-in, sign-up, password changes
 js/components.js      Shared pieces (task rows, receipt sheet, vehicle cards)
-js/views/             One file per screen
+js/lightDetector.js   On-device detection of glowing dashboard lights (camera scanner)
+js/guideDiagrams.js   Labeled diagrams for the DIY guides
+js/views/             One file per screen (library.js is the Discover tab; discover.js is its camera scanner)
 sw.js                 Service worker (bump CACHE on each release)
 docs/erd.png          ERD
+docs/autopal-architecture.png   Architecture diagram
+docs/HANDOFF_finish_backend.md  Setup notes for the dashboard light scanner
 supabase/schema.sql   Full database: tables, triggers, views, security rules, storage, seed data
 supabase/functions/   Edge Functions (username sign-in, warning-light identification)
 supabase/migrations/  Database changes made after the initial schema; run each in the SQL Editor
