@@ -3,15 +3,24 @@
 import { getProfile, getSettings, listVehicles, listTasks, listPhotos, setActiveVehicle, updateProfile } from "../data.js";
 import { distanceUnit, setDistanceUnit, getTheme, applyTheme } from "../prefs.js";
 import {
-  escapeHtml, icon, loading, dueLabel, dueTone, formatMoney, vehicleIcon, vehicleSpec, vehicleTint, toast, errorMessage,
+  escapeHtml, icon, loading, dueLabel, dueTone, formatMoney, vehicleIcon, vehicleSpec, vehicleTint, vehicleInkColor, toast, errorMessage,
 } from "../ui.js";
+import { mountCar3D } from "../car3d.js";
 
 export default async function render(root, ctx) {
+  // 3D cars mounted on the platforms; disposed when the route changes (see cleanup below).
+  const mounts = [];
+  let disposed = false;
+  const cleanup = () => {
+    disposed = true;
+    mounts.splice(0).forEach((m) => m.destroy());
+  };
+
   root.innerHTML = loading();
   const [profile, settings, vehicles, openTasks] = await Promise.all([
     getProfile(), getSettings(), listVehicles(), listTasks({ completed: false, limit: 500 }),
   ]);
-  if (!ctx.isCurrent()) return;
+  if (!ctx.isCurrent()) return cleanup;
 
   let activeIndex = Math.max(0, vehicles.findIndex((v) => v.id === profile.active_vehicle_id));
   if (vehicles.length && vehicles[activeIndex].id !== profile.active_vehicle_id) {
@@ -19,7 +28,7 @@ export default async function render(root, ctx) {
   }
   // Newest photo per car, for the platform (best effort: icons if photos fail).
   const photos = await Promise.all(vehicles.map((v) => listPhotos(v.id).then((p) => p[0]?.url ?? null).catch(() => null)));
-  if (!ctx.isCurrent()) return;
+  if (!ctx.isCurrent()) return cleanup;
 
   const name = profile.username || "driver";
 
@@ -118,6 +127,20 @@ export default async function render(root, ctx) {
   }
 
   root.querySelector("#settings").addEventListener("click", () => openSettings(profile));
+
+  // Cars without a photo get the 3D model on their platform. The 2D icon stays underneath
+  // and shows through if WebGL or the three.js import fails.
+  vehicles.forEach((v, i) => {
+    const host = root.querySelector(`.stage-slide[data-index="${i}"] .platform`);
+    if (!host || photos[i]) return;
+    mountCar3D(host, v, vehicleInkColor(v.index)).then((m) => {
+      if (!m) return;
+      if (disposed) m.destroy();
+      else mounts.push(m);
+    });
+  });
+
+  return cleanup;
 }
 
 function greet() {

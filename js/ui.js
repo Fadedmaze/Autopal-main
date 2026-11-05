@@ -119,11 +119,31 @@ export function vehicleSpec(v) {
 const TRUCK = /\b(f-?\d{3}|silverado|sierra|ram|tacoma|tundra|ranger|frontier|colorado|canyon|ridgeline|titan|gladiator|maverick|santa cruz)\b/i;
 const SUV = /\b(rav4|cr-?v|hr-?v|pilot|explorer|expedition|escape|edge|bronco|highlander|4runner|sequoia|tahoe|suburban|traverse|equinox|blazer|yukon|acadia|terrain|tucson|santa fe|palisade|sorento|telluride|sportage|forester|outback|ascent|crosstrek|cx-\d+|rogue|pathfinder|murano|wrangler|cherokee|grand cherokee|durango|x\d|q\d|gx|rx|nx|model y|model x)\b/i;
 
-export function vehicleIcon(v, size = 30) {
+const VAN = /\b(odyssey|sienna|pacifica|carnival|transit|sprinter|caravan|voyager|promaster|express|sedona|routan)\b/i;
+const COUPE = /\b(mustang|camaro|corvette|86|brz|gr86|miata|mx-?5|911|challenger|supra|cayman|boxster|s2000|tt|firebird|celica)\b/i;
+const HATCH = /\b(golf|fit|prius|bolt|leaf|mazda3|yaris|fiesta|sonic|soul|hatch(back)?)\b/i;
+
+// Body style from the make/model text: truck, suv, van, coupe, hatch or sedan.
+export function bodyStyle(v) {
   const text = `${v.make ?? ""} ${v.model ?? ""}`;
-  if (TRUCK.test(text)) return icon("truck", size, 1.8);
-  if (SUV.test(text)) return icon("suv", size, 1.8);
+  if (TRUCK.test(text)) return "truck";
+  if (VAN.test(text)) return "van";
+  if (SUV.test(text)) return "suv";
+  if (COUPE.test(text)) return "coupe";
+  if (HATCH.test(text)) return "hatch";
+  return "sedan";
+}
+
+export function vehicleIcon(v, size = 30) {
+  const style = bodyStyle(v);
+  if (style === "truck") return icon("truck", size, 1.8);
+  if (style === "suv") return icon("suv", size, 1.8);
   return icon("car", size, 1.8);
+}
+
+// The car's accent ink color (same as vehicleTint), used for the 3D body paint.
+export function vehicleInkColor(index) {
+  return TINTS[index % TINTS.length][1];
 }
 
 // ---- Icons (inline SVG, stroke = currentColor) -----------------------------

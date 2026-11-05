@@ -471,6 +471,10 @@ input[type=date] { min-height: 48px; }
 .platform:hover { text-decoration: none; }
 .platform-car { display: grid; place-items: center; width: 72%; aspect-ratio: 1; border-radius: 50%; overflow: hidden; }
 .platform-car img { width: 100%; height: 100%; object-fit: cover; }
+/* 3D car (js/car3d.js): drawn over the platform; the 2D icon hides once it is running. */
+.car-3d { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; touch-action: pan-y; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; outline: none; }
+.car-3d:active { cursor: grabbing; }
+.platform.has-3d > .platform-car { display: none; }
 .platform-empty { border: 3px dashed color-mix(in srgb, var(--brand) 40%, transparent); background: var(--brand-soft); color: var(--brand); box-shadow: none; }
 .platform-empty:hover { border-color: var(--brand); }
 .stage-nav { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 10px; }
