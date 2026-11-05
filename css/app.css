@@ -641,6 +641,21 @@ body.has-nav .map-screen { height: calc(100dvh - var(--nav-h) - var(--safe-b)); 
   border: 6px solid transparent; border-top-color: #1f6feb; border-bottom: 0;
 }
 .price-pin:hover span, .price-pin:focus span { background: #1f6feb; color: #fff; }
+/* Problem mode (?problem=): banner under the top bar, ranked pins, badge in the list */
+.problem-banner {
+  position: absolute; z-index: 500; left: 12px; right: 12px; top: calc(env(safe-area-inset-top, 0px) + 68px);
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+  background: var(--surface); border-radius: 16px; box-shadow: 0 6px 20px rgba(0,0,0,.18);
+}
+.problem-text { flex: 1; min-width: 0; font-size: 14px; color: var(--ink); }
+.problem-line { display: block; overflow-wrap: anywhere; }
+.problem-label { color: var(--ink-3); font-weight: 600; }
+.problem-change { display: flex; flex-direction: column; gap: 2px; flex: none; font-size: 11px; font-weight: 700; color: var(--ink-3); }
+.problem-change select { max-width: 150px; padding: 6px 8px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--surface-2); color: var(--ink); font: inherit; font-size: 13px; }
+.price-pin.dim span { opacity: .4; }
+.price-pin.fix span { border-color: #15803d; }
+.fix-badge { font-style: normal; font-size: 11px; font-weight: 700; color: #15803d; background: #e7f6ec; padding: 1px 6px; border-radius: 8px; margin-left: 6px; }
+.map-list-toggle { width: 100%; }
 .shop-pop { display: flex; flex-direction: column; gap: 3px; font-family: Inter, sans-serif; min-width: 170px; }
 .shop-pop strong { font-size: 15px; }
 .shop-pop-price { font-size: 14px; font-weight: 700; color: #1f6feb; }

@@ -339,7 +339,7 @@ export function openLightCard({ light, result = null, vehicle, brandKey, ctx }) 
           </div>` : ""}
         <div class="light-actions">
           ${vehicle && severity !== "info" ? `<button type="button" class="btn btn-soft" data-task>${icon("plus", 16, 2.4)}Add to My Tasks</button>` : ""}
-          ${severity !== "info" ? `<a class="btn" href="#/mechanics" data-mechanic>${icon("pin", 16, 2)}Find a Mechanic</a>` : ""}
+          ${severity !== "info" ? `<a class="btn" href="#/mechanics?problem=${encodeURIComponent(light.slug)}" data-mechanic>${icon("pin", 16, 2)}Find a Mechanic</a>` : ""}
         </div>`}
     </div>`;
   document.body.appendChild(dlg);
