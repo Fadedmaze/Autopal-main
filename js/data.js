@@ -8,27 +8,79 @@ const VEHICLE_COLS = "id, vehicle_nickname, brand, make, model, model_year, curr
 const TASK_COLS = "id, vehicle_id, shop_id, catalog_id, task_name, due_date, estimated_cost, is_completed, completed_date, notes, receipt_path, remind_days_before, created_at";
 const PROFILE_COLS = "id, username, display_name, avatar_path, distance_unit, active_vehicle_id";
 
+const LIGHT_COLS = "id, slug, name, colors, severity, symbol_hint, meaning, action, drive_advice, brand_notes, brand_severity, sort_order, repair_service, repair_alt_services, repair_cost_low, repair_cost_high, needs_diagnosis, repair_note";
+
 function check({ data, error }) {
   if (error) throw error;
   return data;
 }
 
+// ---- Columns added by the 2026-11-04 migrations -----------------------------
+// The app can be deployed before the database is migrated. If a table doesn't have its
+// new columns yet, queries fall back to the older column list, and saving a value that
+// needs a new column fails with a clear message instead of breaking the whole screen.
+const NEW_COLS = {
+  profiles: ["display_name"],
+  maintenance_tasks: ["remind_days_before"],
+  warning_lights: ["repair_service", "repair_alt_services", "repair_cost_low", "repair_cost_high", "needs_diagnosis", "repair_note"],
+};
+const notMigrated = new Set();
+const NEEDS_MIGRATION = "This feature needs a database update before it works. Ask the app owner to run the latest Supabase migrations.";
+
+// 42703: unknown column in a select/filter. PGRST204: unknown column in an insert/update.
+function isMissingColumn(error) {
+  return error?.code === "42703" || error?.code === "PGRST204" || /column .*(does not exist|in the schema cache)/i.test(error?.message ?? "");
+}
+
+export function hasNewColumns(table) {
+  return !notMigrated.has(table);
+}
+
+function cols(table, list) {
+  return notMigrated.has(table)
+    ? list.split(", ").filter((c) => !NEW_COLS[table].includes(c)).join(", ")
+    : list;
+}
+
+// Drop new columns from a write when the table doesn't have them. A real value there
+// (not null) can't be saved, so say so.
+function fieldsFor(table, fields) {
+  if (!notMigrated.has(table)) return fields;
+  const out = { ...fields };
+  for (const c of NEW_COLS[table]) {
+    if (out[c] != null) throw new Error(NEEDS_MIGRATION);
+    delete out[c];
+  }
+  return out;
+}
+
+// Runs a query built by `build()`; on a missing-column error, marks the table as not
+// migrated and runs it once more (build() then picks the older columns/fields).
+async function run(table, build) {
+  const res = await build();
+  if (res.error && isMissingColumn(res.error) && !notMigrated.has(table)) {
+    notMigrated.add(table);
+    return check(await build());
+  }
+  return check(res);
+}
+
 // ---- Profile & settings --------------------------------------------------
 
 export async function getProfile() {
-  return check(await supabase
+  return run("profiles", () => supabase
     .from("profiles")
-    .select(PROFILE_COLS)
+    .select(cols("profiles", PROFILE_COLS))
     .eq("id", currentUserId())
     .single());
 }
 
 export async function updateProfile(fields) {
-  return check(await supabase
+  return run("profiles", () => supabase
     .from("profiles")
-    .update(fields)
+    .update(fieldsFor("profiles", fields))
     .eq("id", currentUserId())
-    .select(PROFILE_COLS)
+    .select(cols("profiles", PROFILE_COLS))
     .single());
 }
 
@@ -131,29 +183,34 @@ export async function resolveActiveVehicle(profile, vehicles) {
 
 // Filters: vehicleId, completed (bool), from/to (inclusive due_date bounds), limit.
 export async function listTasks({ vehicleId = null, completed = null, from = null, to = null, limit = 500 } = {}) {
-  let q = supabase.from("maintenance_tasks").select(TASK_COLS);
-  if (vehicleId) q = q.eq("vehicle_id", vehicleId);
-  if (completed !== null) q = q.eq("is_completed", completed);
-  if (from) q = q.gte("due_date", from);
-  if (to) q = q.lte("due_date", to);
-  if (completed === true) {
-    q = q.order("completed_date", { ascending: false }).order("id", { ascending: false });
-  } else {
-    q = q.order("due_date", { ascending: true, nullsFirst: false }).order("id");
-  }
-  return check(await q.limit(limit));
+  return run("maintenance_tasks", () => {
+    let q = supabase.from("maintenance_tasks").select(cols("maintenance_tasks", TASK_COLS));
+    if (vehicleId) q = q.eq("vehicle_id", vehicleId);
+    if (completed !== null) q = q.eq("is_completed", completed);
+    if (from) q = q.gte("due_date", from);
+    if (to) q = q.lte("due_date", to);
+    if (completed === true) {
+      q = q.order("completed_date", { ascending: false }).order("id", { ascending: false });
+    } else {
+      q = q.order("due_date", { ascending: true, nullsFirst: false }).order("id");
+    }
+    return q.limit(limit);
+  });
 }
 
 export async function getTask(id) {
-  return check(await supabase.from("maintenance_tasks").select(TASK_COLS).eq("id", id).maybeSingle());
+  return run("maintenance_tasks", () => supabase.from("maintenance_tasks")
+    .select(cols("maintenance_tasks", TASK_COLS)).eq("id", id).maybeSingle());
 }
 
 export async function createTask(fields) {
-  return check(await supabase.from("maintenance_tasks").insert(fields).select(TASK_COLS).single());
+  return run("maintenance_tasks", () => supabase.from("maintenance_tasks")
+    .insert(fieldsFor("maintenance_tasks", fields)).select(cols("maintenance_tasks", TASK_COLS)).single());
 }
 
 export async function updateTask(id, fields) {
-  return check(await supabase.from("maintenance_tasks").update(fields).eq("id", id).select(TASK_COLS).single());
+  return run("maintenance_tasks", () => supabase.from("maintenance_tasks")
+    .update(fieldsFor("maintenance_tasks", fields)).eq("id", id).select(cols("maintenance_tasks", TASK_COLS)).single());
 }
 
 export async function deleteTask(id) {
@@ -288,11 +345,10 @@ let warningLightsCache = null;
 
 // Catalog of dashboard lights (read-only reference data), cached for the session.
 export async function listWarningLights() {
-  warningLightsCache ??= await supabase
+  warningLightsCache ??= await run("warning_lights", () => supabase
     .from("warning_lights")
-    .select("id, slug, name, colors, severity, symbol_hint, meaning, action, drive_advice, brand_notes, brand_severity, sort_order, repair_service, repair_alt_services, repair_cost_low, repair_cost_high, needs_diagnosis, repair_note")
-    .order("sort_order")
-    .then(check)
+    .select(cols("warning_lights", LIGHT_COLS))
+    .order("sort_order"))
     .catch((err) => { warningLightsCache = null; throw err; });
   return warningLightsCache;
 }

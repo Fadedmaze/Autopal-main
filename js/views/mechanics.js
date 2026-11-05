@@ -4,7 +4,7 @@
 // Problem mode (#/mechanics?problem=<light slug>&vehicle=<id>, from the dashboard scanner
 // or a light's guide): a banner names the problem, and a results panel ranks the shops
 // most likely to fix it with a per-shop price estimate for the user's car (js/repairs.js).
-import { nearbyShops, listWarningLights, listVehicles, getProfile } from "../data.js";
+import { nearbyShops, listWarningLights, listVehicles, getProfile, hasNewColumns } from "../data.js";
 import { escapeHtml, icon, stars, formatMoney, formatDistance, errorMessage, toast } from "../ui.js";
 import {
   hasRepair, capability, estimate, rankShops, median, rangeText, money, midpoint, estimateWhy, problemSeverity,
@@ -179,7 +179,9 @@ export default async function render(root, ctx) {
           </label>` : vehicle ? `<span>for your ${escapeHtml(carName(vehicle))}</span>` : ""}
       </div>
       ${SEVERITY[sev].text ? `<p class="problem-alert">${icon("alert", 16, 2.2)}<span>${SEVERITY[sev].text}</span></p>` : ""}
-      ${!hasRepair(problem) ? `<p class="problem-alert info">${icon("alert", 16, 2.2)}<span>This light usually doesn't need a shop. Pick a different problem to compare shops.</span></p>` : ""}`;
+      ${!hasRepair(problem) ? `<p class="problem-alert info">${icon("alert", 16, 2.2)}<span>${hasNewColumns("warning_lights")
+        ? "This light usually doesn't need a shop. Pick a different problem to compare shops."
+        : "Shop matching and price estimates aren't set up yet (the database needs an update). All nearby shops are shown."}</span></p>` : ""}`;
   };
 
   const syncUrl = () => {

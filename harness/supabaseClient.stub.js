@@ -137,6 +137,12 @@ class Query {
   }
   run() {
     calls.push({ table: this.table, op: this.op, payload: this.payload });
+    // Simulate a database that hasn't run a migration yet: window.__missingColumns = { table: ["col", ...] }.
+    const gone = window.__missingColumns?.[this.table] ?? [];
+    const inSelect = gone.find((c) => this.cols.split(",").map((s) => s.trim()).includes(c));
+    const inPayload = gone.find((c) => this.payload && !Array.isArray(this.payload) && c in this.payload);
+    if (inPayload) return { data: null, error: { code: "PGRST204", message: `Could not find the '${inPayload}' column of '${this.table}' in the schema cache` } };
+    if (inSelect) return { data: null, error: { code: "42703", message: `column ${this.table}.${inSelect} does not exist` } };
     if (window.__failNext && window.__failNext.table === this.table && window.__failNext.op === this.op) {
       const err = window.__failNext.error; window.__failNext = null;
       return { data: null, error: err };
