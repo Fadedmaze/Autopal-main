@@ -1,6 +1,9 @@
 // Profile (/profile): picture, username, Change Password, Notification Settings, Log Out.
 // Sub-screens: /profile/password and /profile/notifications (ctx.mode).
-import { getProfile, getSettings, updateSettings, uploadAvatar, avatarUrl, saveDisplayName } from "../data.js";
+import { getProfile, getSettings, updateSettings, uploadAvatar, avatarUrl, saveDisplayName, listTasks, listVehicles } from "../data.js";
+import {
+  REMIND_CHOICES, remindLabel, deviceNotificationsOn, enableDeviceNotifications, disableDeviceNotifications, buildIcs, downloadIcs,
+} from "../reminders.js";
 import { prepareUpload } from "../components.js";
 import { verifyPassword, updatePassword, signOut } from "../auth.js";
 import { appBar, escapeHtml, icon, loading, toast, confirmDialog, errorMessage, withBusy } from "../ui.js";
@@ -176,6 +179,7 @@ async function renderNotifications(root, ctx) {
   root.innerHTML = loading();
   const settings = await getSettings();
   if (!ctx.isCurrent()) return;
+  const supported = "Notification" in window;
   root.innerHTML = `
     ${appBar({ title: "Notifications", back: { href: "#/profile", label: "Profile" } })}
     <div class="content">
@@ -186,12 +190,30 @@ async function renderNotifications(root, ctx) {
           <span>Maintenance reminders</span>
         </label>
         <label class="field inline-field">
-          <span>Remind me</span>
+          <span>Default timing</span>
           <select name="reminder_days_before" ${settings.task_reminders_enabled ? "" : "disabled"}>
-            ${[1, 3, 7, 14, 30].map((d) => `<option value="${d}" ${d === settings.reminder_days_before ? "selected" : ""}>${d} day${d > 1 ? "s" : ""} before</option>`).join("")}
+            ${REMIND_CHOICES.map(([d, label]) => `<option value="${d}" ${d === settings.reminder_days_before ? "selected" : ""}>${label}</option>`).join("")}
+            ${REMIND_CHOICES.some(([d]) => d === settings.reminder_days_before) ? "" : `<option value="${settings.reminder_days_before}" selected>${escapeHtml(remindLabel(settings.reminder_days_before))}</option>`}
           </select>
         </label>
-        <p class="hint">Tasks coming due are highlighted on Home, in Tasks and in the Garage.</p>
+        <p class="hint">Used for every task unless you pick a different time on the task itself. Tasks coming due are highlighted on Home, in Tasks and in the Garage, and Home lists them when their reminder day arrives.</p>
+      </section>
+
+      <section class="card">
+        <label class="toggle">
+          <input type="checkbox" name="device_notifications" ${deviceNotificationsOn() ? "checked" : ""} ${supported ? "" : "disabled"}>
+          <span class="toggle-ui"></span>
+          <span>Notifications on this device</span>
+        </label>
+        <p class="hint" id="device-hint">${supported
+          ? "Get a notification on this phone or computer when a reminder is due. They arrive when you open AutoPal."
+          : "This browser can't show notifications. On iPhone, add AutoPal to your Home Screen first (Share → Add to Home Screen)."}</p>
+      </section>
+
+      <section class="card">
+        <strong class="card-title">${icon("calendar", 18, 2)}Calendar reminders</strong>
+        <p class="hint">Want an alert even when AutoPal is closed? Add your upcoming tasks to your phone's calendar. Each one gets an alarm at 9 AM on its reminder day.</p>
+        <button type="button" class="btn btn-soft" id="export-calendar">${icon("calendar", 18, 2)}Add tasks to calendar</button>
       </section>
     </div>`;
 
@@ -201,6 +223,8 @@ async function renderNotifications(root, ctx) {
     days.disabled = !enabled.checked;
     try {
       await updateSettings({ task_reminders_enabled: enabled.checked, reminder_days_before: Number(days.value) });
+      settings.task_reminders_enabled = enabled.checked;
+      settings.reminder_days_before = Number(days.value);
       toast("Saved", "ok");
     } catch (err) {
       toast(errorMessage(err), "error");
@@ -208,4 +232,30 @@ async function renderNotifications(root, ctx) {
   };
   enabled.addEventListener("change", save);
   days.addEventListener("change", save);
+
+  const device = root.querySelector("[name=device_notifications]");
+  device.addEventListener("change", async () => {
+    if (!device.checked) {
+      disableDeviceNotifications();
+      return toast("Notifications off for this device", "ok");
+    }
+    const result = await enableDeviceNotifications();
+    if (result === "on") return toast("Notifications on for this device", "ok");
+    device.checked = false;
+    toast(result === "denied"
+      ? "Notifications are blocked. Allow them for this site in your browser settings, then try again."
+      : "This browser can't show notifications.", "error");
+  });
+
+  root.querySelector("#export-calendar").addEventListener("click", (e) => withBusy(e.currentTarget, async () => {
+    try {
+      const [tasks, vehicles] = await Promise.all([listTasks({ completed: false }), listVehicles()]);
+      const upcoming = tasks.filter((t) => t.due_date);
+      if (!upcoming.length) return toast("No upcoming tasks with a due date yet.", "info");
+      downloadIcs(buildIcs(upcoming, { defaultDays: settings.reminder_days_before, vehicles }), "autopal-maintenance.ics");
+      toast(`Calendar file with ${upcoming.length} task${upcoming.length === 1 ? "" : "s"} downloaded. Open it to add them.`, "ok");
+    } catch (err) {
+      toast(errorMessage(err), "error");
+    }
+  }));
 }

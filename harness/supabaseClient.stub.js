@@ -67,7 +67,7 @@ function onTaskUpdate(before, after) {
   if (after.is_completed && !before.is_completed && after.catalog_id) {
     const c = db.maintenance_catalog.find((x) => x.id === after.catalog_id);
     if (c && !db.maintenance_tasks.some((t) => t.generated_from_task_id === after.id)) {
-      db.maintenance_tasks.push(task({ vehicle_id: after.vehicle_id, catalog_id: c.id, task_name: after.task_name, due_date: addDays(after.completed_date, c.interval_days), estimated_cost: after.estimated_cost, generated_from_task_id: after.id }));
+      db.maintenance_tasks.push(task({ vehicle_id: after.vehicle_id, catalog_id: c.id, task_name: after.task_name, due_date: addDays(after.completed_date, c.interval_days), estimated_cost: after.estimated_cost, generated_from_task_id: after.id, remind_days_before: after.remind_days_before ?? null }));
     }
   } else if (before.is_completed && !after.is_completed) {
     db.maintenance_tasks = db.maintenance_tasks.filter((t) => !(t.generated_from_task_id === after.id && !t.is_completed));

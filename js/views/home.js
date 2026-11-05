@@ -6,6 +6,7 @@ import {
   escapeHtml, icon, loading, dueLabel, dueTone, formatMoney, vehicleIcon, vehicleSpec, vehicleTint, vehicleInkColor, toast, errorMessage,
 } from "../ui.js";
 import { mountCar3D } from "../car3d.js";
+import { announceReminders } from "../reminders.js";
 
 export default async function render(root, ctx) {
   // 3D cars mounted on the platforms; disposed when the route changes (see cleanup below).
@@ -127,6 +128,9 @@ export default async function render(root, ctx) {
   }
 
   root.querySelector("#settings").addEventListener("click", () => openSettings(profile));
+
+  // Reminders whose day has arrived: shown once each (sheet, plus a phone notification if on).
+  announceReminders(openTasks, settings, vehicles).catch(() => {});
 
   // Cars without a photo get the 3D model on their platform. The 2D icon stays underneath
   // and shows through if WebGL or the three.js import fails.

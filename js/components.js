@@ -5,6 +5,7 @@ import {
   escapeHtml, icon, dueLabel, dueTone, formatMoney, formatDate, formatMileage,
   vehicleIcon, vehicleSpec, vehicleTint, todayISO, toast, errorMessage, withBusy,
 } from "./ui.js";
+import { remindLabel, remindShort } from "./reminders.js";
 
 // One maintenance task row. The checkbox on the left completes / un-completes it.
 // Overdue tasks are red (spec). `showCost` puts the estimate on the right (Budget).
@@ -13,7 +14,7 @@ export function taskRow(task, { vehicle = null, remindDays = 7, showCost = false
   // A task's own reminder window wins over the user's default (null = use the default).
   const tone = done ? "muted" : dueTone(task.due_date, task.remind_days_before ?? remindDays);
   const bell = task.remind_days_before != null
-    ? `<span class="remind-hint" title="Reminder ${task.remind_days_before} day${task.remind_days_before === 1 ? "" : "s"} before">${icon("bell", 12, 2)}${task.remind_days_before === 0 ? "due day" : `${task.remind_days_before}d`}</span>`
+    ? `<span class="remind-hint" title="Reminder: ${escapeHtml(remindLabel(task.remind_days_before).toLowerCase())}">${icon("bell", 12, 2)}${remindShort(task.remind_days_before)}</span>`
     : "";
   const when = done ? `Completed ${formatDate(task.completed_date)}` : dueLabel(task.due_date);
   const right = showCost
