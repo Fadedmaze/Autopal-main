@@ -10,7 +10,11 @@ import {
 // Overdue tasks are red (spec). `showCost` puts the estimate on the right (Budget).
 export function taskRow(task, { vehicle = null, remindDays = 7, showCost = false, showReceipt = false } = {}) {
   const done = task.is_completed;
-  const tone = done ? "muted" : dueTone(task.due_date, remindDays);
+  // A task's own reminder window wins over the user's default (null = use the default).
+  const tone = done ? "muted" : dueTone(task.due_date, task.remind_days_before ?? remindDays);
+  const bell = task.remind_days_before != null
+    ? `<span class="remind-hint" title="Reminder ${task.remind_days_before} day${task.remind_days_before === 1 ? "" : "s"} before">${icon("bell", 12, 2)}${task.remind_days_before === 0 ? "due day" : `${task.remind_days_before}d`}</span>`
+    : "";
   const when = done ? `Completed ${formatDate(task.completed_date)}` : dueLabel(task.due_date);
   const right = showCost
     ? `<span class="task-cost">${task.estimated_cost !== null ? formatMoney(task.estimated_cost) : "—"}</span>`
@@ -28,6 +32,7 @@ export function taskRow(task, { vehicle = null, remindDays = 7, showCost = false
         <span class="task-meta">
           <span class="tone-${tone}">${escapeHtml(when)}</span>
           ${vehicle ? `<span class="dot-sep">${escapeHtml(vehicle.label)}</span>` : ""}
+          ${bell}
         </span>
       </div>
       ${right}
@@ -176,7 +181,7 @@ export function vehicleStatus(v, openTasks, remindDays = 7) {
   const overdue = mine.filter((t) => t.due_date < today);
   if (overdue.length > 1) return { tone: "danger", text: `${overdue.length} tasks overdue` };
   if (overdue.length === 1) return { tone: "danger", text: `${overdue[0].task_name} overdue` };
-  const soon = mine.find((t) => dueTone(t.due_date, remindDays) === "warn");
+  const soon = mine.find((t) => dueTone(t.due_date, t.remind_days_before ?? remindDays) === "warn");
   if (soon) return { tone: "warn", text: `${soon.task_name} due` };
   return { tone: "muted", text: "Up to date" };
 }

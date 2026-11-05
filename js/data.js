@@ -5,7 +5,7 @@ import { currentUserId } from "./auth.js";
 import { PHOTO_BUCKET, RECEIPT_BUCKET, AVATAR_BUCKET } from "./config.js";
 
 const VEHICLE_COLS = "id, vehicle_nickname, brand, make, model, model_year, current_mileage, description, created_at";
-const TASK_COLS = "id, vehicle_id, shop_id, catalog_id, task_name, due_date, estimated_cost, is_completed, completed_date, notes, receipt_path, created_at";
+const TASK_COLS = "id, vehicle_id, shop_id, catalog_id, task_name, due_date, estimated_cost, is_completed, completed_date, notes, receipt_path, remind_days_before, created_at";
 const PROFILE_COLS = "id, username, display_name, avatar_path, distance_unit, active_vehicle_id";
 
 function check({ data, error }) {

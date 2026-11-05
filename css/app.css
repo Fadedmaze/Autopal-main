@@ -354,6 +354,7 @@ input[type=date] { min-height: 48px; }
 .task-body:hover .task-name { color: var(--brand); }
 .task-name { font-weight: 600; overflow-wrap: anywhere; }
 .task-meta { display: flex; flex-wrap: wrap; gap: 2px 0; font-size: 13px; color: var(--ink-3); }
+.remind-hint { display: inline-flex; align-items: center; gap: 3px; margin-left: 8px; font-size: 12px; color: var(--ink-3); }
 .dot-sep::before { content: "·"; margin: 0 6px; }
 .task-cost { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .task.done .task-name { text-decoration: line-through; color: var(--ink-3); }

@@ -61,7 +61,7 @@ function seedVehicleTasks(v) {
   }
 }
 function task(fields) {
-  return { id: nextId++, shop_id: null, catalog_id: null, generated_from_task_id: null, is_completed: false, completed_date: null, notes: null, receipt_path: null, estimated_cost: null, due_date: null, created_at: new Date().toISOString(), ...fields };
+  return { id: nextId++, shop_id: null, catalog_id: null, generated_from_task_id: null, is_completed: false, completed_date: null, notes: null, receipt_path: null, remind_days_before: null, estimated_cost: null, due_date: null, created_at: new Date().toISOString(), ...fields };
 }
 function onTaskUpdate(before, after) {
   if (after.is_completed && !before.is_completed && after.catalog_id) {
@@ -120,7 +120,8 @@ class Query {
   insert(p) { this.op = "insert"; this.payload = p; return this; }
   update(p) { this.op = "update"; this.payload = p; return this; }
   delete() { this.op = "delete"; return this; }
-  eq(c, v) { this.filters.push((r) => r[c] === v); return this; }
+  // Route params arrive as strings; PostgREST matches "120" to 120, so compare as text.
+  eq(c, v) { this.filters.push((r) => r[c] === v || (r[c] != null && v != null && String(r[c]) === String(v))); return this; }
   gte(c, v) { this.filters.push((r) => r[c] !== null && r[c] >= v); return this; }
   lte(c, v) { this.filters.push((r) => r[c] !== null && r[c] <= v); return this; }
   not(c, op, v) { this.filters.push((r) => !(op === "is" && v === null ? r[c] === null : r[c] === v)); return this; }

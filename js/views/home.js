@@ -83,7 +83,7 @@ export default async function render(root, ctx) {
         ${icon("chevron", 18, 2)}`;
       return;
     }
-    const tone = dueTone(next.due_date, settings.reminder_days_before);
+    const tone = dueTone(next.due_date, next.remind_days_before ?? settings.reminder_days_before);
     nextTaskEl.className = `next-task tone-box-${tone}`;
     nextTaskEl.innerHTML = `
       <span class="next-icon">${icon(tone === "danger" ? "alert" : "wrench", 22, 2)}</span>

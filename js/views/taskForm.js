@@ -1,13 +1,17 @@
 // Create a custom task (name + due date required, notes optional), or edit one.
-import { listVehicles, getTask, createTask, updateTask, deleteTaskWithReceipt } from "../data.js";
+import { listVehicles, getTask, createTask, updateTask, deleteTaskWithReceipt, getSettings } from "../data.js";
 import { appBar, escapeHtml, icon, loading, toast, confirmDialog, errorMessage, withBusy } from "../ui.js";
+
+// "Remind me" choices (days before the due date); the empty choice means the user's default.
+const REMIND_OPTIONS = [[0, "On the due date"], [1, "1 day before"], [3, "3 days before"], [7, "1 week before"], [14, "2 weeks before"], [30, "1 month before"]];
 
 export default async function render(root, ctx) {
   root.innerHTML = loading();
   const editing = Boolean(ctx.params.id);
-  const [vehicles, task] = await Promise.all([
+  const [vehicles, task, settings] = await Promise.all([
     listVehicles(),
     editing ? getTask(ctx.params.id) : Promise.resolve(null),
+    getSettings(),
   ]);
   if (!ctx.isCurrent()) return;
   if (editing && !task) {
@@ -57,6 +61,13 @@ export default async function render(root, ctx) {
         <textarea name="notes" rows="3" maxlength="1000" placeholder="Part numbers, which shop, anything to remember">${escapeHtml(t.notes ?? "")}</textarea>
       </label>
       <label class="field">
+        <span>Remind me <em>when this is due soon</em></span>
+        <select name="remind_days_before">
+          <option value="" ${t.remind_days_before == null ? "selected" : ""}>Default (${settings.reminder_days_before} days before)</option>
+          ${REMIND_OPTIONS.map(([d, label]) => `<option value="${d}" ${t.remind_days_before === d ? "selected" : ""}>${label}</option>`).join("")}
+        </select>
+      </label>
+      <label class="field">
         <span>Estimated cost <em>optional, used in Maintenance Estimate</em></span>
         <span class="input-prefix"><span>$</span><input name="estimated_cost" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00" value="${t.estimated_cost ?? ""}"></span>
       </label>
@@ -82,6 +93,7 @@ export default async function render(root, ctx) {
       task_name: f.task_name.trim(),
       due_date: f.due_date || null,
       notes: f.notes.trim() || null,
+      remind_days_before: f.remind_days_before === "" ? null : Number(f.remind_days_before),
       estimated_cost: f.estimated_cost === "" ? null : Math.round(Number(f.estimated_cost) * 100) / 100,
     };
     const missing = [!fields.task_name && "a task name", !fields.due_date && "a due date"].filter(Boolean);
