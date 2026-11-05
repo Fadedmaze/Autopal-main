@@ -1,8 +1,14 @@
 // Map (Find Mechanic): full-screen map with a pin per shop. Tapping a pin shows the shop
 // name and its average repair price. The filter tab at the top narrows the pins.
 // A live blue dot tracks the user's location and the map follows it until they pan.
-import { nearbyShops, listWarningLights } from "../data.js";
+// Problem mode (#/mechanics?problem=<light slug>&vehicle=<id>, from the dashboard scanner
+// or a light's guide): a banner names the problem, and a results panel ranks the shops
+// most likely to fix it with a per-shop price estimate for the user's car (js/repairs.js).
+import { nearbyShops, listWarningLights, listVehicles, getProfile } from "../data.js";
 import { escapeHtml, icon, stars, formatMoney, formatDistance, errorMessage, toast } from "../ui.js";
+import {
+  hasRepair, capability, estimate, rankShops, median, rangeText, money, midpoint, estimateWhy, problemSeverity,
+} from "../repairs.js";
 
 const DEFAULT_POINT = { lat: 40.2338, lng: -111.6585 }; // Provo
 const LEAFLET = "https://unpkg.com/leaflet@1.9.4/dist";
@@ -16,7 +22,11 @@ const PRICES = [
 const RATINGS = [{ id: 0, label: "Any rating" }, { id: 4, label: "4.0+" }, { id: 4.5, label: "4.5+" }];
 const REFETCH_MILES = 0.5; // refresh shop distances after moving this far
 const FOLLOW_ZOOM = 14;
-const PRICE_FACTOR = [0.75, 1.35]; // a shop's price level scales a problem's typical repair range within this band
+const SEVERITY = {
+  stop: { label: "Stop now", text: "Don't drive far. Call the shop first and ask about towing." },
+  soon: { label: "Check soon", text: "" },
+  info: { label: "Good to know", text: "" },
+};
 
 // Filters persist while moving around the app; location is kept in memory only.
 const filters = { price: "any", rating: 0, services: new Set() };
@@ -39,6 +49,10 @@ export default async function render(root, ctx) {
 
       <div class="filter-panel" id="filter-panel" hidden>
         <div class="filter-group">
+          <label class="filter-label" for="filter-problem">Fix a warning light</label>
+          <select class="filter-select" id="filter-problem"><option value="">Any problem</option></select>
+        </div>
+        <div class="filter-group">
           <span class="filter-label">Average repair price</span>
           <div class="chips">${PRICES.map((p) => `<button type="button" class="chip" data-price="${p.id}">${p.label}</button>`).join("")}</div>
         </div>
@@ -59,6 +73,7 @@ export default async function render(root, ctx) {
       <button type="button" class="map-fab map-locate" id="locate" aria-label="Follow my location" aria-pressed="false">${icon("locate", 22, 2)}</button>
 
       <div class="map-list" id="map-list" hidden></div>
+      <section class="problem-results" id="problem-results" hidden aria-label="Shops for this problem"></section>
       <p class="map-note">Sample shop data for demonstration</p>
     </div>`;
 
@@ -83,10 +98,16 @@ export default async function render(root, ctx) {
   let resizeObserver = null;
   // Problem mode (?problem=<slug> from a warning light). See "Problem mode" below.
   const bannerEl = root.querySelector("#problem-banner");
-  let problems = [];        // all warning lights, for the banner's Change list
-  let problem = null;       // the identified light, or null for the normal map
-  let medianPrice = null;   // median average repair price of the shops in view
-  let showAllShops = false; // list shows shops that can't do this repair too
+  const resultsEl = root.querySelector("#problem-results");
+  const screenEl = root.querySelector(".map-screen");
+  let problems = [];        // warning lights, for the Change list and the filter
+  let problem = null;       // the light being fixed, or null for the normal map
+  let vehicles = [];
+  let vehicle = null;       // car the estimates are for (brand changes cost and severity)
+  let medianPrice = null;   // median average repair price of the shops nearby
+  let showAllShops = false; // results also list shops that can't do this repair
+  let resultsOpen = true;   // results panel expanded (collapsing shows more map)
+  let ranked = [];          // rankShops() output for the shops in view
 
   const matches = (s) => {
     const price = PRICES.find((p) => p.id === filters.price);
@@ -104,127 +125,252 @@ export default async function render(root, ctx) {
     const count = tab.querySelector(".filter-count");
     count.textContent = active;
     count.hidden = !active;
+    const fp = panel.querySelector("#filter-problem");
+    if (fp && problems.length) {
+      fp.innerHTML = `<option value="">Any problem</option>${problemOptions(problem?.slug)}`;
+    }
     const n = shops.filter(matches).length;
     root.querySelector("#apply-filters").textContent = `Show ${n} shop${n === 1 ? "" : "s"}`;
   };
 
   // ---- Problem mode -----------------------------------------------------------
   const findProblem = (slug) => (slug ? problems.find((p) => p.slug === slug) ?? null : null);
-  const problemMode = () => Boolean(problem?.repair_service);
-  const fixes = (s) => problemMode() && Boolean(s.services?.includes(problem.repair_service));
-  // Typical US repair range for the problem, scaled by the shop's price level (its average
-  // vs the median of the shops in view), clamped, and rounded to the nearest $5.
-  const estimateFor = (s) => {
-    if (!fixes(s) || problem.repair_cost_low == null || problem.repair_cost_high == null) return null;
-    const avg = Number(s.average_repair_price);
-    const factor = medianPrice && avg > 0
-      ? Math.min(PRICE_FACTOR[1], Math.max(PRICE_FACTOR[0], avg / medianPrice))
-      : 1;
-    return {
-      low: roundTo5(Number(problem.repair_cost_low) * factor),
-      high: roundTo5(Number(problem.repair_cost_high) * factor),
-    };
+  const problemMode = () => hasRepair(problem);
+  const est = (s) => (problemMode() ? estimate(s, problem, { areaMedian: medianPrice, vehicle }) : null);
+  const carName = (v) => [v.model_year, v.brand, v.make || v.model].filter(Boolean).join(" ");
+
+  // Grouped by urgency for this car, only lights a shop can actually fix.
+  const problemOptions = (selected) => {
+    const fixable = problems.filter((p) => hasRepair(p) || p.slug === selected);
+    const groups = [["stop", "Stop now"], ["soon", "Check soon"], ["info", "Other"]];
+    return groups.map(([sev, label]) => {
+      const items = fixable.filter((p) => problemSeverity(p, vehicle) === sev);
+      return items.length
+        ? `<optgroup label="${label}">${items.map((p) => `<option value="${escapeHtml(p.slug)}" ${p.slug === selected ? "selected" : ""}>${escapeHtml(p.name)}</option>`).join("")}</optgroup>`
+        : "";
+    }).join("");
   };
 
   const drawBanner = () => {
+    screenEl.classList.toggle("problem-on", Boolean(problem));
     if (!problem) {
       bannerEl.hidden = true;
       bannerEl.innerHTML = "";
       return;
     }
-    // The current problem stays selectable even if it has no repair service.
-    const choices = problems.filter((p) => p.repair_service || p.slug === problem.slug);
+    const sev = problemSeverity(problem, vehicle);
     bannerEl.hidden = false;
     bannerEl.innerHTML = `
-      <div class="problem-text">
-        <span class="problem-line"><span class="problem-label">Problem:</span> <strong>${escapeHtml(problem.name)}</strong>${problem.repair_service ? ` · ${escapeHtml(problem.repair_service)}` : ""}</span>
-      </div>
-      <label class="problem-change"><span>Change</span>
-        <select id="problem-select">
+      <label class="problem-pick">
+        <span class="problem-label">Problem <span class="problem-hint">· tap to change</span></span>
+        <select id="problem-select" aria-label="Problem. Choose a different one to see other shops">
           <option value="">No specific problem</option>
-          ${choices.map((p) => `<option value="${escapeHtml(p.slug)}" ${p.slug === problem.slug ? "selected" : ""}>${escapeHtml(p.name)}</option>`).join("")}
+          ${problemOptions(problem.slug)}
         </select>
-      </label>`;
+      </label>
+      <div class="problem-sub">
+        <span class="sev-pill sev-${sev}">${SEVERITY[sev].label}</span>
+        ${problem.repair_service ? `<span class="problem-type">${escapeHtml(problem.repair_service)} repair</span>` : ""}
+        ${vehicles.length > 1 ? `
+          <label class="problem-car"><span>for</span>
+            <select id="problem-vehicle" aria-label="Car to estimate for">
+              ${vehicles.map((v) => `<option value="${v.id}" ${v.id === vehicle?.id ? "selected" : ""}>${escapeHtml(v.label || carName(v))}</option>`).join("")}
+            </select>
+          </label>` : vehicle ? `<span>for your ${escapeHtml(carName(vehicle))}</span>` : ""}
+      </div>
+      ${SEVERITY[sev].text ? `<p class="problem-alert">${icon("alert", 16, 2.2)}<span>${SEVERITY[sev].text}</span></p>` : ""}
+      ${!hasRepair(problem) ? `<p class="problem-alert info">${icon("alert", 16, 2.2)}<span>This light usually doesn't need a shop. Pick a different problem to compare shops.</span></p>` : ""}`;
   };
 
-  const setProblem = (slug) => {
+  const syncUrl = () => {
+    const q = new URLSearchParams();
+    if (problem) q.set("problem", problem.slug);
+    if (problem && vehicle) q.set("vehicle", vehicle.id);
+    // Replace the entry (not push) so Back doesn't step through every problem tried.
+    const qs = q.toString();
+    history.replaceState(null, "", `#/mechanics${qs ? `?${qs}` : ""}`);
+  };
+
+  const setProblem = (slug, { fit = true } = {}) => {
     problem = findProblem(slug);
     showAllShops = false;
-    // Replace the entry (not push) so Back doesn't step through every problem tried.
-    history.replaceState(null, "", problem ? `#/mechanics?problem=${encodeURIComponent(problem.slug)}` : "#/mechanics");
+    resultsOpen = true;
+    syncUrl();
     drawBanner();
-    drawPins(lastPoint ?? DEFAULT_POINT);
+    syncFilterUi();
+    drawPins(lastPoint ?? DEFAULT_POINT, { fit: fit && problemMode() });
   };
   bannerEl.addEventListener("change", (e) => {
     if (e.target.id === "problem-select") setProblem(e.target.value || null);
+    if (e.target.id === "problem-vehicle") {
+      vehicle = vehicles.find((v) => v.id === Number(e.target.value)) ?? vehicle;
+      syncUrl();
+      drawBanner();
+      drawPins(lastPoint ?? DEFAULT_POINT);
+    }
+  });
+  panel.querySelector("#filter-problem").addEventListener("change", (e) => {
+    setProblem(e.target.value || null);
+    panel.hidden = true;
+    tab.setAttribute("aria-expanded", "false");
   });
 
+  const telHref = (phone) => `tel:${String(phone).replace(/[^\d+]/g, "")}`;
+  const directionsHref = (s) => `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${s.street_address}, ${s.city}`)}`;
+  // "Add to my tasks" carries the repair, the car, the shop and the estimate into a new task.
+  const taskHref = (s, e) => {
+    const q = new URLSearchParams({ name: `${problem.name} repair`.slice(0, 80), from: "mechanics", shop: s.id });
+    if (vehicle) q.set("vehicle", vehicle.id);
+    if (e) {
+      q.set("cost", midpoint(e));
+      q.set("notes", `${s.shop_name}: estimate ${rangeText(e)}${e.diag ? ` + diagnosis ${rangeText(e.diag)}` : ""}. ${s.phone ?? ""}`.trim());
+    }
+    return `#/tasks/new?${q}`;
+  };
+
   const popupHtml = (s) => {
-    const est = estimateFor(s);
+    const e = est(s);
+    const cap = problemMode() ? capability(s, problem) : null;
     return `
     <div class="shop-pop">
       <strong>${escapeHtml(s.shop_name)}</strong>
-      ${est ? `<span class="shop-pop-price">Est. for ${escapeHtml(problem.repair_service)}: ${estText(est)}</span>` : ""}
-      <span class="shop-pop-price">Avg. repair ${s.average_repair_price !== null ? formatMoney(s.average_repair_price) : "n/a"}</span>
+      ${problemMode() ? (cap
+        ? `<span class="fix-badge ${cap}">${cap === "primary" ? "Can fix this" : "Can often handle this"}</span>`
+        : `<span class="shop-pop-meta">Doesn't list ${escapeHtml(problem.repair_service.toLowerCase())} work</span>`) : ""}
+      ${e ? `<span class="shop-pop-price">Est. ${rangeText(e)}</span>${e.diag ? `<span class="shop-pop-meta">+ diagnosis ${rangeText(e.diag)}</span>` : ""}` : ""}
+      ${!problemMode() ? `<span class="shop-pop-price">Avg. repair ${s.average_repair_price !== null ? formatMoney(s.average_repair_price) : "n/a"}</span>` : ""}
       <span class="shop-pop-meta">${stars(s.average_rating)}</span>
       <span class="shop-pop-meta">${escapeHtml(formatDistance(s.distance_miles))}</span>
-      <a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${s.street_address}, ${s.city}, UT`)}" target="_blank" rel="noopener">Directions</a>
+      <span class="shop-pop-links">
+        ${s.phone ? `<a href="${telHref(s.phone)}">Call</a>` : ""}
+        <a href="${directionsHref(s)}" target="_blank" rel="noopener">Directions</a>
+      </span>
     </div>`;
+  };
+
+  // Results panel: the shops most likely to fix the problem, best first.
+  const drawResults = () => {
+    if (!problemMode()) {
+      resultsEl.hidden = true;
+      resultsEl.innerHTML = "";
+      return;
+    }
+    const capable = ranked.filter((r) => r.cap);
+    const others = ranked.filter((r) => !r.cap);
+    const rows = showAllShops ? ranked : capable;
+    const lows = capable.map((r) => est(r.shop)?.low).filter((n) => n != null);
+    const summary = capable.length
+      ? `${capable.length} shop${capable.length === 1 ? "" : "s"} can fix this${lows.length ? ` · from ${money(Math.min(...lows))}` : ""}`
+      : "No nearby shops list this repair";
+    resultsEl.hidden = false;
+    resultsEl.classList.toggle("collapsed", !resultsOpen);
+    resultsEl.innerHTML = `
+      <button type="button" class="results-head" data-collapse aria-expanded="${resultsOpen}">
+        <span class="results-grip" aria-hidden="true"></span>
+        <strong>${escapeHtml(summary)}</strong>
+        <span class="results-toggle">${resultsOpen ? "Hide" : "Show"}</span>
+      </button>
+      <div class="results-body">
+        ${problem.repair_note ? `<p class="results-note"><strong>What usually fixes it:</strong> ${escapeHtml(problem.repair_note)}</p>` : ""}
+        ${rows.length ? `<ol class="shop-results">${rows.map((r) => shopCard(r)).join("")}</ol>` : `
+          <p class="muted-box">${shops.length ? "No shops match your filters. Clear the filters to see more." : "No shops found near you."}</p>`}
+        ${others.length ? `<button type="button" class="btn btn-ghost btn-sm results-more" data-show-all>${showAllShops ? "Only shops that can fix this" : `Show ${others.length} other shop${others.length === 1 ? "" : "s"}`}</button>` : ""}
+        <p class="hint small">Estimates are typical US prices for the usual fix, adjusted for each shop's prices${vehicle ? " and your car" : ""}. Call the shop for an exact quote.</p>
+      </div>`;
+  };
+
+  const shopCard = ({ shop: s, cap, best, reasons }) => {
+    const e = est(s);
+    return `
+      <li class="shop-result ${cap ? "" : "cant"}" data-shop-id="${s.id}">
+        <div class="shop-result-top">
+          <button type="button" class="shop-result-name" data-focus="${s.id}">
+            <strong>${escapeHtml(s.shop_name)}</strong>
+            ${best ? `<em class="best-badge">Best match</em>` : ""}
+          </button>
+          ${e ? `<span class="shop-result-price">${rangeText(e)}</span>` : ""}
+        </div>
+        <span class="shop-result-meta">${stars(s.average_rating)} <span>· ${escapeHtml(formatDistance(s.distance_miles))}</span></span>
+        ${reasons.length ? `<span class="reason-chips">${reasons.map((x, i) => `<span class="reason ${i === 0 ? "lead" : ""}">${escapeHtml(x)}</span>`).join("")}</span>` : ""}
+        ${!cap ? `<span class="shop-result-why">Doesn't list ${escapeHtml(problem.repair_service.toLowerCase())} work</span>` : ""}
+        ${e ? `<span class="shop-result-why">${e.diag ? `Plus diagnosis ${rangeText(e.diag)}, often credited toward the repair. ` : ""}${escapeHtml(estimateWhy(e, vehicle))}.</span>` : ""}
+        <span class="shop-actions">
+          ${s.phone ? `<a class="btn btn-sm" href="${telHref(s.phone)}">${icon("phone", 15, 2)}Call</a>` : ""}
+          <a class="btn btn-sm btn-soft" href="${directionsHref(s)}" target="_blank" rel="noopener">${icon("directions", 15, 2)}Directions</a>
+          ${cap ? `<a class="btn btn-sm btn-ghost" href="${escapeHtml(taskHref(s, e))}">${icon("plus", 15, 2.4)}Add to tasks</a>` : ""}
+        </span>
+      </li>`;
+  };
+
+  resultsEl.addEventListener("click", (ev) => {
+    if (ev.target.closest("[data-collapse]")) {
+      resultsOpen = !resultsOpen;
+      return drawResults();
+    }
+    if (ev.target.closest("[data-show-all]")) {
+      showAllShops = !showAllShops;
+      return drawResults();
+    }
+    const focus = ev.target.closest("[data-focus]");
+    if (focus) focusShop(Number(focus.dataset.focus));
+  });
+
+  let markers = new Map();
+  const focusShop = (id) => {
+    const m = markers.get(id);
+    if (!m || !map) return;
+    if (window.matchMedia("(max-width: 699px)").matches) {
+      resultsOpen = false;
+      drawResults();
+    }
+    map.setView(m.getLatLng(), Math.max(map.getZoom(), 14));
+    m.openPopup();
   };
 
   const drawPins = (point, { fit = false } = {}) => {
     const visible = shops.filter(matches);
-    // Problem mode: shops that can do the repair come first, nearest first. The rest stay
-    // on the map (dimmed) and are listed only after "Show all shops".
-    const ranked = problemMode()
-      ? [...visible].sort((a, b) => (fixes(b) - fixes(a)) || (a.distance_miles - b.distance_miles))
-      : visible;
-    const listed = problemMode() && !showAllShops ? ranked.filter(fixes) : ranked;
-    const others = ranked.filter((s) => !fixes(s)).length;
-    const toggle = problemMode() && others
-      ? `<button type="button" class="btn btn-ghost btn-sm map-list-toggle" data-show-all>${showAllShops ? "Only shops that can fix this" : `Show all shops (${others} more)`}</button>`
-      : "";
-    listEl.innerHTML = `${toggle}${listed.length
-      ? `<ul>${listed.map((s) => {
-          const est = estimateFor(s);
-          return `
+    ranked = problemMode() ? rankShops(visible, problem, { areaMedian: medianPrice, vehicle }) : [];
+    const canFix = (s) => problemMode() && Boolean(capability(s, problem));
+    drawResults();
+    // The plain list (normal mode only; problem mode has the results panel).
+    listEl.innerHTML = visible.length
+      ? `<ul>${visible.map((s) => `
           <li><button type="button" data-shop="${s.id}">
-            <span><strong>${escapeHtml(s.shop_name)}${fixes(s) ? ` <em class="fix-badge">Can fix this</em>` : ""}</strong><small>${escapeHtml(s.street_address)}, ${escapeHtml(s.city)} · ${escapeHtml(formatDistance(s.distance_miles))}</small></span>
-            <span class="map-list-price">${est ? estText(est) : (s.average_repair_price !== null ? formatMoney(s.average_repair_price) : "")}</span>
-          </button></li>`;
-        }).join("")}</ul>`
-      : `<p class="muted-box">No shops match these filters.</p>`}`;
-    listEl.querySelector("[data-show-all]")?.addEventListener("click", () => {
-      showAllShops = !showAllShops;
-      drawPins(point);
-    });
+            <span><strong>${escapeHtml(s.shop_name)}</strong><small>${escapeHtml(s.street_address)}, ${escapeHtml(s.city)} · ${escapeHtml(formatDistance(s.distance_miles))}</small></span>
+            <span class="map-list-price">${s.average_repair_price !== null ? formatMoney(s.average_repair_price) : ""}</span>
+          </button></li>`).join("")}</ul>`
+      : `<p class="muted-box">No shops match these filters.</p>`;
     if (!map) return;
     layer?.remove();
     layer = L.layerGroup().addTo(map);
-    const markers = new Map();
+    markers = new Map();
+    const bestId = ranked.find((r) => r.best)?.shop.id;
     for (const s of visible) {
-      const est = estimateFor(s);
-      const price = est ? estText(est) : (s.average_repair_price !== null ? `$${Math.round(Number(s.average_repair_price))}` : "—");
-      const dim = problemMode() && !fixes(s);
+      const e = est(s);
+      const dim = problemMode() && !canFix(s);
+      // In problem mode a shop that can't do the repair shows no price: its average would read like an estimate.
+      const price = e ? rangeText(e) : dim ? "—" : (s.average_repair_price !== null ? `$${Math.round(Number(s.average_repair_price))}` : "—");
+      const cls = ["price-pin", dim && "dim", problemMode() && !dim && "fix", s.id === bestId && "best"].filter(Boolean).join(" ");
       const marker = L.marker([Number(s.latitude), Number(s.longitude)], {
-        icon: L.divIcon({
-          className: `price-pin${dim ? " dim" : ""}${problemMode() && !dim ? " fix" : ""}`,
-          html: `<span>${price}</span>`, iconSize: null, iconAnchor: [0, 0],
-        }),
+        icon: L.divIcon({ className: cls, html: `<span>${s.id === bestId ? "★ " : ""}${price}</span>`, iconSize: null, iconAnchor: [0, 0] }),
         keyboard: true,
         title: s.shop_name,
+        zIndexOffset: s.id === bestId ? 500 : dim ? -100 : 0,
       }).bindPopup(popupHtml(s), { closeButton: true, offset: [0, -30] }).addTo(layer);
       markers.set(s.id, marker);
     }
     listEl.querySelectorAll("[data-shop]").forEach((b) => b.addEventListener("click", () => {
-      const m = markers.get(Number(b.dataset.shop));
       listEl.hidden = true;
-      map.setView(m.getLatLng(), Math.max(map.getZoom(), 13));
-      m.openPopup();
+      focusShop(Number(b.dataset.shop));
     }));
     if (fit) {
-      const pts = [[point.lat, point.lng], ...visible.slice(0, 8).map((s) => [Number(s.latitude), Number(s.longitude)])];
-      map.fitBounds(pts, { padding: [50, 50], maxZoom: 14 });
+      // Problem mode frames the best few shops for the job; otherwise the nearest ones.
+      const focusOn = problemMode() ? ranked.filter((r) => r.cap).slice(0, 3).map((r) => r.shop) : visible.slice(0, 8);
+      const pts = [[point.lat, point.lng], ...focusOn.map((s) => [Number(s.latitude), Number(s.longitude)])];
+      const pad = problemMode() && window.matchMedia("(max-width: 699px)").matches
+        ? { paddingTopLeft: [40, 190], paddingBottomRight: [40, 60 + resultsEl.offsetHeight] }
+        : problemMode() ? { paddingTopLeft: [50, 210], paddingBottomRight: [430, 50] } : { padding: [50, 50] };
+      map.fitBounds(pts, { ...pad, maxZoom: 14 });
     }
   };
 
@@ -235,7 +381,7 @@ export default async function render(root, ctx) {
     const found = await nearbyShops(point.lat, point.lng, 100);
     if (!ctx.isCurrent() || seq !== fetchSeq) return;
     shops = found;
-    medianPrice = medianOf(shops.map((s) => Number(s.average_repair_price)));
+    medianPrice = median(shops.map((s) => s.average_repair_price));
     syncFilterUi();
     drawPins(point, { fit });
   };
@@ -278,7 +424,10 @@ export default async function render(root, ctx) {
       // Instant (not animated): Leaflet ignores a new zoom while a zoom animation runs.
       map?.setView([me.lat, me.lng], FOLLOW_ZOOM, { animate: false });
       await show({ lat: me.lat, lng: me.lng }, { fit: false }).catch((err) => toast(errorMessage(err), "error"));
-      if (map && following) {
+      if (map && following && problemMode()) {
+        // Frame the best shops for the job (and you), then keep following.
+        drawPins({ lat: me.lat, lng: me.lng }, { fit: true });
+      } else if (map && following) {
         const near = shops.filter(matches).slice(0, 3);
         if (near.length) {
           // Mirror each shop around the user so the bounds stay centered on them.
@@ -351,8 +500,13 @@ export default async function render(root, ctx) {
   });
 
   root.querySelector("#toggle-list").addEventListener("click", () => {
-    listEl.hidden = !listEl.hidden;
     panel.hidden = true;
+    tab.setAttribute("aria-expanded", "false");
+    if (problemMode()) {
+      resultsOpen = !resultsOpen;
+      return drawResults();
+    }
+    listEl.hidden = !listEl.hidden;
   });
 
   // Target button: re-center and follow again (and start tracking if it isn't running).
@@ -389,10 +543,24 @@ export default async function render(root, ctx) {
     listEl.hidden = false;
   }
 
-  // Problem mode: the light catalog is cached after the first load; a failed load just means no banner.
-  problems = await listWarningLights().catch(() => []);
+  // Problem mode needs the light catalog (cached after the first load) and the user's cars.
+  // A failed load just means the normal map.
+  const [lights, cars, profile] = await Promise.all([
+    listWarningLights().catch(() => []),
+    listVehicles().catch(() => []),
+    getProfile().catch(() => null),
+  ]);
+  if (!ctx.isCurrent()) return;
+  problems = lights;
+  vehicles = cars;
+  const wanted = Number(ctx.query.get("vehicle"));
+  vehicle = vehicles.find((v) => v.id === wanted)
+    ?? vehicles.find((v) => v.id === profile?.active_vehicle_id)
+    ?? vehicles[0] ?? null;
   problem = findProblem(ctx.query.get("problem"));
+  if (ctx.query.get("problem") && !problem) toast("We couldn't find that problem, so here are all shops.", "info");
   drawBanner();
+  syncFilterUi();
 
   startTracking();
   if (!me) await show(lastPoint ?? DEFAULT_POINT);
@@ -401,21 +569,6 @@ export default async function render(root, ctx) {
     resizeObserver?.disconnect();
     map?.remove();
   };
-}
-
-function estText(e) {
-  return `$${e.low}–$${e.high}`;
-}
-
-function roundTo5(n) {
-  return Math.round(n / 5) * 5;
-}
-
-function medianOf(values) {
-  const v = values.filter((n) => n > 0).sort((a, b) => a - b);
-  if (!v.length) return null;
-  const mid = v.length >> 1;
-  return v.length % 2 ? v[mid] : (v[mid - 1] + v[mid]) / 2;
 }
 
 // Great-circle distance in miles.

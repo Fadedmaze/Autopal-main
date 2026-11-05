@@ -1,6 +1,6 @@
 // AutoPal service worker. Bump CACHE on every release; it doubles as the
 // "is the new version live yet" probe after a deploy.
-const CACHE = "autopal-shell-v6";
+const CACHE = "autopal-shell-v7";
 
 const SHELL = [
   "./",
@@ -16,6 +16,8 @@ const SHELL = [
   "./js/lightDetector.js",
   "./js/guideDiagrams.js",
   "./js/prefs.js",
+  "./js/reminders.js",
+  "./js/repairs.js",
   "./js/supabaseClient.js",
   "./js/ui.js",
   "./js/views/auth.js",
@@ -63,5 +65,18 @@ self.addEventListener("fetch", (event) => {
         return res;
       })
       .catch(() => caches.match(req).then((hit) => hit || caches.match("./index.html"))),
+  );
+});
+
+// Tapping a reminder notification opens (or focuses) AutoPal on the Tasks screen.
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const target = new URL(event.notification.data?.url || "./#/tasks", self.registration.scope).href;
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((wins) => {
+      const win = wins.find((w) => w.url.startsWith(self.registration.scope));
+      if (win) return win.focus().then((w) => w.navigate?.(target) ?? w);
+      return self.clients.openWindow(target);
+    }),
   );
 });

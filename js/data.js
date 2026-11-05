@@ -290,7 +290,7 @@ let warningLightsCache = null;
 export async function listWarningLights() {
   warningLightsCache ??= await supabase
     .from("warning_lights")
-    .select("id, slug, name, colors, severity, symbol_hint, meaning, action, drive_advice, brand_notes, brand_severity, sort_order, repair_service, repair_cost_low, repair_cost_high")
+    .select("id, slug, name, colors, severity, symbol_hint, meaning, action, drive_advice, brand_notes, brand_severity, sort_order, repair_service, repair_alt_services, repair_cost_low, repair_cost_high, needs_diagnosis, repair_note")
     .order("sort_order")
     .then(check)
     .catch((err) => { warningLightsCache = null; throw err; });

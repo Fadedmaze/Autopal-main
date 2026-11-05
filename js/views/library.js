@@ -138,7 +138,8 @@ export default async function render(root, ctx) {
       title: light.name,
       summary: light.meaning,
       severity: light.severity,
-      steps: [light.action, light.drive_advice].filter(Boolean)
+      steps: [light.action, light.drive_advice].filter(Boolean),
+      warningLight: light,
     });
   }
 
@@ -419,6 +420,12 @@ async function renderGuide(root, ctx, g) {
           <h3>${isDiy ? "Steps" : "What to do"}</h3>
           <ol class="steps">${g.steps.map((s) => `<li>${escapeHtml(s)}</li>`).join("")}</ol>
         </section>`}
+      ${isDashboard && g.warningLight?.repair_service ? `
+        <a class="card mechanic-cta" href="#/mechanics?problem=${encodeURIComponent(g.warningLight.slug)}${chosenVehicleId ? `&vehicle=${chosenVehicleId}` : ""}">
+          <span class="guide-icon">${icon("pin", 20, 2)}</span>
+          <span class="guide-text"><strong>Find a shop that can fix this</strong><span>Nearby shops ranked for ${escapeHtml(g.warningLight.repair_service.toLowerCase())} work, with price estimates.</span></span>
+          ${icon("chevron", 18, 2)}
+        </a>` : ""}
       ${g.wrap_up ? `
         <section class="card guide-prose guide-wrap">
           <h3>Good to know</h3>
