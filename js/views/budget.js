@@ -11,7 +11,7 @@ export default async function render(root, ctx) {
   root.innerHTML = loading();
   const [profile, settings, vehicles] = await Promise.all([getProfile(), getSettings(), listVehicles()]);
   if (!ctx.isCurrent()) return;
-  const bar = { title: "Maintenance Estimate", sub: "Estimate costs for upcoming repairs.", back: { href: "#/home", label: "Home" } };
+  const bar = { title: "Maintenance Estimate", sub: "Estimate costs for upcoming repairs", back: { href: "#/home", label: "Home" } };
 
   if (!vehicles.length) {
     root.innerHTML = `
