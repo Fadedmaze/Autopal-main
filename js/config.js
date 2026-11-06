@@ -5,3 +5,4 @@ export const SUPABASE_PUBLISHABLE_KEY = "sb_publishable__Jx_pdxzT_h5Zxpggv6SSw_N
 export const PHOTO_BUCKET = "vehicle-photos";
 export const RECEIPT_BUCKET = "receipts";
 export const AVATAR_BUCKET = "avatars";
+export const INSURANCE_BUCKET = "insurance-cards";

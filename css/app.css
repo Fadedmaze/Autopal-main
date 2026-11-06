@@ -1100,3 +1100,44 @@ body.has-nav .fab { bottom: calc(var(--nav-h) + var(--safe-b) + 16px); }
 .dg-electrode-g { fill: none; stroke: #6b7280; stroke-width: 6; stroke-linejoin: round; }
 .dg-inv { fill: #fff; font-size: 11px; font-weight: 800; letter-spacing: .06em; }
 .dg-gap { fill: none; stroke: var(--warn); stroke-width: 2.5; stroke-linecap: round; }
+
+/* ---------- Profile: insurance card ---------- */
+.ins { gap: 18px; }
+.ins-side { display: flex; flex-direction: column; gap: 10px; }
+.ins-side > h3 { margin: 0; font-size: 16px; font-weight: 700; }
+/* Card shape (credit-card ratio) so the photo fills it naturally. */
+.ins-preview {
+  position: relative; display: grid; place-items: center; width: 100%; aspect-ratio: 1.586;
+  border-radius: var(--radius); border: 1.5px dashed var(--line-strong); background: var(--surface);
+  overflow: hidden; color: var(--ink-2); text-decoration: none; padding: 0; font: inherit; cursor: pointer;
+}
+.ins-view, .ins-pdf { border-style: solid; }
+.ins-view img { width: 100%; height: 100%; object-fit: contain; background: #0b0d12; }
+.ins-pdf { display: flex; flex-direction: column; gap: 6px; align-items: center; justify-content: center; color: var(--brand); }
+.ins-pdf strong { color: var(--ink); }
+.ins-pdf small { color: var(--ink-3); }
+.ins-pdf:hover { text-decoration: none; border-color: var(--brand); }
+.ins-capture .ins-preview { min-height: 0; }
+.ins-actions { display: flex; gap: 10px; }
+.ins-actions .btn { flex: 1; cursor: pointer; }
+/* Spinner while a card uploads. */
+.ins-capture.busy .ins-preview, .ins-actions .btn.busy { pointer-events: none; }
+.ins-capture.busy .ins-preview::after {
+  content: ""; position: absolute; inset: 0; margin: auto; width: 32px; height: 32px; border-radius: 50%;
+  border: 3px solid var(--brand); border-right-color: transparent; animation: spin .8s linear infinite;
+  background: transparent;
+}
+.ins-capture.busy .capture-empty { opacity: .25; }
+
+/* Full-screen viewer for showing the card. */
+.ins-viewer {
+  width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; padding: 16px; border: 0;
+  background: #000; display: grid; place-items: center;
+}
+.ins-viewer::backdrop { background: #000; }
+.ins-viewer img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.ins-viewer-close {
+  position: fixed; top: calc(env(safe-area-inset-top, 0px) + 14px); right: 14px; display: grid; place-items: center;
+  width: 44px; height: 44px; border-radius: 50%; border: 0; background: rgba(255,255,255,.18); color: #fff; cursor: pointer;
+}
+.btn-ghost.busy::after { border-color: var(--brand); border-right-color: transparent; }

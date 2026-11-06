@@ -17,7 +17,7 @@ const USER_ID = "00000000-0000-4000-8000-000000000001";
 const scenario = params.get("scenario") || "full"; // full | empty | signedout
 
 const db = (window.__db = {
-  profiles: [{ id: USER_ID, username: "andrew", display_name: null, avatar_path: null, distance_unit: "mi", active_vehicle_id: null }],
+  profiles: [{ id: USER_ID, username: "andrew", display_name: null, avatar_path: null, distance_unit: "mi", active_vehicle_id: null, insurance_front_path: null, insurance_back_path: null }],
   notification_settings: [{ user_id: USER_ID, task_reminders_enabled: true, reminder_days_before: 7 }],
   vehicles: [],
   vehicle_photos: [],

@@ -2,7 +2,7 @@
 // Explicit column lists everywhere (no select("*")) keep payloads small and stable.
 import { supabase } from "./supabaseClient.js";
 import { currentUserId } from "./auth.js";
-import { PHOTO_BUCKET, RECEIPT_BUCKET, AVATAR_BUCKET } from "./config.js";
+import { PHOTO_BUCKET, RECEIPT_BUCKET, AVATAR_BUCKET, INSURANCE_BUCKET } from "./config.js";
 
 const VEHICLE_COLS = "id, vehicle_nickname, brand, make, model, model_year, current_mileage, description, created_at";
 const TASK_COLS = "id, vehicle_id, shop_id, catalog_id, task_name, due_date, estimated_cost, is_completed, completed_date, notes, receipt_path, remind_days_before, created_at";
@@ -310,6 +310,61 @@ export async function uploadAvatar(blob, ext, previousPath) {
 export async function avatarUrl(path) {
   if (!path) return null;
   const { data, error } = await supabase.storage.from(AVATAR_BUCKET).createSignedUrl(path, 3600);
+  if (error) return null;
+  return data.signedUrl;
+}
+
+// ---- Insurance card --------------------------------------------------------
+// Front and back of the user's insurance card (image or PDF) in a private bucket.
+// Kept out of PROFILE_COLS so the rest of the app still works if the
+// 20261105_insurance_card migration hasn't been run; the screen says so instead.
+
+const INSURANCE_COL = { front: "insurance_front_path", back: "insurance_back_path" };
+
+export async function getInsuranceCard() {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("insurance_front_path, insurance_back_path")
+    .eq("id", currentUserId())
+    .single();
+  if (error) {
+    const err = new Error("Insurance cards aren't set up yet. Ask the app owner to run the insurance card update in Supabase.");
+    err.notConfigured = true;
+    throw err;
+  }
+  return { front: data.insurance_front_path, back: data.insurance_back_path };
+}
+
+// Upload first, then point the profile at it; the old file is removed only after
+// the new one is saved, so a failure keeps the old card.
+export async function uploadInsuranceCard(side, blob, ext, previousPath) {
+  const col = INSURANCE_COL[side];
+  if (!col) throw new Error("Unknown card side.");
+  const path = `${currentUserId()}/${side}-${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase.storage.from(INSURANCE_BUCKET)
+    .upload(path, blob, { contentType: contentTypeFor(blob, ext), upsert: false });
+  if (error) throw error;
+  try {
+    check(await supabase.from("profiles").update({ [col]: path }).eq("id", currentUserId()).select("id").single());
+    if (previousPath) await supabase.storage.from(INSURANCE_BUCKET).remove([previousPath]);
+    return path;
+  } catch (err) {
+    await supabase.storage.from(INSURANCE_BUCKET).remove([path]);
+    throw err;
+  }
+}
+
+export async function removeInsuranceCard(side, path) {
+  const col = INSURANCE_COL[side];
+  if (!col) throw new Error("Unknown card side.");
+  check(await supabase.from("profiles").update({ [col]: null }).eq("id", currentUserId()).select("id").single());
+  if (path) await supabase.storage.from(INSURANCE_BUCKET).remove([path]);
+}
+
+// Short-lived link (10 minutes): the card has personal details on it.
+export async function insuranceCardUrl(path) {
+  if (!path) return null;
+  const { data, error } = await supabase.storage.from(INSURANCE_BUCKET).createSignedUrl(path, 600);
   if (error) return null;
   return data.signedUrl;
 }

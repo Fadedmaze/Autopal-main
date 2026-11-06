@@ -1,6 +1,7 @@
-// Profile (/profile): picture, username, Change Password, Notification Settings, Log Out.
-// Sub-screens: /profile/password and /profile/notifications (ctx.mode).
-import { getProfile, getSettings, updateSettings, uploadAvatar, avatarUrl, saveDisplayName, listTasks, listVehicles } from "../data.js";
+// Profile (/profile): picture, name, Insurance Card, Change Password, Notification
+// Settings, Log Out. Sub-screens: /profile/insurance, /profile/password and
+// /profile/notifications (ctx.mode).
+import { getProfile, getSettings, updateSettings, uploadAvatar, avatarUrl, saveDisplayName, listTasks, listVehicles, getInsuranceCard, uploadInsuranceCard, removeInsuranceCard, insuranceCardUrl } from "../data.js";
 import {
   REMIND_CHOICES, remindLabel, deviceNotificationsOn, enableDeviceNotifications, disableDeviceNotifications, buildIcs, downloadIcs,
 } from "../reminders.js";
@@ -11,6 +12,7 @@ import { appBar, escapeHtml, icon, loading, toast, confirmDialog, errorMessage, 
 export default async function render(root, ctx) {
   if (ctx.mode === "password") return renderPassword(root, ctx);
   if (ctx.mode === "notifications") return renderNotifications(root, ctx);
+  if (ctx.mode === "insurance") return renderInsurance(root, ctx);
 
   root.innerHTML = loading();
   const profile = await getProfile();
@@ -48,6 +50,7 @@ export default async function render(root, ctx) {
       <p class="profile-username">@${escapeHtml(profile.username ?? "")}</p>
 
       <div class="profile-actions">
+        <a class="menu-row" href="#/profile/insurance">${icon("shield", 20, 2)}<span>Insurance Card</span>${icon("chevron", 18, 2)}</a>
         <a class="menu-row" href="#/profile/password">${icon("lock", 20, 2)}<span>Change Password</span>${icon("chevron", 18, 2)}</a>
         <a class="menu-row" href="#/profile/notifications">${icon("bell", 20, 2)}<span>Notification Settings</span>${icon("chevron", 18, 2)}</a>
       </div>
@@ -258,4 +261,136 @@ async function renderNotifications(root, ctx) {
       toast(errorMessage(err), "error");
     }
   }));
+}
+
+// ---- Insurance card (/profile/insurance) -------------------------------------
+// Front and back of the card, each a photo or PDF in a private bucket. Tap a card
+// to see it full screen (e.g. to show someone after an accident).
+
+const SIDES = [
+  { id: "front", label: "Front of card" },
+  { id: "back", label: "Back of card" },
+];
+
+async function renderInsurance(root, ctx) {
+  root.innerHTML = loading();
+  let card;
+  try {
+    card = await getInsuranceCard();
+  } catch (err) {
+    if (!ctx.isCurrent()) return;
+    root.innerHTML = `
+      ${appBar({ title: "Insurance Card", back: { href: "#/profile", label: "Profile" } })}
+      <div class="error-state">
+        ${icon("shield", 40, 1.6)}
+        <h2>Not available yet</h2>
+        <p>${escapeHtml(err.notConfigured ? err.message : errorMessage(err))}</p>
+      </div>`;
+    return;
+  }
+  const urls = {};
+  await Promise.all(SIDES.map(async (s) => { urls[s.id] = await insuranceCardUrl(card[s.id]); }));
+  if (!ctx.isCurrent()) return;
+
+  const isPdf = (path) => /\.pdf$/i.test(path ?? "");
+  const slot = (s) => {
+    const path = card[s.id];
+    const url = urls[s.id];
+    if (!path) {
+      return `
+        <section class="ins-side">
+          <h3>${s.label}</h3>
+          <label class="capture ins-capture" data-side="${s.id}">
+            <input type="file" accept="image/*,application/pdf" hidden>
+            <span class="capture-preview ins-preview">
+              <span class="capture-empty">${icon("camera", 40, 1.5)}<strong>Add ${s.label.toLowerCase()}</strong><small>Take a photo or choose an image or PDF</small></span>
+            </span>
+          </label>
+        </section>`;
+    }
+    return `
+      <section class="ins-side">
+        <h3>${s.label}</h3>
+        ${isPdf(path)
+          ? `<a class="ins-preview ins-pdf" href="${escapeHtml(url ?? "#")}" target="_blank" rel="noopener">${icon("receipt", 36, 1.6)}<strong>PDF saved</strong><small>Tap to open</small></a>`
+          : `<button type="button" class="ins-preview ins-view" data-view="${s.id}" aria-label="View ${s.label.toLowerCase()} full screen">
+               ${url ? `<img src="${escapeHtml(url)}" alt="${s.label}">` : `<span class="capture-empty"><small>Couldn't load the picture. Check your connection.</small></span>`}
+             </button>`}
+        <div class="ins-actions">
+          <label class="btn btn-ghost btn-sm" data-side="${s.id}">
+            <input type="file" accept="image/*,application/pdf" hidden>${icon("camera", 16, 2)}Replace
+          </label>
+          <button type="button" class="btn btn-ghost btn-sm danger" data-remove="${s.id}">${icon("trash", 16, 2)}Remove</button>
+        </div>
+      </section>`;
+  };
+
+  root.innerHTML = `
+    ${appBar({ title: "Insurance Card", back: { href: "#/profile", label: "Profile" } })}
+    <div class="content ins">
+      <p class="notice notice-info">${icon("lock", 18, 2)}<span>Only you can see your card. It's stored privately in your account, so you'll need a connection to open it.</span></p>
+      ${SIDES.map(slot).join("")}
+      <p class="form-error" role="alert" hidden></p>
+    </div>`;
+
+  const errEl = root.querySelector(".form-error");
+  const showError = (m) => { errEl.textContent = m; errEl.hidden = !m; };
+
+  root.querySelectorAll("[data-side]").forEach((label) => {
+    const input = label.querySelector("input[type=file]");
+    input.addEventListener("change", async () => {
+      const file = input.files?.[0];
+      input.value = "";
+      if (!file) return;
+      const side = label.dataset.side;
+      showError("");
+      label.classList.add("busy");
+      try {
+        const prepared = await prepareUpload(file, { maxEdge: 2000, allowPdf: true });
+        await uploadInsuranceCard(side, prepared.blob, prepared.ext, card[side]);
+        toast("Insurance card saved", "ok");
+        if (ctx.isCurrent()) renderInsurance(root, ctx);
+      } catch (err) {
+        label.classList.remove("busy");
+        showError(`Couldn't save your card: ${errorMessage(err)}${card[side] ? " Your old picture was kept." : ""}`);
+      }
+    });
+  });
+
+  root.querySelectorAll("[data-remove]").forEach((btn) => btn.addEventListener("click", async () => {
+    const side = btn.dataset.remove;
+    const name = SIDES.find((s) => s.id === side).label.toLowerCase();
+    const ok = await confirmDialog({ title: "Remove card", body: `Remove the ${name}? This can't be undone.`, confirmLabel: "Remove", danger: true });
+    if (!ok) return;
+    withBusy(btn, async () => {
+      try {
+        await removeInsuranceCard(side, card[side]);
+        toast("Removed", "ok");
+        if (ctx.isCurrent()) renderInsurance(root, ctx);
+      } catch (err) {
+        showError(errorMessage(err));
+      }
+    });
+  }));
+
+  root.querySelectorAll("[data-view]").forEach((btn) => btn.addEventListener("click", () => {
+    const side = btn.dataset.view;
+    if (urls[side]) viewCardFullScreen(urls[side], SIDES.find((s) => s.id === side).label);
+  }));
+}
+
+// Full-screen view, bright on black, for showing the card to someone.
+function viewCardFullScreen(url, label) {
+  const dlg = document.createElement("dialog");
+  dlg.className = "ins-viewer";
+  dlg.setAttribute("aria-label", label);
+  dlg.innerHTML = `
+    <img src="${escapeHtml(url)}" alt="${escapeHtml(label)}">
+    <button type="button" class="ins-viewer-close" aria-label="Close">${icon("close", 22, 2.4)}</button>`;
+  document.body.append(dlg);
+  const close = () => { dlg.close(); dlg.remove(); };
+  dlg.querySelector(".ins-viewer-close").addEventListener("click", close);
+  dlg.addEventListener("click", (e) => { if (e.target === dlg) close(); });
+  dlg.addEventListener("cancel", (e) => { e.preventDefault(); close(); });
+  dlg.showModal();
 }
