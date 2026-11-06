@@ -181,7 +181,7 @@ export default async function render(root, ctx) {
     : guidesCache.filter((g) => g.category === "diy");
 
     root.innerHTML = `
-      ${appBar({ title: "Discover", sub: "Learn the basics of keeping your car healthy.", back: { href: "#/home", label: "Home" } })}
+      ${appBar({ title: "Discover", sub: "Learn the basics of keeping your car healthy", back: { href: "#/home", label: "Home" } })}
       <div class="content">
         <div class="segmented" role="tablist" aria-label="Guide categories">
           ${CATEGORIES.map((c) => `<button role="tab" type="button" data-cat="${c.id}" aria-selected="${c.id === category}">${c.label}</button>`).join("")}
