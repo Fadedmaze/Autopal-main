@@ -30,7 +30,7 @@ export default async function render(root, ctx) {
 
   const draw = () => {
     root.innerHTML = `
-      ${appBar({ title: "Garage", sub: vehicles.length ? "Select a vehicle to see it on Home." : "", back: { href: "#/home", label: "Home" } })}
+      ${appBar({ title: "Garage", sub: vehicles.length ? "Select a vehicle to see it on Home" : "", back: { href: "#/home", label: "Home" } })}
       ${vehicles.length ? `
         <div class="content">
           <div class="count">${vehicles.length} vehicle${vehicles.length === 1 ? "" : "s"}</div>
