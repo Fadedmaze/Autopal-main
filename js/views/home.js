@@ -132,11 +132,11 @@ export default async function render(root, ctx) {
   // Reminders whose day has arrived: shown once each (sheet, plus a phone notification if on).
   announceReminders(openTasks, settings, vehicles).catch(() => {});
 
-  // Cars without a photo get the 3D model on their platform. The 2D icon stays underneath
+  // Every car gets the 3D model on its platform. The photo (or 2D icon) stays underneath
   // and shows through if WebGL or the three.js import fails.
   vehicles.forEach((v, i) => {
     const host = root.querySelector(`.stage-slide[data-index="${i}"] .platform`);
-    if (!host || photos[i]) return;
+    if (!host) return;
     mountCar3D(host, v, vehicleInkColor(v.index)).then((m) => {
       if (!m) return;
       if (disposed) m.destroy();
