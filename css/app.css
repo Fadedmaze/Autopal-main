@@ -921,6 +921,44 @@ body.scanning #nav { display: none !important; }
 .light-actions:has(> :only-child) { grid-template-columns: 1fr; }
 .light-card { max-height: 85vh; overflow-y: auto; }
 
+/* DIY Maintenance icons - difficulty colors */
+
+.guide-card .guide-icon.diy-easy {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.guide-card .guide-icon.diy-moderate {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.guide-card .guide-icon.diy-advanced {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.guide-card .guide-icon.diy-unknown {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+/* Consistent icon size and spacing */
+
+.guide-card .guide-icon[class*="diy-"] {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+}
+
+.guide-card .guide-icon[class*="diy-"] svg {
+  width: 26px;
+  height: 26px;
+}
+
 /* ---------- Dialog & toasts ---------- */
 
 .dialog {
