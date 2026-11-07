@@ -255,30 +255,32 @@ export default async function render(root, ctx) {
     root.innerHTML = `
       ${appBar({ title: "Discover", sub: "Learn the basics of keeping your car healthy", back: { href: "#/home", label: "Home" } })}
       <div class="content">
-        <div class="segmented" role="tablist" aria-label="Guide categories">
-          ${CATEGORIES.map((c) => `<button role="tab" type="button" data-cat="${c.id}" aria-selected="${c.id === category}">${c.label}</button>`).join("")}
-        </div>
+      <div class="segmented" role="tablist" aria-label="Guide categories">
+        ${CATEGORIES.map((c) => `<button role="tab" type="button" data-cat="${c.id}" aria-selected="${c.id === category}">${c.label}</button>`).join("")}
+      </div>
 
-        <div class="guide-search">
-          <span class="search-icon" aria-hidden="true">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <circle cx="11" cy="11" r="8"></circle>
-              <path d="m21 21-4.35-4.35"></path>
-            </svg>
-          </span>
-          <input
-            type="search"
-            id="guide-search"
-            placeholder="${category === "diy"
-              ? "Search DIY Maintenance..."
-              : "Search Dashboard Lights..."}"
-            aria-label="Search guides"
-            value="${escapeHtml(searchQuery)}"
-          />
-        </div>
+      ${category === "dashboard" ? scanCard(vehicles, vehicle()) : ""}
 
-        ${category === "dashboard" ? scanCard(vehicles, vehicle()) : ""}
-
+      <div class="guide-search">
+        <span class="search-icon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round"
+            aria-hidden="true">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+          </svg>
+        </span>
+        <input
+          type="search"
+          id="guide-search"
+          placeholder="${category === "diy"
+            ? "Search DIY Maintenance..."
+            : "Search Dashboard Lights..."}"
+          aria-label="Search guides"
+          value="${escapeHtml(searchQuery)}"
+        />
+      </div>
 
         ${guides.length ? `
           <ul class="guide-list">
