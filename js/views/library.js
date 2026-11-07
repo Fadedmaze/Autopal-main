@@ -94,6 +94,78 @@ function dashboardIcon(guide) {
   return icon("alert", 24, 2);
 }
 
+
+function diyIcon(guide) {
+  const name = `${guide.title} ${guide.slug}`.toLowerCase();
+
+  const svg = (content) => `
+    <svg width="26" height="26" viewBox="0 0 24 24"
+      fill="none" stroke="currentColor" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round"
+      aria-hidden="true">
+      ${content}
+    </svg>`;
+
+  // Battery maintenance
+  if (/battery|electrical|terminal/.test(name)) {
+    return svg(`
+      <rect x="3" y="7" width="18" height="12" rx="2"/>
+      <path d="M8 7V5h3v2M15 7V5h2v2"/>
+      <path d="M7 13h4M9 11v4M15 13h4"/>
+    `);
+  }
+
+  // Tires and wheels - clean side-view tire
+  if (/tire|tyre|wheel|pressure|tread/.test(name)) {
+    return svg(`
+      <circle cx="12" cy="12" r="10"/>
+      <circle cx="12" cy="12" r="6"/>
+      <circle cx="12" cy="12" r="2.2"/>
+      <circle cx="12" cy="7.7" r=".55" fill="currentColor"/>
+      <circle cx="16.1" cy="10.7" r=".55" fill="currentColor"/>
+      <circle cx="14.5" cy="15.5" r=".55" fill="currentColor"/>
+      <circle cx="9.5" cy="15.5" r=".55" fill="currentColor"/>
+      <circle cx="7.9" cy="10.7" r=".55" fill="currentColor"/>
+    `);
+  }
+
+  // Brakes
+  if (/brake|rotor|caliper|pad replacement/.test(name)) {
+    return svg(`
+      <circle cx="12" cy="12" r="9"/>
+      <circle cx="12" cy="12" r="5"/>
+      <path d="M17 5h3v6h-3"/>
+    `);
+  }
+
+  // Air and cabin filters
+  if (/filter|air|cabin|vent/.test(name) && !/oil/.test(name)) {
+    return svg(`
+      <path d="M3 8h11c3 0 3-4 0-4"/>
+      <path d="M2 12h17c3 0 3-4 0-4"/>
+      <path d="M3 16h10c3 0 3 4 0 4"/>
+    `);
+  }
+
+  // Oil and fluids
+  if (/oil|fluid|coolant|washer/.test(name)) {
+    return svg(`
+      <path d="M12 3C9 8 5 12 5 16a7 7 0 0 0 14 0c0-4-4-8-7-13z"/>
+    `);
+  }
+
+  // Spark plugs and ignition
+  if (/spark|ignition|plug/.test(name)) {
+    return svg(`
+      <path d="m13 2-8 11h7l-1 9 8-12h-7z"/>
+    `);
+  }
+
+  // General maintenance
+  return icon("wrench", 24, 2);
+}
+
+
 export default async function render(root, ctx) {
   root.innerHTML = loading();
   try {
@@ -213,7 +285,11 @@ export default async function render(root, ctx) {
             ${guides.map((g) => `
               <li>
                 <a class="guide-card" href="#/library/${encodeURIComponent(g.slug)}">
-                  <span class="guide-icon ${g.severity ? `sev-${g.severity}` : ""}">${g.category === "diy" ? icon("wrench", 20, 2) : dashboardIcon(g)}</span>
+                <span class="guide-icon ${g.category === "diy"
+                  ? `diy-${g.difficulty || "unknown"}`
+                  : g.severity ? `sev-${g.severity}` : ""}">
+                  ${g.category === "diy" ? diyIcon(g) : dashboardIcon(g)}
+                </span>
                   <span class="guide-text">
                     <strong>${escapeHtml(g.title)}</strong>
                     <span>${escapeHtml(g.summary)}</span>
