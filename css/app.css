@@ -553,6 +553,69 @@ a.gallery-empty span { display: inline-flex; align-items: center; gap: 6px; }
 .history-date { color: var(--ink-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .card .description { padding: 0; border: 0; background: none; }
 
+/* Car care at a glance (vehicle page) */
+.care { gap: 14px; }
+.care-status { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 14px; font-weight: 400; color: var(--ink); }
+.care-status.tone-ok { background: var(--ok-soft); }
+.care-status.tone-warn { background: var(--warn-soft); }
+.care-status.tone-danger { background: var(--danger-soft); }
+.care-status-icon { flex: none; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: var(--surface); }
+.care-status.tone-ok .care-status-icon { color: var(--ok); }
+.care-status.tone-warn .care-status-icon { color: var(--warn); }
+.care-status.tone-danger .care-status-icon { color: var(--danger-strong); }
+.care-status-text { display: flex; flex-direction: column; min-width: 0; }
+.care-status-text strong { font-size: 15px; }
+.care-status-text span { font-size: 13px; color: var(--ink-2); }
+
+.care-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (min-width: 700px) { .care-tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.care-tile { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding: 12px; border-radius: 14px; background: var(--surface-2); color: var(--ink); text-decoration: none; }
+a.care-tile:hover { text-decoration: none; box-shadow: inset 0 0 0 1.5px var(--brand); }
+.care-tile-label { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-3); }
+.care-tile-label .icon { color: var(--brand); }
+.care-tile-value { font-size: 22px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; line-height: 1.25; overflow-wrap: anywhere; }
+.care-tile-sub { font-size: 12.5px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.care-next { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1.5px solid var(--line); border-radius: 14px; color: var(--ink); text-decoration: none; }
+.care-next:hover { text-decoration: none; border-color: var(--brand); }
+.care-next > .icon { flex: none; color: var(--ink-3); }
+.care-next-label { flex: none; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--brand); background: var(--brand-soft); padding: 3px 8px; border-radius: 8px; }
+.care-next-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.care-next-main strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.care-next-main span { font-size: 13px; }
+.care-next-add { justify-content: center; color: var(--brand); font-weight: 700; border-style: dashed; }
+.care-next-add > .icon { color: var(--brand); }
+
+.care-sub-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.care-sub-head h4 { margin: 0; font-size: 13px; font-weight: 700; color: var(--ink-2); }
+.care-sub-total { font-size: 14px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.care-chart { position: relative; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 2px; height: 108px; padding-top: 4px; }
+.care-bar-col { position: relative; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; height: 100%; padding: 0 2px; cursor: default; outline: none; }
+.care-bar-col::before { content: ""; position: absolute; left: 0; right: 0; bottom: 18px; height: 1px; background: var(--line); }
+.care-bar { display: block; width: 100%; max-width: 22px; border-radius: 4px 4px 0 0; background: var(--brand); }
+.care-bar.is-zero { display: none; }
+.care-bar-area { flex: 1; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
+.care-bar-col.on .care-bar { filter: brightness(1.15); }
+.care-bar-col.on .care-bar-label { color: var(--ink); font-weight: 800; }
+.care-bar-label { flex: none; height: 14px; font-size: 11px; line-height: 14px; color: var(--ink-3); }
+.care-tip {
+  position: absolute; top: -6px; transform: translate(-50%, -100%); z-index: 2; pointer-events: none;
+  padding: 5px 9px; border-radius: 8px; white-space: nowrap; font-size: 12px; font-weight: 600;
+  background: var(--ink); color: var(--surface); box-shadow: 0 4px 12px rgba(0,0,0,.2);
+}
+.care-chart-note { margin: 6px 0 0; font-size: 12.5px; color: var(--ink-3); }
+
+.care-where ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.care-where li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; align-items: baseline; }
+.care-where-name { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.care-where-amt { font-size: 14px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.care-where-track { grid-column: 1 / -1; height: 6px; border-radius: 3px; background: var(--surface-2); overflow: hidden; }
+.care-where-track span { display: block; height: 100%; border-radius: 3px; background: var(--brand); }
+
+.care-facts { list-style: none; margin: 0; padding: 12px 0 0; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; }
+.care-facts li { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); }
+.care-facts .icon { flex: none; color: var(--ink-3); }
+
 /* ---------- Budget ---------- */
 
 .total-bar {
