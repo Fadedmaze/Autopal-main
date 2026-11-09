@@ -1039,6 +1039,33 @@ body.scanning #nav { display: none !important; }
 .light-actions:has(> :only-child) { grid-template-columns: 1fr; }
 .light-card { max-height: 85vh; overflow-y: auto; }
 
+/* DIY dropdowns */
+.diy-dropdown {
+  margin-bottom: 12px;
+}
+
+.diy-dropdown > summary {
+  cursor: pointer;
+  padding: 16px;
+  font-weight: 600;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.diy-dropdown > summary::-webkit-details-marker {
+  display: none;
+}
+
+.diy-dropdown[open] > summary svg {
+  transform: rotate(90deg);
+}
+
+.diy-dropdown-content {
+  padding: 0 12px 12px;
+}
+
 /* DIY Maintenance icons - difficulty colors */
 
 .guide-card .guide-icon.diy-easy {
