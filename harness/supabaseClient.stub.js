@@ -100,6 +100,15 @@ if (scenario === "full") {
   // An overdue custom task and a completed one with history.
   db.maintenance_tasks.push(task({ vehicle_id: a.id, task_name: "Replace headlight bulb", due_date: addDays(today(), -3), estimated_cost: 25 }));
   db.maintenance_tasks.push(task({ vehicle_id: a.id, task_name: "Oil change", is_completed: true, completed_date: addDays(today(), -60), estimated_cost: 72, due_date: addDays(today(), -62) }));
+  // A year of history for the vehicle page's "Car care at a glance" summary.
+  [
+    ["Oil change", -150, 68, "r1.jpg"], ["Tire rotation", -150, 35, null], ["Brake pads (front)", -215, 289, "r2.pdf"],
+    ["Oil change", -240, 65, null], ["Cabin air filter", -270, null, null], ["Battery replacement", -310, 189, "r3.jpg"],
+    ["Oil change", -330, 62, null], ["Wiper blades", -20, 28, null],
+  ].forEach(([name, days, cost, receipt]) => db.maintenance_tasks.push(task({
+    vehicle_id: a.id, task_name: name, is_completed: true, completed_date: addDays(today(), days),
+    due_date: addDays(today(), days - 2), estimated_cost: cost, receipt_path: receipt,
+  })));
 }
 
 // ---- Query builder ------------------------------------------------------

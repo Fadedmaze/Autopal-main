@@ -1,6 +1,8 @@
-// Vehicle: name at the top, then the image, the description (with Edit), and a box of
-// maintenance history (type on the left, date on the right).
-import { getVehicle, listTasks, listPhotos, deletePhoto, updateVehicle } from "../data.js";
+// Vehicle: name at the top, then the image, a "car care at a glance" summary (status,
+// completed tasks, total spent, next up, spending by month), the description (with Edit),
+// and a box of maintenance history (type on the left, date on the right).
+import { getVehicle, getSettings, listTasks, listPhotos, deletePhoto, updateVehicle } from "../data.js";
+import { careSummary, careCard, bindCareCard } from "../carCare.js";
 import {
   appBar, escapeHtml, icon, loading, formatDate, formatMileage, vehicleIcon, vehicleSpec, vehicleTint,
   toast, confirmDialog, errorMessage, withBusy,
@@ -14,11 +16,15 @@ export default async function render(root, ctx) {
     toast("That vehicle doesn't exist anymore.", "error");
     return ctx.navigate("#/garage", { replace: true });
   }
-  const [history, photos] = await Promise.all([
+  const [history, open, photos, settings] = await Promise.all([
     listTasks({ vehicleId: vehicle.id, completed: true }),
+    listTasks({ vehicleId: vehicle.id, completed: false }),
     listPhotos(vehicle.id).catch(() => []),
+    getSettings().catch(() => ({ reminder_days_before: 7 })),
   ]);
   if (!ctx.isCurrent()) return;
+  const remindDays = settings?.reminder_days_before ?? 7;
+  const care = careSummary({ open, done: history, remindDays });
 
   let selectedPhoto = 0;
   let editingDescription = false;
@@ -48,6 +54,8 @@ export default async function render(root, ctx) {
             <a class="thumb thumb-add" href="#/vehicles/${vehicle.id}/photo" aria-label="Add a photo">${icon("camera", 22, 1.9)}</a>
           </div>
         </section>
+
+        ${careCard(vehicle, care, { remindDays })}
 
         <section class="card">
           <div class="card-head">
@@ -84,6 +92,8 @@ export default async function render(root, ctx) {
             : `<p class="muted-box">No maintenance recorded yet. Completed tasks show up here.</p>`}
         </section>
       </div>`;
+
+    bindCareCard(root);
 
     root.querySelectorAll(".thumb[data-index]").forEach((b) =>
       b.addEventListener("click", () => { selectedPhoto = Number(b.dataset.index); draw(); }));

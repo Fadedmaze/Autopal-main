@@ -20,6 +20,9 @@ export default async function render(root, ctx) {
     return;
   }
 
+  // Opened from a vehicle page (?vehicle=<id>): show that car.
+  const asked = Number(ctx.query?.get("vehicle"));
+  if (asked && vehicles.some((v) => v.id === asked)) chosenVehicle = asked;
   if (!vehicles.some((v) => v.id === chosenVehicle)) {
     chosenVehicle = vehicles.some((v) => v.id === profile.active_vehicle_id) ? profile.active_vehicle_id : vehicles[0].id;
   }
@@ -63,6 +66,11 @@ export default async function render(root, ctx) {
 
   root.querySelectorAll("[data-vehicle]").forEach((b) => b.addEventListener("click", () => {
     chosenVehicle = Number(b.dataset.vehicle);
+    // Keep a ?vehicle= link from overriding the chip the user just picked.
+    if (ctx.query?.has("vehicle")) {
+      ctx.query.set("vehicle", String(chosenVehicle));
+      history.replaceState(null, "", `#/budget?vehicle=${chosenVehicle}`);
+    }
     render(root, ctx);
   }));
   bindTaskRows(root, new Map([...open, ...done].map((t) => [t.id, t])), () => render(root, ctx));
