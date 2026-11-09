@@ -426,6 +426,21 @@ function addTaskHref(guide, vehicle) {
   return `#/tasks/new?${params}`;
 }
 
+function diyDropdown(title, content, open = false) {
+  if (!content) return "";
+
+  return `
+    <details class="card diy-dropdown" ${open ? "open" : ""}>
+      <summary>
+        <span>${escapeHtml(title)}</span>
+        ${icon("chevron", 18, 2)}
+      </summary>
+      <div class="diy-dropdown-content">
+        ${content}
+      </div>
+    </details>`;
+}
+
 async function renderGuide(root, ctx, g) {
   if (!g) return ctx.navigate("#/library", { replace: true });
   category = g.category;
@@ -462,18 +477,36 @@ async function renderGuide(root, ctx, g) {
         </p>` : ""}
       ${sev ? `<div class="notice notice-${g.severity === "stop" ? "danger" : "warn"}">${icon("alert", 18, 2)}<span><strong>${sev.label}.</strong> ${sev.text}</span></div>` : ""}
       ${isDiy ? `<section class="card guide-video" id="video-card"></section>` : ""}
-      ${g.intro ? `
+      ${isDiy ? diyDropdown(
+        "Why it matters",
+        g.intro ? `
+          <section class="guide-prose">
+            <h3>Why it matters</h3>
+            ${paragraphs(g.intro)}
+          </section>` : ""
+      ) : g.intro ? `
         <section class="guide-prose">
           <h3>Why it matters</h3>
           ${paragraphs(g.intro)}
         </section>` : ""}
-      ${g.prep ? `
+      ${isDiy ? diyDropdown(
+        "Before you start",
+        g.prep ? `
+          <section class="card guide-prose">
+            <h3>Before you start</h3>
+            ${paragraphs(g.prep)}
+          </section>` : g.tools?.length ? `
+          <section class="card">
+            <div><strong>You'll need</strong>
+              <ul class="tools">
+                ${g.tools.map((t) => `<li>${escapeHtml(t)}</li>`).join("")}
+              </ul>
+            </div>
+          </section>` : ""
+      ) : g.prep ? `
         <section class="card guide-prose">
           <h3>Before you start</h3>
           ${paragraphs(g.prep)}
-        </section>` : isDiy && g.tools.length ? `
-        <section class="card">
-          <div><strong>You'll need</strong><ul class="tools">${g.tools.map((t) => `<li>${escapeHtml(t)}</li>`).join("")}</ul></div>
         </section>` : ""}
       ${guideFigure(g)}
       ${g.safety?.length ? `
