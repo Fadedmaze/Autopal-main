@@ -33,7 +33,7 @@ export default async function render(root, ctx) {
   const row = (t) => taskRow(t, { remindDays: settings.reminder_days_before, showCost: true });
 
   root.innerHTML = `
-    ${appBar({ ...bar, action: `<a class="icon-btn icon-btn-brand" href="#/tasks/new?vehicle=${vehicle.id}" aria-label="Add a repair">${icon("plus", 22, 2.4)}</a>` })}
+    ${appBar(bar)}
     <div class="content">
       ${vehicles.length > 1 ? `
         <div class="chips scroll" role="group" aria-label="Choose vehicle">
@@ -58,7 +58,8 @@ export default async function render(root, ctx) {
         <small>${s.open_count + done.length} repair${s.open_count + done.length === 1 ? "" : "s"} · ${escapeHtml(vehicle.label)}</small>
       </div>
       <strong>${formatMoney(s.all_estimated_total)}</strong>
-    </div>`;
+    </div>
+    <a class="fab" href="#/tasks/new?vehicle=${vehicle.id}">${icon("plus", 20, 2.6)}<span>Add task</span></a>`;
 
   root.querySelectorAll("[data-vehicle]").forEach((b) => b.addEventListener("click", () => {
     chosenVehicle = Number(b.dataset.vehicle);
