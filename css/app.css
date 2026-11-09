@@ -566,6 +566,10 @@ a.gallery-empty span { display: inline-flex; align-items: center; gap: 6px; }
 .total-bar span { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; opacity: .9; }
 .total-bar small { opacity: .85; }
 .total-bar strong { font-size: 28px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+body.has-nav .page-budget .fab { bottom: calc(var(--nav-h) + var(--safe-b) + 104px); }
+@media (min-width: 900px) {
+  body.has-nav .page-budget .fab { bottom: 104px; }
+}
 
 /* ---------- Map ---------- */
 
