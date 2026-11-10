@@ -9,7 +9,7 @@ import { remindLabel, remindShort } from "./reminders.js";
 
 // One maintenance task row. The checkbox on the left completes / un-completes it.
 // Overdue tasks are red (spec). `showCost` puts the estimate on the right (Budget).
-export function taskRow(task, { vehicle = null, remindDays = 7, showCost = false, showReceipt = false, showDueDate = true, showTaskDetails = false, showCheckbox = true } = {}) {
+export function taskRow(task, { vehicle = null, remindDays = 7, showCost = false, showReceipt = false, showDueDate = true, showTaskDetails = false, showCheckbox = true, showOverdueStyle = true } = {}) {
   const done = task.is_completed;
   // A task's own reminder window wins over the user's default (null = use the default).
   const tone = done ? "muted" : dueTone(task.due_date, task.remind_days_before ?? remindDays);
@@ -27,7 +27,7 @@ export function taskRow(task, { vehicle = null, remindDays = 7, showCost = false
     ? `type="button" data-task-details aria-label="View details for ${escapeHtml(task.task_name)}"`
     : "data-toggle";
   return `
-    <li class="task ${done ? "done" : ""} ${tone === "danger" ? "overdue" : ""}" data-task-id="${task.id}">
+    <li class="task ${done ? "done" : ""} ${showOverdueStyle && tone === "danger" ? "overdue" : ""}" data-task-id="${task.id}">
       ${showCheckbox ? `<label class="check" title="${done ? "Undo: mark as not done" : "Mark as completed"}">
         <input type="checkbox" ${done ? "checked" : ""} aria-label="${escapeHtml(task.task_name)} completed">
         <span class="check-box">${icon("check", 14, 3)}</span>
