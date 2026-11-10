@@ -4,6 +4,7 @@ import { initAuth, currentSession } from "./auth.js";
 import { getProfile } from "./data.js";
 import { setDistanceUnit, applyTheme } from "./prefs.js";
 import { icon, escapeHtml, errorMessage } from "./ui.js";
+import { openSettings } from "./settings.js";
 
 const ROUTES = [
   // Public
@@ -12,8 +13,8 @@ const ROUTES = [
   { path: "/forgot", view: () => import("./views/auth.js"), public: true, mode: "forgot" },
   { path: "/reset-password", view: () => import("./views/resetPassword.js") },
   // Signed in
-  { path: "/home", view: () => import("./views/home.js") },
-  { path: "/garage", view: () => import("./views/garage.js"), tab: "garage" },
+  { path: "/home", view: () => import("./views/home.js"), settings: true },
+  { path: "/garage", view: () => import("./views/garage.js"), tab: "garage", settings: true },
   { path: "/vehicles/new", view: () => import("./views/vehicleForm.js"), tab: "garage", nav: false },
   { path: "/vehicles/:id", view: () => import("./views/vehicle.js"), tab: "garage" },
   { path: "/vehicles/:id/edit", view: () => import("./views/vehicleForm.js"), tab: "garage", nav: false },
@@ -22,14 +23,14 @@ const ROUTES = [
   { path: "/tasks/new", view: () => import("./views/taskForm.js"), nav: false },
   { path: "/tasks/:id", view: () => import("./views/taskForm.js"), nav: false },
   { path: "/budget", view: () => import("./views/budget.js") },
-  { path: "/mechanics", view: () => import("./views/mechanics.js"), tab: "mechanics" },
+  { path: "/mechanics", view: () => import("./views/mechanics.js"), tab: "mechanics", settings: true },
   { path: "/discover", view: () => import("./views/discover.js"), tab: "library" }, // redirects to the Dashboard Lights tab
-  { path: "/library", view: () => import("./views/library.js"), tab: "library" },
+  { path: "/library", view: () => import("./views/library.js"), tab: "library", settings: true },
   { path: "/library/:slug", view: () => import("./views/library.js"), tab: "library" },
-  { path: "/profile", view: () => import("./views/profile.js"), tab: "profile" },
+  { path: "/profile", view: () => import("./views/profile.js"), tab: "profile", settings: true },
   { path: "/profile/password", view: () => import("./views/profile.js"), tab: "profile", mode: "password", nav: false },
   { path: "/profile/notifications", view: () => import("./views/profile.js"), tab: "profile", mode: "notifications", nav: false },
-  { path: "/profile/insurance", view: () => import("./views/profile.js"), tab: "profile", mode: "insurance" }, // Profile with the insurance pop-up open
+  { path: "/profile/insurance", view: () => import("./views/profile.js"), tab: "profile", mode: "insurance", settings: true }, // Profile with the insurance pop-up open
 ];
 
 // Bottom bar, left to right, per the Home spec.
@@ -43,6 +44,7 @@ const TABS = [
 const navEl = document.getElementById("nav");
 const viewEl = document.getElementById("view");
 let cleanup = null;
+let settingsCleanup = null;
 let renderSeq = 0;
 let recovering = false;
 let prefsLoaded = false;
@@ -84,6 +86,34 @@ function renderNav(route) {
       <a href="${t.href}" class="tab ${t.id === route.tab ? "active" : ""}" ${t.id === route.tab ? 'aria-current="page"' : ""}>
         ${icon(t.icon, 22, 1.9)}<span>${t.label}</span>
       </a>`).join("")}`;
+}
+
+// Settings (tire) button on the main pages (routes with settings: true), not on
+// sub-pages. Home draws its own; for the others it goes in the page header, or
+// in the map's top bar on Find Mechanic. Views draw their headers themselves and
+// some redraw them (e.g. switching Discover tabs), so it's re-added when needed.
+function mountSettingsButton(page) {
+  const place = () => {
+    if (page.querySelector(".tire-btn")) return;
+    const host = page.querySelector(".map-top") ?? page.querySelector("header.appbar");
+    if (!host) return; // still loading, or an error screen
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "tire-btn page-settings";
+    btn.setAttribute("aria-label", "Settings");
+    btn.innerHTML = icon("tire", 24, 1.7);
+    btn.addEventListener("click", () => openSettings());
+    if (host.classList.contains("map-top")) {
+      btn.classList.add("map-settings");
+    } else {
+      host.classList.add("has-settings");
+    }
+    host.append(btn);
+  };
+  place();
+  const watcher = new MutationObserver(place);
+  watcher.observe(page, { childList: true, subtree: true });
+  return () => watcher.disconnect();
 }
 
 async function render() {
@@ -134,6 +164,8 @@ async function render() {
   page.className = `page page-${pathname.split("/")[1] || "root"}`;
   viewEl.replaceChildren(page);
   window.scrollTo(0, 0);
+  settingsCleanup?.();
+  settingsCleanup = found.route.settings ? mountSettingsButton(page) : null;
 
   const ctx = {
     params: found.params,
