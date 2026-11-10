@@ -114,6 +114,7 @@ export function taskDetailsSheet(task, { onChanged } = {}) {
     });
   });
   dlg.querySelector("[data-delete-custom]")?.addEventListener("click", async (e) => {
+    const button = e.currentTarget;
     const confirmed = await confirmDialog({
       title: "Delete Custom Item?",
       body: `“${task.task_name}” will be removed from this vehicle's maintenance estimate.`,
@@ -121,7 +122,7 @@ export function taskDetailsSheet(task, { onChanged } = {}) {
       danger: true,
     });
     if (!confirmed) return;
-    await withBusy(e.currentTarget, async () => {
+    await withBusy(button, async () => {
       try {
         await deleteTaskWithReceipt(task);
         dlg.close();
