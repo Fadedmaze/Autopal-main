@@ -15,7 +15,7 @@ export default async function render(root, ctx) {
     sub: "Estimate costs for upcoming repairs",
     back: { href: "#/home", label: "Home" },
     action: vehicles.length
-      ? `<button class="icon-btn icon-btn-brand" type="button" data-add-custom aria-label="Add Custom">${icon("plus", 22, 2.4)}</button>`
+      ? `<button class="btn btn-sm" type="button" data-add-custom>${icon("plus", 18, 2.4)}<span>Add Custom</span></button>`
       : "",
   };
 
