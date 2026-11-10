@@ -9,6 +9,7 @@
 //   repair_note          one plain sentence on what usually causes it and what it costs
 
 import { titleCase } from "./ui.js";
+import { findBrand } from "./vehicleCatalog.js";
 
 export const SERVICES = ["Oil change", "Brakes", "Tires", "Engine", "Transmission", "Electrical", "Alignment", "Inspection"];
 
@@ -23,10 +24,16 @@ const BRAND_FACTOR = {
   "range rover": 1.45, "jaguar": 1.4, "maserati": 1.5, "alfa romeo": 1.3, "mini": 1.2, "volvo": 1.25,
   "tesla": 1.3, "cadillac": 1.2, "lincoln": 1.2, "genesis": 1.15, "lexus": 1.15, "infiniti": 1.15,
   "acura": 1.1, "volkswagen": 1.1, "vw": 1.1,
+  // Added with the larger vehicle catalog (js/vehicleCatalog.js).
+  "bentley": 1.7, "rolls-royce": 1.8, "ferrari": 1.8, "lamborghini": 1.8, "mclaren": 1.8, "aston martin": 1.6,
+  "lotus": 1.45, "lucid": 1.35, "polestar": 1.25, "rivian": 1.3, "fisker": 1.3, "saab": 1.2, "hummer": 1.15,
 };
 
+// Lowercase brand used as the key for brand notes and prices. Shorthand like "Chevy"
+// or "vw" is mapped to the full brand first (see js/vehicleCatalog.js).
 export function brandKey(vehicle) {
-  return (vehicle?.brand ?? "").trim().toLowerCase();
+  const typed = (vehicle?.brand ?? "").trim();
+  return (findBrand(typed) ?? typed).toLowerCase();
 }
 
 export function vehicleFactor(vehicle) {

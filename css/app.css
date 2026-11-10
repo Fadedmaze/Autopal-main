@@ -1034,6 +1034,9 @@ body.scanning #nav { display: none !important; }
 .light-section h3 { margin: 0 0 4px; font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
 .light-section p { margin: 0; color: var(--ink-2); }
 .light-section.brand-note { padding: 12px 14px; border-radius: 14px; background: var(--brand-soft); }
+.guide .card.brand-note { gap: 6px; background: var(--brand-soft); border-color: transparent; }
+.guide .card.brand-note h3 { font-size: 15px; }
+.guide .card.brand-note p { margin: 0; color: var(--ink-2); }
 .light-section.brand-note h3 { color: var(--brand); }
 .light-section.brand-note p + p { margin-top: 6px; }
 .light-note { padding: 10px 12px; border-radius: 12px; background: var(--surface-2); }

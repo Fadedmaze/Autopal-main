@@ -355,14 +355,15 @@ create policy "files: delete own" on storage.objects for delete to authenticated
 -- ---------------------------------------------------------------------
 
 insert into public.maintenance_catalog (task_name, typical_cost, interval_days, first_due_days, sort_order) values
-  ('Oil change',          75, 120,  30, 1),
-  ('Tire rotation',       40, 180,  45, 2),
+  ('Oil change',          95, 182,  30, 1),   -- 2026 values; see migrations/20261109_maintenance_schedule_2026.sql
+  ('Tire rotation',       40, 182,  45, 2),
   ('Tire pressure check',  0,  30,   7, 3),
-  ('Wiper blades',        30, 365,  90, 4),
-  ('Engine air filter',   35, 365, 120, 5),
-  ('Brake inspection',    50, 365, 150, 6),
-  ('Emissions test',      30, 365, 180, 7),
-  ('Battery check',       25, 365, 200, 8);
+  ('Wiper blades',        45, 365,  90, 4),
+  ('Engine air filter',   45, 365, 120, 5),
+  ('Cabin air filter',    55, 365, 135, 6),
+  ('Brake inspection',    50, 365, 150, 7),
+  ('Emissions test',      30, 365, 180, 8),
+  ('Battery check',        0, 365, 200, 9);
 
 insert into public.mechanic_shops
   (shop_name, street_address, city, phone, latitude, longitude, average_rating, average_repair_price, services) values

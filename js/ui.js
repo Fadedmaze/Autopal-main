@@ -1,5 +1,6 @@
 // Shared UI helpers: escaping, formatting, icons, toasts and the confirm dialog.
 import { distanceUnit } from "./prefs.js";
+import { catalogBody } from "./vehicleCatalog.js";
 
 export function escapeHtml(value) {
   return String(value ?? "")
@@ -151,8 +152,11 @@ const VAN = /\b(odyssey|sienna|pacifica|carnival|transit|sprinter|caravan|voyage
 const COUPE = /\b(mustang|camaro|corvette|86|brz|gr86|miata|mx-?5|911|challenger|supra|cayman|boxster|s2000|tt|firebird|celica)\b/i;
 const HATCH = /\b(golf|fit|prius|bolt|leaf|mazda3|yaris|fiesta|sonic|soul|hatch(back)?)\b/i;
 
-// Body style from the make/model text: truck, suv, van, coupe, hatch or sedan.
+// Body style: truck, suv, van, coupe, hatch or sedan. The vehicle catalog knows the
+// real body type of listed models; for anything else, guess from the make/model text.
 export function bodyStyle(v) {
+  const listed = catalogBody(v.brand, v.make);
+  if (listed) return listed;
   const text = `${v.make ?? ""} ${v.model ?? ""}`;
   if (TRUCK.test(text)) return "truck";
   if (VAN.test(text)) return "van";

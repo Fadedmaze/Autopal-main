@@ -6,6 +6,8 @@ import { listGuides, listWarningLights, getProfile, listVehicles, listTasks } fr
 import { appBar, escapeHtml, icon, loading, formatDate, vehicleSpec } from "../ui.js";
 import { openScanner } from "./discover.js";
 import { diagramFor } from "../guideDiagrams.js";
+import { brandKey as brandKeyFor } from "../repairs.js";
+import { findBrand } from "../vehicleCatalog.js";
 
 const CATEGORIES = [
   { id: "diy", label: "DIY Maintenance", icon: "wrench" },
@@ -233,7 +235,7 @@ export default async function render(root, ctx) {
   } catch { /* scan without car tuning */ }
   if (!ctx.isCurrent()) return;
   const vehicle = () => vehicles.find((v) => v.id === chosenVehicleId) ?? null;
-  const brandKey = () => (vehicle()?.brand ?? "").trim().toLowerCase();
+  const brandKey = () => brandKeyFor(vehicle());
   const bySlug = new Map(warningLightsCache.map((l) => [l.slug, l]));
   let scanner = null;
 
@@ -449,12 +451,11 @@ async function renderGuide(root, ctx, g) {
   category = g.category;
   const isDiy = g.category === "diy";
   const isDashboard = g.category === "dashboard";
-  const sev = g.severity ? SEVERITY[g.severity] : null;
-
-  // The car tunes the video search and the Add Task button. If this fails (offline,
-  // say), the guide still shows; it just isn't tuned to a car.
+  // The car tunes the video search and the Add Task button (DIY), or shows what this
+  // light means on your brand (dashboard). If this fails (offline, say), the guide
+  // still shows; it just isn't tuned to a car.
   let vehicles = [];
-  if (isDiy) {
+  if (isDiy || isDashboard) {
     try {
       const [profile, list] = await Promise.all([getProfile(), listVehicles()]);
       vehicles = list;
@@ -465,6 +466,14 @@ async function renderGuide(root, ctx, g) {
     if (!ctx.isCurrent()) return;
   }
   const vehicle = () => vehicles.find((v) => v.id === chosenVehicleId) ?? null;
+
+  // Dashboard lights: the brand's own note and, where it differs, its severity
+  // (an amber wrench is a powertrain fault on a Ford, but routine service elsewhere).
+  const car = isDashboard ? vehicle() : null;
+  const carBrand = car ? brandKeyFor(car) : "";
+  const brandNote = car ? g.warningLight?.brand_notes?.[carBrand] : null;
+  const severity = (car && g.warningLight?.brand_severity?.[carBrand]) || g.severity;
+  const sev = severity ? SEVERITY[severity] : null;
 
   // Readable guides have step_details ({title, body}); older ones only have short steps.
   const detailed = Array.isArray(g.step_details) && g.step_details.length > 0;
@@ -478,7 +487,12 @@ async function renderGuide(root, ctx, g) {
           ${g.difficulty ? difficultyBadge(g.difficulty) : ""}
           ${g.time_estimate ? `<span>${icon("clock", 15, 2)} About ${escapeHtml(g.time_estimate)}</span>` : ""}
         </p>` : ""}
-      ${sev ? `<div class="notice notice-${g.severity === "stop" ? "danger" : "warn"}">${icon("alert", 18, 2)}<span><strong>${sev.label}.</strong> ${sev.text}</span></div>` : ""}
+      ${brandNote ? `
+        <section class="card brand-note">
+          <h3>${icon("car", 16, 2)}On Your ${escapeHtml(findBrand(car.brand) ?? car.brand)}</h3>
+          <p>${escapeHtml(brandNote)}</p>
+        </section>` : ""}
+      ${sev ? `<div class="notice notice-${severity === "stop" ? "danger" : "warn"}">${icon("alert", 18, 2)}<span><strong>${sev.label}.</strong> ${sev.text}</span></div>` : ""}
       ${isDiy ? `<section class="card guide-video" id="video-card"></section>` : ""}
       ${isDiy ? diyDropdown(
         "Why it matters",

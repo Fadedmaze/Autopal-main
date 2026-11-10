@@ -5,13 +5,9 @@ import { distanceUnit } from "../prefs.js";
 import {
   appBar, escapeHtml, icon, loading, toast, confirmDialog, errorMessage, withBusy, toStoredMiles, fromStoredMiles,
 } from "../ui.js";
+import { BRANDS, COMMON_TRIMS, findBrand, findModel, modelsFor } from "../vehicleCatalog.js";
 
-const BRANDS = [
-  "Acura", "Audi", "BMW", "Buick", "Cadillac", "Chevrolet", "Chrysler", "Dodge", "Fiat", "Ford", "Genesis",
-  "GMC", "Honda", "Hyundai", "Infiniti", "Jeep", "Kia", "Land Rover", "Lexus", "Lincoln", "Mazda",
-  "Mercedes-Benz", "Mini", "Mitsubishi", "Nissan", "Porsche", "Ram", "Rivian", "Subaru", "Tesla",
-  "Toyota", "Volkswagen", "Volvo",
-];
+const BODY_NAMES = { sedan: "sedan", hatch: "hatchback", coupe: "coupe", suv: "SUV", truck: "pickup truck", van: "van" };
 
 export default async function render(root, ctx) {
   const editing = Boolean(ctx.params.id);
@@ -42,12 +38,15 @@ export default async function render(root, ctx) {
       </label>
       <label class="field">
         <span>Make</span>
-        <input name="make" required maxlength="40" placeholder="e.g. Civic" value="${escapeHtml(v.make ?? "")}">
+        <input name="make" list="makes" required maxlength="40" placeholder="e.g. Civic" value="${escapeHtml(v.make ?? "")}" autocomplete="off">
+        <datalist id="makes"></datalist>
+        <small class="hint" id="make-hint" aria-live="polite"></small>
       </label>
       <div class="field-row">
         <label class="field grow">
           <span>Model</span>
-          <input name="model" maxlength="40" placeholder="e.g. EX" value="${escapeHtml(v.model ?? "")}">
+          <input name="model" list="trims" maxlength="40" placeholder="e.g. EX" value="${escapeHtml(v.model ?? "")}" autocomplete="off">
+          <datalist id="trims">${COMMON_TRIMS.map((t) => `<option value="${escapeHtml(t)}">`).join("")}</datalist>
         </label>
         <label class="field">
           <span>Year</span>
@@ -77,15 +76,39 @@ export default async function render(root, ctx) {
 
   const form = root.querySelector("form");
   const errEl = root.querySelector(".form-error");
+
+  // Make suggestions follow the brand, and a hint confirms what we recognized.
+  const brandInput = form.elements.brand;
+  const makeInput = form.elements.make;
+  const makeList = root.querySelector("#makes");
+  const makeHint = root.querySelector("#make-hint");
+  const syncMakes = () => {
+    makeList.innerHTML = modelsFor(brandInput.value).map((m) => `<option value="${escapeHtml(m.name)}">`).join("");
+  };
+  const syncHint = () => {
+    const brand = findBrand(brandInput.value);
+    const model = brand && findModel(brand, makeInput.value);
+    if (model) makeHint.textContent = `${brand} ${model.name} · ${BODY_NAMES[model.body]}`;
+    else if (brand && makeInput.value.trim()) makeHint.textContent = `Not in our ${brand} list. That's fine if it's spelled right.`;
+    else makeHint.textContent = "";
+  };
+  brandInput.addEventListener("input", () => { syncMakes(); syncHint(); });
+  makeInput.addEventListener("input", syncHint);
+  syncMakes();
+  syncHint();
   const fail = (msg) => { errEl.textContent = msg; errEl.hidden = false; };
 
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     errEl.hidden = true;
     const f = Object.fromEntries(new FormData(form));
+    // Use the catalog's spelling when we recognize the car ("honda crv" → "Honda CR-V"),
+    // so brand-specific tips and the 3D shape match.
+    const brand = findBrand(f.brand);
+    const model = brand ? findModel(brand, f.make, { exact: true }) : null;
     const fields = {
-      brand: f.brand.trim(),
-      make: f.make.trim(),
+      brand: brand ?? f.brand.trim(),
+      make: model?.name ?? f.make.trim(),
       model: f.model.trim() || null,
       model_year: Number(f.model_year) || null,
       vehicle_nickname: f.vehicle_nickname.trim() || null,
