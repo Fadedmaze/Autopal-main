@@ -30,13 +30,15 @@ export default async function render(root, ctx) {
     : { href: "#/tasks", label: "Tasks" };
   // From a mechanic shop (Find a Mechanic → "Add to my tasks"): the shop and the estimate.
   const presetShop = Number(ctx.query.get("shop")) || null;
-  const presetCost = Number(ctx.query.get("cost"));
+  const costParam = ctx.query.get("cost");
+  const parsedCost = costParam === null || costParam.trim() === "" ? NaN : Number(costParam);
+  const presetCost = Number.isFinite(parsedCost) && parsedCost >= 0 ? parsedCost : null;
   const presetNotes = (ctx.query.get("notes") ?? "").slice(0, 1000);
   const t = task ?? {
     vehicle_id: vehicles.some((v) => v.id === presetVehicle) ? presetVehicle : vehicles[0].id,
     task_name: presetName,
     due_date: "",
-    estimated_cost: presetCost > 0 ? presetCost : null,
+    estimated_cost: presetCost,
     notes: presetNotes,
     shop_id: presetShop,
     remind_days_before: null,
