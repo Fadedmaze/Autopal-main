@@ -1,8 +1,8 @@
 // Maintenance Estimate: upcoming repairs with their approximate prices and a total.
 // The total comes from the vehicle_task_summary view (summed in the database).
-import { getProfile, getSettings, listVehicles, listTasks, listGuides } from "../data.js";
-import { taskRow, bindTaskRows } from "../components.js";
-import { appBar, escapeHtml, loading, emptyState, formatMoney, icon } from "../ui.js";
+import { getProfile, getSettings, listVehicles, listTasks } from "../data.js";
+import { taskRow, bindTaskRows, taskDetailsSheet } from "../components.js";
+import { appBar, escapeHtml, loading, emptyState, formatMoney } from "../ui.js";
 
 let chosenVehicle = null;
 
@@ -26,27 +26,15 @@ export default async function render(root, ctx) {
     chosenVehicle = vehicles.some((v) => v.id === profile.active_vehicle_id) ? profile.active_vehicle_id : vehicles[0].id;
   }
   const vehicle = vehicles.find((v) => v.id === chosenVehicle);
-  const [open, guides] = await Promise.all([
-    listTasks({ vehicleId: vehicle.id, completed: false }),
-    listGuides(),
-  ]);
+  const open = await listTasks({ vehicleId: vehicle.id, completed: false });
   if (!ctx.isCurrent()) return;
   const s = vehicle.summary;
-  const guidesByTaskName = new Map(guides
-    .filter((g) => g.category === "diy" && g.task_name)
-    .map((g) => [g.task_name.trim().toLowerCase(), g]));
-  const row = (t) => {
-    const guide = guidesByTaskName.get(t.task_name.trim().toLowerCase());
-    const guideHref = guide
-      ? `#/library/${encodeURIComponent(guide.slug)}?vehicle=${vehicle.id}`
-      : null;
-    return taskRow(t, {
-      remindDays: settings.reminder_days_before,
-      showCost: true,
-      showDueDate: false,
-      guideHref,
-    });
-  };
+  const row = (t) => taskRow(t, {
+    remindDays: settings.reminder_days_before,
+    showCost: true,
+    showDueDate: false,
+    showTaskDetails: true,
+  });
 
   root.innerHTML = `
     ${appBar(bar)}
@@ -69,8 +57,7 @@ export default async function render(root, ctx) {
         <small>${s.open_count} upcoming repair${s.open_count === 1 ? "" : "s"} · ${escapeHtml(vehicle.label)}</small>
       </div>
       <strong>${formatMoney(s.open_estimated_total)}</strong>
-    </div>
-    <a class="fab" href="#/tasks/new?vehicle=${vehicle.id}">${icon("plus", 20, 2.6)}<span>Add task</span></a>`;
+    </div>`;
 
   root.querySelectorAll("[data-vehicle]").forEach((b) => b.addEventListener("click", () => {
     chosenVehicle = Number(b.dataset.vehicle);
@@ -81,5 +68,12 @@ export default async function render(root, ctx) {
     }
     render(root, ctx);
   }));
+  const tasksById = new Map(open.map((t) => [t.id, t]));
+  root.querySelectorAll("[data-task-details]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const task = tasksById.get(Number(button.closest(".task").dataset.taskId));
+      if (task) taskDetailsSheet(task);
+    });
+  });
   bindTaskRows(root, new Map(open.map((t) => [t.id, t])), () => render(root, ctx));
 }
