@@ -9,7 +9,7 @@ import { remindLabel, remindShort } from "./reminders.js";
 
 // One maintenance task row. The checkbox on the left completes / un-completes it.
 // Overdue tasks are red (spec). `showCost` puts the estimate on the right (Budget).
-export function taskRow(task, { vehicle = null, remindDays = 7, showCost = false, showReceipt = false } = {}) {
+export function taskRow(task, { vehicle = null, remindDays = 7, showCost = false, showReceipt = false, showDueDate = true } = {}) {
   const done = task.is_completed;
   // A task's own reminder window wins over the user's default (null = use the default).
   const tone = done ? "muted" : dueTone(task.due_date, task.remind_days_before ?? remindDays);
@@ -31,7 +31,7 @@ export function taskRow(task, { vehicle = null, remindDays = 7, showCost = false
       <div class="task-body" data-toggle>
         <span class="task-name">${escapeHtml(task.task_name)}</span>
         <span class="task-meta">
-          <span class="tone-${tone}">${escapeHtml(when)}</span>
+          ${showDueDate ? `<span class="tone-${tone}">${escapeHtml(when)}</span>` : ""}
           ${vehicle ? `<span class="dot-sep">${escapeHtml(vehicle.label)}</span>` : ""}
           ${bell}
         </span>
