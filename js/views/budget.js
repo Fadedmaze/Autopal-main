@@ -10,7 +10,14 @@ export default async function render(root, ctx) {
   root.innerHTML = loading();
   const [profile, settings, vehicles] = await Promise.all([getProfile(), getSettings(), listVehicles()]);
   if (!ctx.isCurrent()) return;
-  const bar = { title: "Maintenance Estimator", sub: "Estimate costs for upcoming repairs", back: { href: "#/home", label: "Home" } };
+  const bar = {
+    title: "Maintenance Estimator",
+    sub: "Estimate costs for upcoming repairs",
+    back: { href: "#/home", label: "Home" },
+    action: vehicles.length
+      ? `<button class="icon-btn icon-btn-brand" type="button" data-add-custom aria-label="Add Custom">${icon("plus", 22, 2.4)}</button>`
+      : "",
+  };
 
   if (!vehicles.length) {
     root.innerHTML = `
@@ -59,8 +66,7 @@ export default async function render(root, ctx) {
         <small>${s.open_count} upcoming repair${s.open_count === 1 ? "" : "s"} · ${escapeHtml(vehicle.label)}</small>
       </div>
       <strong>${formatMoney(s.open_estimated_total)}</strong>
-    </div>
-    <button class="fab" type="button" data-add-custom>${icon("plus", 20, 2.6)}<span>Add Custom</span></button>`;
+    </div>`;
 
   root.querySelector("[data-add-custom]").addEventListener("click", () => {
     addCustomTaskSheet(vehicle.id, {
