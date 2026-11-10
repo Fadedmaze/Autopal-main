@@ -1,8 +1,8 @@
 // Maintenance Estimate: upcoming repairs with their approximate prices and a total.
 // The total comes from the vehicle_task_summary view (summed in the database).
 import { getProfile, getSettings, listVehicles, listTasks } from "../data.js";
-import { taskRow, bindTaskRows, taskDetailsSheet } from "../components.js";
-import { appBar, escapeHtml, loading, emptyState, formatMoney } from "../ui.js";
+import { taskRow, bindTaskRows, taskDetailsSheet, addCustomTaskSheet } from "../components.js";
+import { appBar, escapeHtml, loading, emptyState, formatMoney, icon } from "../ui.js";
 
 let chosenVehicle = null;
 
@@ -59,8 +59,14 @@ export default async function render(root, ctx) {
         <small>${s.open_count} upcoming repair${s.open_count === 1 ? "" : "s"} · ${escapeHtml(vehicle.label)}</small>
       </div>
       <strong>${formatMoney(s.open_estimated_total)}</strong>
-    </div>`;
+    </div>
+    <button class="fab" type="button" data-add-custom>${icon("plus", 20, 2.6)}<span>Add Custom</span></button>`;
 
+  root.querySelector("[data-add-custom]").addEventListener("click", () => {
+    addCustomTaskSheet(vehicle.id, {
+      onCreated: () => ctx.isCurrent() && render(root, ctx),
+    });
+  });
   root.querySelectorAll("[data-vehicle]").forEach((b) => b.addEventListener("click", () => {
     chosenVehicle = Number(b.dataset.vehicle);
     // Keep a ?vehicle= link from overriding the chip the user just picked.
