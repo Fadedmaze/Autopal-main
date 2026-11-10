@@ -34,6 +34,7 @@ export default async function render(root, ctx) {
     showCost: true,
     showDueDate: false,
     showTaskDetails: true,
+    showCheckbox: false,
   });
 
   root.innerHTML = `
