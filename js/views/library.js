@@ -224,7 +224,10 @@ export default async function render(root, ctx) {
   try {
     const [profile, list] = await Promise.all([getProfile(), listVehicles()]);
     vehicles = list;
-    if (!vehicles.some((v) => v.id === chosenVehicleId)) {
+    const requestedVehicleId = Number(ctx.query.get("vehicle"));
+    if (vehicles.some((v) => v.id === requestedVehicleId)) {
+      chosenVehicleId = requestedVehicleId;
+    } else if (!vehicles.some((v) => v.id === chosenVehicleId)) {
       chosenVehicleId = vehicles.some((v) => v.id === profile.active_vehicle_id) ? profile.active_vehicle_id : vehicles[0]?.id ?? null;
     }
   } catch { /* scan without car tuning */ }
