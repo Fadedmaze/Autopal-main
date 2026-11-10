@@ -394,7 +394,7 @@ function guideFigure(g) {
   if (d) {
     return `
       <figure class="card guide-diagram">
-        <h3>What to Look For</h3>
+      ${g.category === "diy" ? "" : "<h3>What to look for</h3>"}
         <div class="diagram" role="img" aria-label="${escapeHtml(d.alt)}">${d.svg}</div>
         ${d.caption ? `<figcaption>${escapeHtml(d.caption)}</figcaption>` : ""}
       </figure>`;
@@ -498,29 +498,27 @@ async function renderGuide(root, ctx, g) {
         "Why it matters",
         g.intro ? `
           <section class="guide-prose">
-            <h3>Why It Matters</h3>
             ${paragraphs(g.intro)}
           </section>` : ""
       ) : g.intro ? `
         <section class="guide-prose">
-          <h3>Why It Matters</h3>
           ${paragraphs(g.intro)}
         </section>` : ""}
       ${isDiy ? diyDropdown(
         "Before you start",
         g.prep ? `
-          <section class="card guide-prose">
-            <h3>Before You Start</h3>
+          <section class="guide-prose">
             ${paragraphs(g.prep)}
           </section>` : g.tools?.length ? `
           <section class="card">
-            <div><strong>You'll Need</strong>
+            <div><strong>You'll need</strong>
               <ul class="tools">
                 ${g.tools.map((t) => `<li>${escapeHtml(t)}</li>`).join("")}
               </ul>
             </div>
           </section>` : ""
-      ) : g.prep ? `
+      )
+       : g.prep ? `
         <section class="card guide-prose">
           <h3>Before You Start</h3>
           ${paragraphs(g.prep)}
