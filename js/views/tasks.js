@@ -37,7 +37,7 @@ export default async function render(root, ctx) {
       ${appBar({
         title: "Tasks",
         back: { href: "#/home", label: "Home" },
-        action: vehicles.length ? `<a class="icon-btn icon-btn-brand" href="${addHref}" aria-label="Add a task">${icon("plus", 22, 2.4)}</a>` : "",
+        action: vehicles.length ? `<a class="icon-btn icon-btn-brand" href="${addHref}" aria-label="Add a Task">${icon("plus", 22, 2.4)}</a>` : "",
       })}
       <div class="content">
         <div class="segmented" role="tablist">
