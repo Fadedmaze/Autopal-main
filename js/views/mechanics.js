@@ -5,7 +5,7 @@
 // or a light's guide): a banner names the problem, and a results panel ranks the shops
 // most likely to fix it with a per-shop price estimate for the user's car (js/repairs.js).
 import { nearbyShops, listWarningLights, listVehicles, getProfile, hasNewColumns } from "../data.js";
-import { escapeHtml, icon, stars, formatMoney, formatDistance, errorMessage, toast } from "../ui.js";
+import { escapeHtml, icon, stars, formatMoney, formatDistance, errorMessage, toast, titleCase } from "../ui.js";
 import {
   hasRepair, capability, estimate, rankShops, median, rangeText, money, midpoint, estimateWhy, problemSeverity,
 } from "../repairs.js";
@@ -20,9 +20,9 @@ const RATING_SLIDER = { min: 0, max: 5, step: 0.5 };
 const REFETCH_MILES = 0.5; // refresh shop distances after moving this far
 const FOLLOW_ZOOM = 14;
 const SEVERITY = {
-  stop: { label: "Stop now", text: "Don't drive far. Call the shop first and ask about towing." },
-  soon: { label: "Check soon", text: "" },
-  info: { label: "Good to know", text: "" },
+  stop: { label: "Stop Now", text: "Don't drive far. Call the shop first and ask about towing." },
+  soon: { label: "Check Soon", text: "" },
+  info: { label: "Good to Know", text: "" },
 };
 
 // Filters persist while moving around the app; location is kept in memory only.
@@ -46,11 +46,11 @@ export default async function render(root, ctx) {
 
       <div class="filter-panel" id="filter-panel" hidden>
         <div class="filter-group">
-          <label class="filter-label" for="filter-problem">Fix a warning light</label>
+          <label class="filter-label" for="filter-problem">Fix a Warning Light</label>
           <select class="filter-select" id="filter-problem"><option value="">Any problem</option></select>
         </div>
         <div class="filter-group">
-          <div class="filter-label-row"><label class="filter-label" for="filter-price">Average repair price</label><output id="price-out"></output></div>
+          <div class="filter-label-row"><label class="filter-label" for="filter-price">Average Repair Price</label><output id="price-out"></output></div>
           <input type="range" class="filter-range" id="filter-price" min="${PRICE_SLIDER.min}" max="${PRICE_SLIDER.max}" step="${PRICE_SLIDER.step}">
           <div class="range-ends"><span>$${PRICE_SLIDER.min}</span><span>Any</span></div>
         </div>
@@ -61,11 +61,11 @@ export default async function render(root, ctx) {
         </div>
         <div class="filter-group">
           <span class="filter-label">Services</span>
-          <div class="service-grid">${SERVICES.map((s) => `<button type="button" class="service-toggle" data-service="${escapeHtml(s)}" aria-pressed="false"><span class="service-check" aria-hidden="true">${icon("check", 14, 3)}</span>${escapeHtml(s)}</button>`).join("")}</div>
+          <div class="service-grid">${SERVICES.map((s) => `<button type="button" class="service-toggle" data-service="${escapeHtml(s)}" aria-pressed="false"><span class="service-check" aria-hidden="true">${icon("check", 14, 3)}</span>${escapeHtml(titleCase(s))}</button>`).join("")}</div>
         </div>
         <div class="filter-actions">
           <button type="button" class="btn btn-ghost btn-sm" id="clear-filters">Clear</button>
-          <button type="button" class="btn btn-sm" id="apply-filters">Show shops</button>
+          <button type="button" class="btn btn-sm" id="apply-filters">Show Shops</button>
         </div>
       </div>
 
@@ -143,7 +143,7 @@ export default async function render(root, ctx) {
       fp.innerHTML = `<option value="">Any problem</option>${problemOptions(problem?.slug)}`;
     }
     const n = shops.filter(matches).length;
-    root.querySelector("#apply-filters").textContent = `Show ${n} shop${n === 1 ? "" : "s"}`;
+    root.querySelector("#apply-filters").textContent = `Show ${n} Shop${n === 1 ? "" : "s"}`;
   };
 
   // ---- Problem mode -----------------------------------------------------------
@@ -183,7 +183,7 @@ export default async function render(root, ctx) {
       </label>
       <div class="problem-sub">
         <span class="sev-pill sev-${sev}">${SEVERITY[sev].label}</span>
-        ${problem.repair_service ? `<span class="problem-type">${escapeHtml(problem.repair_service)} repair</span>` : ""}
+        ${problem.repair_service ? `<span class="problem-type">${escapeHtml(titleCase(problem.repair_service))} Repair</span>` : ""}
         ${vehicles.length > 1 ? `
           <label class="problem-car"><span>for</span>
             <select id="problem-vehicle" aria-label="Car to estimate for">
@@ -289,7 +289,7 @@ export default async function render(root, ctx) {
         ${problem.repair_note ? `<p class="results-note"><strong>What usually fixes it:</strong> ${escapeHtml(problem.repair_note)}</p>` : ""}
         ${rows.length ? `<ol class="shop-results">${rows.map((r) => shopCard(r)).join("")}</ol>` : `
           <p class="muted-box">${shops.length ? "No shops match your filters. Clear the filters to see more." : "No shops found near you."}</p>`}
-        ${others.length ? `<button type="button" class="btn btn-ghost btn-sm results-more" data-show-all>${showAllShops ? "Only shops that can fix this" : `Show ${others.length} other shop${others.length === 1 ? "" : "s"}`}</button>` : ""}
+        ${others.length ? `<button type="button" class="btn btn-ghost btn-sm results-more" data-show-all>${showAllShops ? "Only Shops That Can Fix This" : `Show ${others.length} Other Shop${others.length === 1 ? "" : "s"}`}</button>` : ""}
         <p class="hint small">Estimates are typical US prices for the usual fix, adjusted for each shop's prices${vehicle ? " and your car" : ""}. Call the shop for an exact quote.</p>
       </div>`;
     if (wasHidden) setSheet(sheetSnap, { animate: false });
@@ -386,7 +386,7 @@ export default async function render(root, ctx) {
         <div class="shop-result-top">
           <button type="button" class="shop-result-name" data-focus="${s.id}">
             <strong>${escapeHtml(s.shop_name)}</strong>
-            ${best ? `<em class="best-badge">Best match</em>` : ""}
+            ${best ? `<em class="best-badge">Best Match</em>` : ""}
           </button>
           ${e ? `<span class="shop-result-price">${rangeText(e)}</span>` : ""}
         </div>
@@ -397,7 +397,7 @@ export default async function render(root, ctx) {
         <span class="shop-actions">
           ${s.phone ? `<a class="btn btn-sm" href="${telHref(s.phone)}">${icon("phone", 15, 2)}Call</a>` : ""}
           <a class="btn btn-sm btn-soft" href="${directionsHref(s)}" target="_blank" rel="noopener">${icon("directions", 15, 2)}Directions</a>
-          ${cap ? `<a class="btn btn-sm btn-ghost" href="${escapeHtml(taskHref(s, e))}">${icon("plus", 15, 2.4)}Add to tasks</a>` : ""}
+          ${cap ? `<a class="btn btn-sm btn-ghost" href="${escapeHtml(taskHref(s, e))}">${icon("plus", 15, 2.4)}Add to Tasks</a>` : ""}
         </span>
       </li>`;
   };
@@ -639,7 +639,7 @@ export default async function render(root, ctx) {
     });
     resizeObserver.observe(mapEl);
   } catch {
-    mapEl.innerHTML = `<div class="map-error">${icon("alert", 28, 2)}<p>The map couldn't load. Check your connection.</p><button type="button" class="btn btn-sm" id="map-retry">Try again</button></div>`;
+    mapEl.innerHTML = `<div class="map-error">${icon("alert", 28, 2)}<p>The map couldn't load. Check your connection.</p><button type="button" class="btn btn-sm" id="map-retry">Try Again</button></div>`;
     mapEl.querySelector("#map-retry").addEventListener("click", () => ctx.navigate(location.hash));
     listEl.hidden = false;
   }

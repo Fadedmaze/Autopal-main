@@ -3,6 +3,12 @@
 import { supabase } from "./supabaseClient.js";
 import { currentUserId } from "./auth.js";
 import { PHOTO_BUCKET, RECEIPT_BUCKET, AVATAR_BUCKET, INSURANCE_BUCKET } from "./config.js";
+import { titleCase } from "./ui.js";
+
+// Names are shown in Title Case everywhere (see titleCase in ui.js). Doing it here, as
+// rows arrive, keeps every screen consistent and lets views print names as-is.
+const taskOut = (t) => (t && t.task_name ? { ...t, task_name: titleCase(t.task_name.trim()) } : t);
+const taskIn = (f) => (f && typeof f.task_name === "string" ? { ...f, task_name: titleCase(f.task_name.trim()) } : f);
 
 const VEHICLE_COLS = "id, vehicle_nickname, brand, make, model, model_year, current_mileage, description, created_at";
 const TASK_COLS = "id, vehicle_id, shop_id, catalog_id, task_name, due_date, estimated_cost, is_completed, completed_date, notes, receipt_path, remind_days_before, created_at";
@@ -126,7 +132,7 @@ function withLabel(v, index, summary) {
   return {
     ...v,
     index,
-    label: nickname || `Vehicle ${index + 1}`,
+    label: nickname ? titleCase(nickname) : `Vehicle ${index + 1}`,
     unnamed: !nickname,
     summary: summary ?? { open_count: 0, overdue_count: 0, next_due_date: null, open_estimated_total: 0, completed_cost_total: 0, all_estimated_total: 0 },
   };
@@ -195,22 +201,22 @@ export async function listTasks({ vehicleId = null, completed = null, from = nul
       q = q.order("due_date", { ascending: true, nullsFirst: false }).order("id");
     }
     return q.limit(limit);
-  });
+  }).then((rows) => rows.map(taskOut));
 }
 
 export async function getTask(id) {
   return run("maintenance_tasks", () => supabase.from("maintenance_tasks")
-    .select(cols("maintenance_tasks", TASK_COLS)).eq("id", id).maybeSingle());
+    .select(cols("maintenance_tasks", TASK_COLS)).eq("id", id).maybeSingle()).then(taskOut);
 }
 
 export async function createTask(fields) {
   return run("maintenance_tasks", () => supabase.from("maintenance_tasks")
-    .insert(fieldsFor("maintenance_tasks", fields)).select(cols("maintenance_tasks", TASK_COLS)).single());
+    .insert(fieldsFor("maintenance_tasks", taskIn(fields))).select(cols("maintenance_tasks", TASK_COLS)).single()).then(taskOut);
 }
 
 export async function updateTask(id, fields) {
   return run("maintenance_tasks", () => supabase.from("maintenance_tasks")
-    .update(fieldsFor("maintenance_tasks", fields)).eq("id", id).select(cols("maintenance_tasks", TASK_COLS)).single());
+    .update(fieldsFor("maintenance_tasks", taskIn(fields))).eq("id", id).select(cols("maintenance_tasks", TASK_COLS)).single()).then(taskOut);
 }
 
 export async function deleteTask(id) {
@@ -390,8 +396,13 @@ const GUIDE_DIY_COLS = "difficulty, task_name, video_query, safety, image_path, 
 export async function listGuides() {
   const query = (cols) => supabase.from("guides").select(cols).order("category").order("sort_order");
   const full = await query(`${GUIDE_COLS}, ${GUIDE_DIY_COLS}`);
-  if (!full.error) return full.data;
-  return check(await query(GUIDE_COLS)).map((g) => ({ ...g, safety: [], step_details: [] }));
+  const rows = full.error ? check(await query(GUIDE_COLS)).map((g) => ({ ...g, safety: [], step_details: [] })) : full.data;
+  return rows.map((g) => ({
+    ...g,
+    title: titleCase(g.title),
+    task_name: g.task_name ? titleCase(g.task_name) : g.task_name,
+    step_details: (g.step_details ?? []).map((st) => (st && st.title ? { ...st, title: titleCase(st.title) } : st)),
+  }));
 }
 
 // ---- Discover: warning lights --------------------------------------------
@@ -404,6 +415,7 @@ export async function listWarningLights() {
     .from("warning_lights")
     .select(cols("warning_lights", LIGHT_COLS))
     .order("sort_order"))
+    .then((rows) => rows.map((l) => ({ ...l, name: titleCase(l.name) })))
     .catch((err) => { warningLightsCache = null; throw err; });
   return warningLightsCache;
 }

@@ -58,13 +58,13 @@ export default async function render(root, ctx) {
         </label>
       </div>
       <label class="field">
-        <span>Vehicle name <em>optional</em></span>
+        <span>Vehicle Name <em>optional</em></span>
         <input name="vehicle_nickname" maxlength="40" placeholder="e.g. Daily Driver" value="${escapeHtml(v.vehicle_nickname ?? "")}">
         <small class="hint">Leave blank and it'll show as “Vehicle 1”, “Vehicle 2”, and so on.</small>
       </label>
       ${editing ? `
         <label class="field">
-          <span>Current mileage (${distanceUnit() === "km" ? "km" : "miles"}) <em>optional</em></span>
+          <span>Current Mileage (${distanceUnit() === "km" ? "km" : "miles"}) <em>optional</em></span>
           <input name="current_mileage" type="number" inputmode="numeric" min="0" max="3000000" step="1" value="${fromStoredMiles(v.current_mileage)}">
         </label>` : ""}
       <p class="form-error" role="alert" hidden></p>
@@ -72,7 +72,7 @@ export default async function render(root, ctx) {
         <a class="btn btn-ghost" href="${cancelHref}">Cancel</a>
         <button class="btn" type="submit">${editing ? "Save Changes" : "Save Vehicle"}</button>
       </div>
-      ${editing ? `<div class="danger-zone"><button type="button" class="btn-text danger" id="delete-vehicle">${icon("trash", 16, 2)}Delete this vehicle</button></div>` : ""}
+      ${editing ? `<div class="danger-zone"><button type="button" class="btn-text danger" id="delete-vehicle">${icon("trash", 16, 2)}Delete This Vehicle</button></div>` : ""}
     </form>`;
 
   const form = root.querySelector("form");

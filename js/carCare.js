@@ -120,7 +120,7 @@ function spendChart(s) {
   return `
     <div class="care-chart-block">
       <div class="care-sub-head">
-        <h4>Spending, last 12 months</h4>
+        <h4>Spending, Last 12 Months</h4>
         <span class="care-sub-total">${shortMoney(s.last12)}</span>
       </div>
       <div class="care-chart" role="img" aria-label="Spending by month. ${escapeHtml(s.months.filter((m) => m.total).map((m) => `${m.long}: ${shortMoney(m.total)}`).join("; "))}.">
@@ -150,7 +150,7 @@ function whereItWent(s) {
     </li>`).join("");
   return `
     <div class="care-where">
-      <div class="care-sub-head"><h4>Where it went</h4></div>
+      <div class="care-sub-head"><h4>Where It Went</h4></div>
       <ul>${rows}</ul>
       ${s.otherTotal ? `<p class="care-chart-note">Everything else: ${shortMoney(s.otherTotal)}</p>` : ""}
     </div>`;
@@ -173,7 +173,7 @@ export function careCard(vehicle, s, { remindDays = 7 } = {}) {
   return `
     <section class="card care" aria-labelledby="care-title">
       <div class="card-head">
-        <h3 id="care-title">${icon("shield", 18, 2)}Car care at a glance</h3>
+        <h3 id="care-title">${icon("shield", 18, 2)}Car Care at a Glance</h3>
         <a class="link-sm" href="#/budget?vehicle=${vehicle.id}">Costs</a>
       </div>
 
@@ -189,20 +189,20 @@ export function careCard(vehicle, s, { remindDays = 7 } = {}) {
         <p class="muted-box">No tasks for this car yet. <a href="${newTask}">Add the first one</a> and this summary fills in as you go.</p>` : `
       <div class="care-tiles">
         ${tile({ iconName: "check", label: "Completed", value: s.completedCount.toLocaleString(), sub: s.completedCount ? `${s.completedThisYear} in ${s.year}` : "None yet" })}
-        ${tile({ iconName: "dollar", label: "Total spent", value: shortMoney(s.spent), sub: s.spent ? `${shortMoney(s.spentThisYear)} in ${s.year}` : "No costs recorded" })}
-        ${tile({ iconName: "history", label: "Last service", value: s.last ? escapeHtml(ago(s.daysSinceLast).replace(/^./, (c) => c.toUpperCase())) : "None yet", sub: s.last ? `${escapeHtml(s.last.task_name)} · ${formatDate(s.last.completed_date, { month: "short", day: "numeric" })}` : "" })}
+        ${tile({ iconName: "dollar", label: "Total Spent", value: shortMoney(s.spent), sub: s.spent ? `${shortMoney(s.spentThisYear)} in ${s.year}` : "No costs recorded" })}
+        ${tile({ iconName: "history", label: "Last Service", value: s.last ? escapeHtml(ago(s.daysSinceLast).replace(/^./, (c) => c.toUpperCase())) : "None yet", sub: s.last ? `${escapeHtml(s.last.task_name)} · ${formatDate(s.last.completed_date, { month: "short", day: "numeric" })}` : "" })}
         ${tile({ iconName: "calendar", label: "Upcoming", value: s.upcomingCount.toLocaleString(), sub: s.upcomingCount ? `${shortMoney(s.upcomingTotal)} estimated` : "Nothing planned", href: `#/budget?vehicle=${vehicle.id}` })}
       </div>
 
       ${s.next ? `
         <a class="care-next" href="#/tasks/${s.next.id}">
-          <span class="care-next-label">Next up</span>
+          <span class="care-next-label">Next Up</span>
           <span class="care-next-main">
             <strong>${escapeHtml(s.next.task_name)}</strong>
             <span class="tone-${dueTone(s.next.due_date, s.next.remind_days_before ?? remindDays)}">${escapeHtml(dueLabel(s.next.due_date))}${cost(s.next) ? ` · ~${shortMoney(cost(s.next))}` : ""}</span>
           </span>
           ${icon("chevron", 18, 2)}
-        </a>` : `<a class="care-next care-next-add" href="${newTask}">${icon("plus", 18, 2.4)}<span>Plan the next service</span></a>`}
+        </a>` : `<a class="care-next care-next-add" href="${newTask}">${icon("plus", 18, 2.4)}<span>Plan the Next Service</span></a>`}
 
       ${spendChart(s)}
       ${whereItWent(s)}

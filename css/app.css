@@ -73,9 +73,8 @@ body {
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }
-h1, h2, h3, h4, h5, h6, .car-name, .task-name, .next-body strong, .light-text strong, .guide-text strong {
-  text-transform: capitalize;
-}
+/* Capitalization is written into the text (Title Case for titles, headings, buttons,
+   labels and names; sentence case for body copy). See titleCase() in js/ui.js. */
 a { color: var(--brand); text-decoration: none; }
 a:hover { text-decoration: underline; }
 img { max-width: 100%; display: block; }

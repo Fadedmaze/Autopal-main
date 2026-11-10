@@ -8,6 +8,8 @@
 //   needs_diagnosis      true when the shop has to scan/test first (adds a diagnostic fee)
 //   repair_note          one plain sentence on what usually causes it and what it costs
 
+import { titleCase } from "./ui.js";
+
 export const SERVICES = ["Oil change", "Brakes", "Tires", "Engine", "Transmission", "Electrical", "Alignment", "Inspection"];
 
 // Typical diagnostic fee at an independent US shop; often credited toward the repair.
@@ -150,14 +152,16 @@ export function rankShops(shops, light, { areaMedian, vehicle }) {
 }
 
 function reasonsFor({ shop, cap }, light, { areaMedian, nearest, topRated }) {
+  // Short tags, in Title Case like other labels.
+  const svc = titleCase(light.repair_service);
   const out = [];
-  if (cap === "primary") out.push(isSpecialist(shop, light) ? `${light.repair_service} specialist` : `Does ${light.repair_service.toLowerCase()} work`);
-  else if (cap === "alt") out.push(`Can often handle this (${(light.repair_alt_services ?? []).filter((s) => shop.services?.includes(s)).join(", ").toLowerCase()})`);
+  if (cap === "primary") out.push(isSpecialist(shop, light) ? `${svc} Specialist` : `Does ${svc} Work`);
+  else if (cap === "alt") out.push(`Can Often Handle This (${(light.repair_alt_services ?? []).filter((s) => shop.services?.includes(s)).map(titleCase).join(", ")})`);
   if (!cap) return out;
-  if (topRated) out.push("Top rated");
+  if (topRated) out.push("Top Rated");
   if (nearest) out.push("Closest");
   const f = shopFactor(shop, areaMedian);
-  if (f <= 0.9) out.push("Lower prices");
-  else if (f >= 1.15) out.push("Higher prices");
+  if (f <= 0.9) out.push("Lower Prices");
+  else if (f >= 1.15) out.push("Higher Prices");
   return out;
 }

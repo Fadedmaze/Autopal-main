@@ -10,15 +10,15 @@ export default async function render(root, ctx) {
         <span class="auth-logo">${icon("lock", 28, 2)}</span>
         <span class="auth-name">AutoPal</span>
       </div>
-      <h1>Choose a new password</h1>
+      <h1>Choose a New Password</h1>
       <p class="sub">You'll stay signed in on this device.</p>
       <form class="form" novalidate>
         <label class="field">
-          <span>New password</span>
+          <span>New Password</span>
           <input name="password" type="password" autocomplete="new-password" minlength="8" required>
         </label>
         <label class="field">
-          <span>Confirm new password</span>
+          <span>Confirm New Password</span>
           <input name="confirm" type="password" autocomplete="new-password" minlength="8" required>
         </label>
         <p class="form-error" role="alert" hidden></p>

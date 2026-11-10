@@ -1,4 +1,4 @@
-// Maintenance Estimate: upcoming repairs with their approximate prices and a total.
+// Maintenance Estimator: upcoming repairs with their approximate prices and a total.
 // The total comes from the vehicle_task_summary view (summed in the database).
 import { getProfile, getSettings, listVehicles, listTasks } from "../data.js";
 import { taskRow, bindTaskRows, taskDetailsSheet, addCustomTaskSheet } from "../components.js";
@@ -15,7 +15,7 @@ export default async function render(root, ctx) {
   if (!vehicles.length) {
     root.innerHTML = `
       ${appBar(bar)}
-      ${emptyState({ iconName: "dollar", title: "No vehicles yet", body: `Add a car in the <a href="#/garage">Garage</a> to see its maintenance estimate.` })}`;
+      ${emptyState({ iconName: "dollar", title: "No Vehicles Yet", body: `Add a car in the <a href="#/garage">Garage</a> to see its maintenance estimate.` })}`;
     return;
   }
 
@@ -55,7 +55,7 @@ export default async function render(root, ctx) {
 
     <div class="total-bar">
       <div>
-        <span>Upcoming total</span>
+        <span>Upcoming Total</span>
         <small>${s.open_count} upcoming repair${s.open_count === 1 ? "" : "s"} · ${escapeHtml(vehicle.label)}</small>
       </div>
       <strong>${formatMoney(s.open_estimated_total)}</strong>

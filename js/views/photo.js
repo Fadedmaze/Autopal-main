@@ -18,7 +18,7 @@ export default async function render(root, ctx) {
       <label class="capture">
         <input type="file" accept="image/*" capture="environment" hidden>
         <span class="capture-preview">
-          <span class="capture-empty">${icon("camera", 48, 1.5)}<strong>Take or choose a photo</strong><small>JPG, PNG, WebP or HEIC up to 10 MB</small></span>
+          <span class="capture-empty">${icon("camera", 48, 1.5)}<strong>Take or Choose a Photo</strong><small>JPG, PNG, WebP or HEIC up to 10 MB</small></span>
         </span>
       </label>
       <p class="form-error" role="alert" hidden></p>
