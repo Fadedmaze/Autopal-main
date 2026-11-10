@@ -59,7 +59,7 @@ export function taskDetailsSheet(task, { onChanged } = {}) {
   dlg.innerHTML = `
     <div class="sheet-body left">
       <div class="sheet-head">
-        <h2>${escapeHtml(task.task_name)}</h2>
+        <h2 class="task-details-title">${escapeHtml(task.task_name)}</h2>
         <button type="button" class="icon-btn" data-close aria-label="Close">${icon("close", 18, 2.2)}</button>
       </div>
       <form class="form task-price-form" data-price-form novalidate>
