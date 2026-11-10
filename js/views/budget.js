@@ -40,7 +40,6 @@ export default async function render(root, ctx) {
         </div>` : ""}
 
       <section class="section">
-        <div class="section-head"><h3>Upcoming</h3><span class="tone-muted">${formatMoney(s.open_estimated_total)}</span></div>
         ${open.length ? `<ul class="task-list">${open.map(row).join("")}</ul>` : `<p class="muted-box">No upcoming repairs.</p>`}
       </section>
 
