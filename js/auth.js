@@ -29,7 +29,7 @@ export async function signIn(username, password) {
   });
   if (error) {
     // invoke() hides the JSON body on non-2xx responses; read the real message.
-    let message = "Sign-in is unavailable right now. Please try again.";
+    let message = "Logging in is unavailable right now. Please try again.";
     try {
       message = (await error.context.json()).error || message;
     } catch { /* network failure: keep the generic message */ }

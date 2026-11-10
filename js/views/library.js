@@ -12,9 +12,9 @@ const CATEGORIES = [
   { id: "dashboard", label: "Dashboard Lights", icon: "alert" },
 ];
 const SEVERITY = {
-  stop: { label: "Pull over now", text: "Stop driving as soon as it's safe to do so." },
-  soon: { label: "Check soon", text: "Safe to drive carefully, but get it checked soon." },
-  info: { label: "Good to know", text: "Usually not urgent." },
+  stop: { label: "Stop Now", text: "Stop driving as soon as it's safe to do so." },
+  soon: { label: "Check Soon", text: "Safe to drive carefully, but get it checked soon." },
+  info: { label: "Good to Know", text: "Usually not urgent." },
 };
 const DIFFICULTY = {
   easy: { label: "Easy", tone: "ok" },
@@ -182,7 +182,7 @@ export default async function render(root, ctx) {
       ${appBar({ title: "Discover", back: { href: "#/home", label: "Home" } })}
       <div class="error-state">
         ${icon("book", 40, 1.6)}
-        <h2>Couldn't load the guides</h2>
+        <h2>Couldn't Load the Guides</h2>
         <p>${navigator.onLine ? "Something went wrong on our end." : "It looks like you're offline."} Check your connection and try again.</p>
         <button class="btn" type="button" id="retry">Try Again</button>
       </div>`;
@@ -371,12 +371,12 @@ function scanCard(vehicles, v) {
   return `
     <section class="scan-hero scan-hero-compact">
       <span class="scan-hero-icon">${icon("scan", 30, 1.8)}</span>
-      <h2>Scan your dashboard</h2>
+      <h2>Scan Your Dashboard</h2>
       <p>Turn the car on so the lights are glowing, then hold your phone about a foot from the dashboard. Yellow squares appear around the lights we find. Tap one to see what it means.</p>
       <button type="button" class="btn" id="start-scan">${icon("camera", 18, 2)}Scan My Dashboard</button>
       ${vehicles.length ? `
         <div class="scan-vehicle">
-          <span>Tuned for</span>
+          <span>Tuned For</span>
           ${vehicles.length > 1
             ? `<select id="scan-vehicle" aria-label="Vehicle to tune results for">${vehicles.map((x) => `<option value="${x.id}" ${x.id === v?.id ? "selected" : ""}>${escapeHtml(x.label)} · ${escapeHtml(vehicleSpec(x))}</option>`).join("")}</select>`
             : `<strong>${escapeHtml(v.label)} · ${escapeHtml(vehicleSpec(v))}</strong>`}
@@ -392,7 +392,7 @@ function guideFigure(g) {
   if (d) {
     return `
       <figure class="card guide-diagram">
-        <h3>What to look for</h3>
+        <h3>What to Look For</h3>
         <div class="diagram" role="img" aria-label="${escapeHtml(d.alt)}">${d.svg}</div>
         ${d.caption ? `<figcaption>${escapeHtml(d.caption)}</figcaption>` : ""}
       </figure>`;
@@ -484,23 +484,23 @@ async function renderGuide(root, ctx, g) {
         "Why it matters",
         g.intro ? `
           <section class="guide-prose">
-            <h3>Why it matters</h3>
+            <h3>Why It Matters</h3>
             ${paragraphs(g.intro)}
           </section>` : ""
       ) : g.intro ? `
         <section class="guide-prose">
-          <h3>Why it matters</h3>
+          <h3>Why It Matters</h3>
           ${paragraphs(g.intro)}
         </section>` : ""}
       ${isDiy ? diyDropdown(
         "Before you start",
         g.prep ? `
           <section class="card guide-prose">
-            <h3>Before you start</h3>
+            <h3>Before You Start</h3>
             ${paragraphs(g.prep)}
           </section>` : g.tools?.length ? `
           <section class="card">
-            <div><strong>You'll need</strong>
+            <div><strong>You'll Need</strong>
               <ul class="tools">
                 ${g.tools.map((t) => `<li>${escapeHtml(t)}</li>`).join("")}
               </ul>
@@ -508,17 +508,17 @@ async function renderGuide(root, ctx, g) {
           </section>` : ""
       ) : g.prep ? `
         <section class="card guide-prose">
-          <h3>Before you start</h3>
+          <h3>Before You Start</h3>
           ${paragraphs(g.prep)}
         </section>` : ""}
       ${guideFigure(g)}
       ${g.safety?.length ? `
         <div class="notice notice-warn guide-safety">${icon("alert", 18, 2)}
-          <div><strong>Safety first</strong>${g.safety.map((s) => `<p>${escapeHtml(s)}</p>`).join("")}</div>
+          <div><strong>Safety First</strong>${g.safety.map((s) => `<p>${escapeHtml(s)}</p>`).join("")}</div>
         </div>` : ""}
       ${detailed ? `
         <section class="guide-prose">
-          <h3>Step by step</h3>
+          <h3>Step by Step</h3>
           <ol class="walkthrough">
             ${g.step_details.map((s, i) => `
               <li class="walk-step">
@@ -531,18 +531,18 @@ async function renderGuide(root, ctx, g) {
           </ol>
         </section>` : `
         <section class="card">
-          <h3>${isDiy ? "Steps" : "What to do"}</h3>
+          <h3>${isDiy ? "Steps" : "What to Do"}</h3>
           <ol class="steps">${g.steps.map((s) => `<li>${escapeHtml(s)}</li>`).join("")}</ol>
         </section>`}
       ${isDashboard && g.warningLight?.repair_service ? `
         <a class="card mechanic-cta" href="#/mechanics?problem=${encodeURIComponent(g.warningLight.slug)}${chosenVehicleId ? `&vehicle=${chosenVehicleId}` : ""}">
           <span class="guide-icon">${icon("pin", 20, 2)}</span>
-          <span class="guide-text"><strong>Find a shop that can fix this</strong><span>Nearby shops ranked for ${escapeHtml(g.warningLight.repair_service.toLowerCase())} work, with price estimates.</span></span>
+          <span class="guide-text"><strong>Find a Shop That Can Fix This</strong><span>Nearby shops ranked for ${escapeHtml(g.warningLight.repair_service.toLowerCase())} work, with price estimates.</span></span>
           ${icon("chevron", 18, 2)}
         </a>` : ""}
       ${g.wrap_up ? `
         <section class="card guide-prose guide-wrap">
-          <h3>Good to know</h3>
+          <h3>Good to Know</h3>
           ${paragraphs(g.wrap_up)}
         </section>` : ""}
       ${isDiy ? `
@@ -565,7 +565,7 @@ async function renderGuide(root, ctx, g) {
       <a class="video-link" href="${escapeHtml(videoUrl(g, v))}" target="_blank" rel="noopener">
         <span class="video-icon">${icon("play", 22, 2)}</span>
         <span class="video-text">
-          <strong>Watch how-to videos</strong>
+          <strong>Watch How-To Videos</strong>
           <span>${v ? `Searches YouTube for your ${escapeHtml([v.model_year, v.brand, v.make].filter(Boolean).join(" "))}` : "Searches YouTube for this job"}</span>
         </span>
         ${icon("chevron", 18, 2)}

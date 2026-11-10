@@ -1,9 +1,9 @@
 // Home: welcome, the car on its circular platform (swipe between cars), the next
-// upcoming task (opens Tasks), Maintenance Estimate, and the tire-shaped settings menu.
+// upcoming task (opens Tasks), Maintenance Estimator, and the tire-shaped settings menu.
 import { getProfile, getSettings, listVehicles, listTasks, listPhotos, setActiveVehicle, updateProfile } from "../data.js";
 import { distanceUnit, setDistanceUnit, getTheme, applyTheme } from "../prefs.js";
 import {
-  escapeHtml, icon, loading, dueLabel, dueTone, formatMoney, vehicleIcon, vehicleSpec, vehicleTint, vehicleInkColor, toast, errorMessage,
+  escapeHtml, icon, loading, dueLabel, dueTone, formatMoney, vehicleIcon, vehicleSpec, vehicleTint, vehicleInkColor, toast, errorMessage, titleCase,
 } from "../ui.js";
 import { mountCar3D } from "../car3d.js";
 import { announceReminders } from "../reminders.js";
@@ -31,13 +31,14 @@ export default async function render(root, ctx) {
   const photos = await Promise.all(vehicles.map((v) => listPhotos(v.id).then((p) => p[0]?.url ?? null).catch(() => null)));
   if (!ctx.isCurrent()) return cleanup;
 
-  const name = profile.display_name || profile.username || "driver";
+  // Display names are shown as typed; a username fallback gets Title Case like other names.
+  const name = profile.display_name || titleCase(profile.username || "driver");
 
   root.innerHTML = `
     <header class="home-head">
       <div>
         <p class="eyebrow">${greet()}</p>
-        <h1>Welcome back, ${escapeHtml(name)}</h1>
+        <h1>Welcome Back, ${escapeHtml(name)}</h1>
       </div>
       <button type="button" class="tire-btn" id="settings" aria-label="Settings">${icon("tire", 26, 1.7)}</button>
     </header>
@@ -63,14 +64,14 @@ export default async function render(root, ctx) {
       ` : `
         <div class="stage-slide">
           <a class="platform platform-empty" href="#/vehicles/new" aria-label="Add a vehicle">${icon("plus", 64, 1.6)}</a>
-          <h2>Add your first car</h2>
+          <h2>Add Your First Car</h2>
           <p class="car-meta">Tap the plus to get started.</p>
         </div>`}
     </section>
 
     <a class="next-task" href="#/tasks" id="next-task"></a>
 
-    <a class="btn btn-estimate" href="#/budget">${icon("dollar", 20, 2)}Maintenance Estimate</a>`;
+    <a class="btn btn-estimate" href="#/budget">${icon("dollar", 20, 2)}Maintenance Estimator</a>`;
 
   const nextTaskEl = root.querySelector("#next-task");
   const drawNextTask = () => {
@@ -80,7 +81,7 @@ export default async function render(root, ctx) {
       nextTaskEl.className = "next-task";
       nextTaskEl.innerHTML = `
         <span class="next-icon">${icon("tasks", 22, 2)}</span>
-        <span class="next-body"><span class="next-label">Next up</span><strong>No upcoming tasks</strong></span>
+        <span class="next-body"><span class="next-label">Next Up</span><strong>No Upcoming Tasks</strong></span>
         ${icon("chevron", 18, 2)}`;
       return;
     }
@@ -89,7 +90,7 @@ export default async function render(root, ctx) {
     nextTaskEl.innerHTML = `
       <span class="next-icon">${icon(tone === "danger" ? "alert" : "wrench", 22, 2)}</span>
       <span class="next-body">
-        <span class="next-label">Next up${vehicles.length > 1 ? ` · ${escapeHtml(v.label)}` : ""}</span>
+        <span class="next-label">Next Up${vehicles.length > 1 ? ` · ${escapeHtml(v.label)}` : ""}</span>
         <strong>${escapeHtml(next.task_name)}</strong>
         <span class="tone-${tone}">${escapeHtml(dueLabel(next.due_date))}${Number(next.estimated_cost) > 0 ? ` · ~${formatMoney(next.estimated_cost)}` : ""}</span>
       </span>
@@ -186,7 +187,7 @@ function openSettings(profile) {
         <ul>
           <li>Your vehicles, tasks, photos, receipts and profile picture are private to your account. Nobody else can see them.</li>
           <li>Your location is used only while you're on Find Mechanic, to sort shops by distance. It's never saved.</li>
-          <li>Your email is used only for sign-in and password resets.</li>
+          <li>Your email is used only for logging in and resetting your password.</li>
           <li>Appearance is remembered on this device only.</li>
         </ul>
       </details>

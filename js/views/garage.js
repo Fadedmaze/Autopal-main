@@ -39,7 +39,7 @@ export default async function render(root, ctx) {
           </ul>
         </div>` : emptyState({
           iconName: "car",
-          title: "Your garage is empty",
+          title: "Your Garage Is Empty",
           body: "You haven't added any vehicles yet. Tap <strong>Add New Vehicle</strong> below to add your first car and start tracking its maintenance.",
         })}
       <div class="footer-cta"><a class="btn" href="#/vehicles/new">${icon("plus", 18, 2.4)}Add New Vehicle</a></div>`;

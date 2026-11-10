@@ -10,6 +10,34 @@ export function escapeHtml(value) {
     .replaceAll("'", "&#39;");
 }
 
+// ---- Capitalization --------------------------------------------------------
+// House style: Title Case for titles, headings, buttons, labels, nav and names
+// (tasks, vehicles, guides, lights); sentence case for body text, hints and messages.
+// titleCase() is for names that come from the database or the user, so they match
+// the hard-coded labels. Small words stay lowercase unless they start the name, and
+// words that already have capitals inside (ABS, 4WD, CR-V, iPhone) are left alone.
+const SMALL_WORDS = new Set(["a", "an", "and", "as", "at", "but", "by", "for", "from", "in", "into", "nor", "of", "on", "or", "per", "the", "to", "vs", "via", "with"]);
+
+export function titleCase(text) {
+  const words = String(text ?? "").split(/(\s+|-|\/|\()/);
+  const isSep = (w) => !w || /^(\s+|-|\/|\()$/.test(w);
+  const lastIndex = words.findLastIndex((w) => !isSep(w));
+  let first = true;
+  return words.map((w, i) => {
+    if (isSep(w)) return w;
+    const isFirst = first;
+    first = false;
+    // Leave words with capitals or digits after the first letter (ABS, CX-5, 0W-20, iPhone).
+    if (/[A-Z0-9]/.test(w.slice(1)) || /^[a-z]+[A-Z]/.test(w)) return w;
+    const lower = w.toLowerCase();
+    // First and last words are always capitalized ("Parking Brake On"), as are small
+    // words that end a phrase before punctuation ("Put It Back In, Then...").
+    const endsPhrase = /[,:;.!?)]$/.test(w);
+    if (!isFirst && i !== lastIndex && !endsPhrase && SMALL_WORDS.has(lower)) return lower;
+    return lower.charAt(0).toUpperCase() + lower.slice(1);
+  }).join("");
+}
+
 // ---- Dates -------------------------------------------------------------
 // Task dates are plain "YYYY-MM-DD" strings. Always build them from local
 // calendar parts; never via toISOString(), which shifts to UTC in the evening.

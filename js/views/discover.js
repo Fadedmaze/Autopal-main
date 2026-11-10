@@ -8,9 +8,9 @@ import { detectLights, BoxTracker } from "../lightDetector.js";
 import { escapeHtml, icon, toast, errorMessage, todayISO, withBusy } from "../ui.js";
 
 const SEVERITY = {
-  stop: { label: "Stop now", tone: "danger" },
-  soon: { label: "Check soon", tone: "warn" },
-  info: { label: "Good to know", tone: "info" },
+  stop: { label: "Stop Now", tone: "danger" },
+  soon: { label: "Check Soon", tone: "warn" },
+  info: { label: "Good to Know", tone: "info" },
 };
 const ANALYSIS_WIDTH = 320; // detector works on a small copy of each frame
 const DETECT_EVERY_MS = 120;
@@ -314,7 +314,7 @@ export function openLightCard({ light, result = null, vehicle, brandKey, ctx }) 
   dlg.innerHTML = `
     <div class="sheet-body left light-card">
       <div class="sheet-head">
-        <h2>${unknown ? "Not recognized" : escapeHtml(light.name)}</h2>
+        <h2>${unknown ? "Not Recognized" : escapeHtml(light.name)}</h2>
         <button type="button" class="icon-btn" data-close aria-label="Close">${icon("close", 18, 2.2)}</button>
       </div>
       ${unknown ? `
@@ -328,12 +328,12 @@ export function openLightCard({ light, result = null, vehicle, brandKey, ctx }) 
           ${result ? `<span class="tone-muted">${result.confidence === "high" ? "Confident match" : result.confidence === "medium" ? "Likely match" : "Possible match"}</span>` : ""}
         </div>
         ${result?.confidence === "low" ? `<p class="notice notice-warn">${icon("alert", 16, 2)}<span>We're not fully sure about this one. Compare it with your owner's manual.</span></p>` : ""}
-        <div class="light-section"><h3>What it means</h3><p>${escapeHtml(light.meaning)}</p></div>
-        <div class="light-section"><h3>What to do</h3><p>${escapeHtml(light.action)}</p></div>
-        <div class="light-section"><h3>Can I keep driving?</h3><p>${escapeHtml(light.drive_advice)}</p></div>
+        <div class="light-section"><h3>What It Means</h3><p>${escapeHtml(light.meaning)}</p></div>
+        <div class="light-section"><h3>What to Do</h3><p>${escapeHtml(light.action)}</p></div>
+        <div class="light-section"><h3>Can I Keep Driving?</h3><p>${escapeHtml(light.drive_advice)}</p></div>
         ${brandNote || aiNote ? `
           <div class="light-section brand-note">
-            <h3>${icon("car", 15, 2)} On your ${escapeHtml(vehicle?.brand ?? "car")}</h3>
+            <h3>${icon("car", 15, 2)} On Your ${escapeHtml(vehicle?.brand ?? "Car")}</h3>
             ${brandNote ? `<p>${escapeHtml(brandNote)}</p>` : ""}
             ${aiNote && aiNote !== brandNote ? `<p>${escapeHtml(aiNote)}</p>` : ""}
           </div>` : ""}

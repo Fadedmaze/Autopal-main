@@ -239,7 +239,7 @@ export function completedSheet(task, { onChanged } = {}) {
   dlg.innerHTML = `
     <div class="sheet-body">
       <div class="sheet-icon">${icon("check", 28, 2.6)}</div>
-      <h2>${escapeHtml(task.task_name)} completed</h2>
+      <h2>${escapeHtml(task.task_name)} Completed</h2>
       <p>Want to attach a receipt? It's handy for warranty claims and resale.</p>
       <label class="btn">
         <input type="file" accept="image/*,application/pdf" hidden>
@@ -307,7 +307,7 @@ export function vehicleCard(v, { selected = false, status = null } = {}) {
     <button class="car ${selected ? "selected" : ""}" type="button" data-vehicle-id="${v.id}" style="${vehicleTint(v.index)}" aria-pressed="${selected}">
       <span class="car-icon">${vehicleIcon(v)}</span>
       <span class="car-text">
-        <span class="car-name">${escapeHtml(v.label)}${v.unnamed ? ' <span class="tag">No name</span>' : ""}</span>
+        <span class="car-name">${escapeHtml(v.label)}${v.unnamed ? ' <span class="tag">No Name</span>' : ""}</span>
         <span class="car-meta">${escapeHtml(vehicleSpec(v))}</span>
         <span class="car-stats">
           ${v.current_mileage !== null ? `<span>${formatMileage(v.current_mileage)}</span>` : ""}

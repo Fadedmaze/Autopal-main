@@ -153,9 +153,9 @@ async function render() {
     if (!ctx.isCurrent()) return;
     page.innerHTML = `
       <div class="error-state">
-        <h2>Something went wrong</h2>
+        <h2>Something Went Wrong</h2>
         <p>${escapeHtml(errorMessage(err))}</p>
-        <button class="btn" id="retry">Try again</button>
+        <button class="btn" id="retry">Try Again</button>
       </div>`;
     page.querySelector("#retry").addEventListener("click", render);
   }

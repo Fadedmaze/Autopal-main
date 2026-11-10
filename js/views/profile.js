@@ -7,7 +7,7 @@ import {
 } from "../reminders.js";
 import { prepareUpload } from "../components.js";
 import { verifyPassword, updatePassword, signOut } from "../auth.js";
-import { appBar, escapeHtml, icon, loading, toast, confirmDialog, errorMessage, withBusy } from "../ui.js";
+import { appBar, escapeHtml, icon, loading, toast, confirmDialog, errorMessage, withBusy, titleCase } from "../ui.js";
 
 export default async function render(root, ctx) {
   if (ctx.mode === "password") return renderPassword(root, ctx);
@@ -32,12 +32,12 @@ export default async function render(root, ctx) {
       </label>
       <p class="form-error center" role="alert" hidden></p>
       <div class="profile-name" id="name-view">
-        <h2 class="profile-display">${escapeHtml(profile.display_name || profile.username || "")}</h2>
+        <h2 class="profile-display">${escapeHtml(profile.display_name || titleCase(profile.username || ""))}</h2>
         <button class="btn btn-ghost btn-sm" type="button" id="name-edit">${icon("edit", 14, 2)}Edit</button>
       </div>
       <form class="profile-name-form" id="name-form" novalidate hidden>
         <label class="field">
-          <span>Display name</span>
+          <span>Display Name</span>
           <input name="display_name" maxlength="40" autocomplete="nickname" value="${escapeHtml(profile.display_name ?? "")}">
           <small class="hint">1 to 40 characters. Shown on Home instead of your username.</small>
         </label>
@@ -123,7 +123,7 @@ export default async function render(root, ctx) {
   });
 
   root.querySelector("#logout").addEventListener("click", async () => {
-    const ok = await confirmDialog({ title: "Log out", body: "Are you sure you want to log out?", confirmLabel: "Log Out", danger: true });
+    const ok = await confirmDialog({ title: "Log Out?", body: "Are you sure you want to log out?", confirmLabel: "Log Out", danger: true });
     if (!ok) return;
     await signOut();
     ctx.navigate("#/signin", { replace: true });
@@ -135,16 +135,16 @@ function renderPassword(root, ctx) {
     ${appBar({ title: "Change Password", back: { href: "#/profile", label: "Profile" } })}
     <form class="form content" novalidate>
       <label class="field">
-        <span>Current password</span>
+        <span>Current Password</span>
         <input name="current" type="password" autocomplete="current-password" required>
       </label>
       <label class="field">
-        <span>New password</span>
+        <span>New Password</span>
         <input name="password" type="password" autocomplete="new-password" minlength="8" required>
         <small class="hint">At least 8 characters.</small>
       </label>
       <label class="field">
-        <span>Confirm new password</span>
+        <span>Confirm New Password</span>
         <input name="confirm" type="password" autocomplete="new-password" minlength="8" required>
       </label>
       <p class="form-error" role="alert" hidden></p>
@@ -190,10 +190,10 @@ async function renderNotifications(root, ctx) {
         <label class="toggle">
           <input type="checkbox" name="task_reminders_enabled" ${settings.task_reminders_enabled ? "checked" : ""}>
           <span class="toggle-ui"></span>
-          <span>Maintenance reminders</span>
+          <span>Maintenance Reminders</span>
         </label>
         <label class="field inline-field">
-          <span>Default timing</span>
+          <span>Default Timing</span>
           <select name="reminder_days_before" ${settings.task_reminders_enabled ? "" : "disabled"}>
             ${REMIND_CHOICES.map(([d, label]) => `<option value="${d}" ${d === settings.reminder_days_before ? "selected" : ""}>${label}</option>`).join("")}
             ${REMIND_CHOICES.some(([d]) => d === settings.reminder_days_before) ? "" : `<option value="${settings.reminder_days_before}" selected>${escapeHtml(remindLabel(settings.reminder_days_before))}</option>`}
@@ -206,7 +206,7 @@ async function renderNotifications(root, ctx) {
         <label class="toggle">
           <input type="checkbox" name="device_notifications" ${deviceNotificationsOn() ? "checked" : ""} ${supported ? "" : "disabled"}>
           <span class="toggle-ui"></span>
-          <span>Notifications on this device</span>
+          <span>Notifications on This Device</span>
         </label>
         <p class="hint" id="device-hint">${supported
           ? "Get a notification on this phone or computer when a reminder is due. They arrive when you open AutoPal."
@@ -214,9 +214,9 @@ async function renderNotifications(root, ctx) {
       </section>
 
       <section class="card">
-        <strong class="card-title">${icon("calendar", 18, 2)}Calendar reminders</strong>
+        <strong class="card-title">${icon("calendar", 18, 2)}Calendar Reminders</strong>
         <p class="hint">Want an alert even when AutoPal is closed? Add your upcoming tasks to your phone's calendar. Each one gets an alarm at 9 AM on its reminder day.</p>
-        <button type="button" class="btn btn-soft" id="export-calendar">${icon("calendar", 18, 2)}Add tasks to calendar</button>
+        <button type="button" class="btn btn-soft" id="export-calendar">${icon("calendar", 18, 2)}Add Tasks to Calendar</button>
       </section>
     </div>`;
 
@@ -268,8 +268,8 @@ async function renderNotifications(root, ctx) {
 // to see it full screen (e.g. to show someone after an accident).
 
 const SIDES = [
-  { id: "front", label: "Front of card" },
-  { id: "back", label: "Back of card" },
+  { id: "front", label: "Front of Card" },
+  { id: "back", label: "Back of Card" },
 ];
 
 async function renderInsurance(root, ctx) {
@@ -283,7 +283,7 @@ async function renderInsurance(root, ctx) {
       ${appBar({ title: "Insurance Card", back: { href: "#/profile", label: "Profile" } })}
       <div class="error-state">
         ${icon("shield", 40, 1.6)}
-        <h2>Not available yet</h2>
+        <h2>Not Available Yet</h2>
         <p>${escapeHtml(err.notConfigured ? err.message : errorMessage(err))}</p>
       </div>`;
     return;
@@ -303,7 +303,7 @@ async function renderInsurance(root, ctx) {
           <label class="capture ins-capture" data-side="${s.id}">
             <input type="file" accept="image/*,application/pdf" hidden>
             <span class="capture-preview ins-preview">
-              <span class="capture-empty">${icon("camera", 40, 1.5)}<strong>Add ${s.label.toLowerCase()}</strong><small>Take a photo or choose an image or PDF</small></span>
+              <span class="capture-empty">${icon("camera", 40, 1.5)}<strong>Add ${s.label}</strong><small>Take a photo or choose an image or PDF</small></span>
             </span>
           </label>
         </section>`;
@@ -312,7 +312,7 @@ async function renderInsurance(root, ctx) {
       <section class="ins-side">
         <h3>${s.label}</h3>
         ${isPdf(path)
-          ? `<a class="ins-preview ins-pdf" href="${escapeHtml(url ?? "#")}" target="_blank" rel="noopener">${icon("receipt", 36, 1.6)}<strong>PDF saved</strong><small>Tap to open</small></a>`
+          ? `<a class="ins-preview ins-pdf" href="${escapeHtml(url ?? "#")}" target="_blank" rel="noopener">${icon("receipt", 36, 1.6)}<strong>PDF Saved</strong><small>Tap to open</small></a>`
           : `<button type="button" class="ins-preview ins-view" data-view="${s.id}" aria-label="View ${s.label.toLowerCase()} full screen">
                ${url ? `<img src="${escapeHtml(url)}" alt="${s.label}">` : `<span class="capture-empty"><small>Couldn't load the picture. Check your connection.</small></span>`}
              </button>`}
@@ -360,7 +360,7 @@ async function renderInsurance(root, ctx) {
   root.querySelectorAll("[data-remove]").forEach((btn) => btn.addEventListener("click", async () => {
     const side = btn.dataset.remove;
     const name = SIDES.find((s) => s.id === side).label.toLowerCase();
-    const ok = await confirmDialog({ title: "Remove card", body: `Remove the ${name}? This can't be undone.`, confirmLabel: "Remove", danger: true });
+    const ok = await confirmDialog({ title: "Remove Card?", body: `Remove the ${name}? This can't be undone.`, confirmLabel: "Remove", danger: true });
     if (!ok) return;
     withBusy(btn, async () => {
       try {

@@ -76,7 +76,7 @@ export default async function render(root, ctx) {
 
         <section class="card history">
           <div class="card-head">
-            <h3>${icon("history", 18, 2)}Maintenance history</h3>
+            <h3>${icon("history", 18, 2)}Maintenance History</h3>
             <a class="link-sm" href="#/tasks">All tasks</a>
           </div>
           ${history.length ? `
@@ -99,7 +99,7 @@ export default async function render(root, ctx) {
       b.addEventListener("click", () => { selectedPhoto = Number(b.dataset.index); draw(); }));
 
     root.querySelector(".gallery-delete")?.addEventListener("click", async () => {
-      const ok = await confirmDialog({ title: "Delete photo?", body: "This permanently removes the photo.", confirmLabel: "Delete", danger: true });
+      const ok = await confirmDialog({ title: "Delete Photo?", body: "This permanently removes the photo.", confirmLabel: "Delete", danger: true });
       if (!ok) return;
       try {
         await deletePhoto(photos[selectedPhoto]);
