@@ -1,6 +1,7 @@
-// Profile (/profile): picture, name, Insurance Card, Change Password, Notification
-// Settings, Log Out. Sub-screens: /profile/insurance, /profile/password and
-// /profile/notifications (ctx.mode).
+// Profile (/profile): picture, name, Change Password, Notification Settings,
+// Insurance Card (a pop-up sheet), Log Out. Sub-screens: /profile/password and
+// /profile/notifications (ctx.mode). /profile/insurance opens Profile with the
+// insurance sheet already open.
 import { getProfile, getSettings, updateSettings, uploadAvatar, avatarUrl, saveDisplayName, listTasks, listVehicles, getInsuranceCard, uploadInsuranceCard, removeInsuranceCard, insuranceCardUrl } from "../data.js";
 import {
   REMIND_CHOICES, remindLabel, deviceNotificationsOn, enableDeviceNotifications, disableDeviceNotifications, buildIcs, downloadIcs,
@@ -12,7 +13,6 @@ import { appBar, escapeHtml, icon, loading, toast, confirmDialog, errorMessage, 
 export default async function render(root, ctx) {
   if (ctx.mode === "password") return renderPassword(root, ctx);
   if (ctx.mode === "notifications") return renderNotifications(root, ctx);
-  if (ctx.mode === "insurance") return renderInsurance(root, ctx);
 
   root.innerHTML = loading();
   const profile = await getProfile();
@@ -50,9 +50,9 @@ export default async function render(root, ctx) {
       <p class="profile-username">@${escapeHtml(profile.username ?? "")}</p>
 
       <div class="profile-actions">
-        <a class="menu-row" href="#/profile/insurance">${icon("shield", 20, 2)}<span>Insurance Card</span>${icon("chevron", 18, 2)}</a>
         <a class="menu-row" href="#/profile/password">${icon("lock", 20, 2)}<span>Change Password</span>${icon("chevron", 18, 2)}</a>
         <a class="menu-row" href="#/profile/notifications">${icon("bell", 20, 2)}<span>Notification Settings</span>${icon("chevron", 18, 2)}</a>
+        <button type="button" class="menu-row" id="open-insurance" aria-haspopup="dialog">${icon("shield", 20, 2)}<span>Insurance Card</span>${icon("chevron", 18, 2)}</button>
       </div>
 
       <button class="btn btn-ghost danger logout" type="button" id="logout">${icon("logout", 18, 2)}Log Out</button>
@@ -128,6 +128,16 @@ export default async function render(root, ctx) {
     await signOut();
     ctx.navigate("#/signin", { replace: true });
   });
+
+  // Insurance card pop-up. The old /profile/insurance link opens it right away.
+  let sheet = null;
+  const openInsurance = () => {
+    sheet?.close();
+    sheet = openInsuranceSheet();
+  };
+  root.querySelector("#open-insurance").addEventListener("click", openInsurance);
+  if (ctx.mode === "insurance") openInsurance();
+  return () => sheet?.close(); // close the pop-up when leaving the page
 }
 
 function renderPassword(root, ctx) {
@@ -263,7 +273,7 @@ async function renderNotifications(root, ctx) {
   }));
 }
 
-// ---- Insurance card (/profile/insurance) -------------------------------------
+// ---- Insurance card (pop-up sheet on Profile) ---------------------------------
 // Front and back of the card, each a photo or PDF in a private bucket. Tap a card
 // to see it full screen (e.g. to show someone after an accident).
 
@@ -272,25 +282,46 @@ const SIDES = [
   { id: "back", label: "Back of Card" },
 ];
 
-async function renderInsurance(root, ctx) {
-  root.innerHTML = loading();
+function openInsuranceSheet() {
+  const dlg = document.createElement("dialog");
+  dlg.className = "sheet ins-sheet";
+  dlg.setAttribute("aria-labelledby", "ins-title");
+  dlg.innerHTML = `
+    <div class="sheet-body left">
+      <div class="sheet-head">
+        <h2 class="task-details-title" id="ins-title">Insurance Card</h2>
+        <button type="button" class="icon-btn" data-close aria-label="Close">${icon("close", 18, 2.2)}</button>
+      </div>
+      <div class="ins" data-ins-body>${loading()}</div>
+    </div>`;
+  document.body.appendChild(dlg);
+  let isOpen = true;
+  dlg.addEventListener("close", () => { isOpen = false; dlg.remove(); });
+  dlg.addEventListener("click", (e) => { if (e.target === dlg) dlg.close(); });
+  dlg.querySelector("[data-close]").addEventListener("click", () => dlg.close());
+  dlg.showModal();
+  drawInsurance(dlg.querySelector("[data-ins-body]"), () => isOpen);
+  return dlg;
+}
+
+// Fills the sheet; re-runs after each upload or removal.
+async function drawInsurance(body, stillOpen) {
   let card;
   try {
     card = await getInsuranceCard();
   } catch (err) {
-    if (!ctx.isCurrent()) return;
-    root.innerHTML = `
-      ${appBar({ title: "Insurance Card", back: { href: "#/profile", label: "Profile" } })}
-      <div class="error-state">
-        ${icon("shield", 40, 1.6)}
-        <h2>Not Available Yet</h2>
+    if (!stillOpen()) return;
+    body.innerHTML = `
+      <div class="ins-unavailable">
+        ${icon("shield", 36, 1.6)}
+        <strong>Not Available Yet</strong>
         <p>${escapeHtml(err.notConfigured ? err.message : errorMessage(err))}</p>
       </div>`;
     return;
   }
   const urls = {};
   await Promise.all(SIDES.map(async (s) => { urls[s.id] = await insuranceCardUrl(card[s.id]); }));
-  if (!ctx.isCurrent()) return;
+  if (!stillOpen()) return;
 
   const isPdf = (path) => /\.pdf$/i.test(path ?? "");
   const slot = (s) => {
@@ -325,14 +356,12 @@ async function renderInsurance(root, ctx) {
       </section>`;
   };
 
-  root.innerHTML = `
-    ${appBar({ title: "Insurance Card", back: { href: "#/profile", label: "Profile" } })}
-    <div class="content ins">
-      <p class="notice notice-info">${icon("lock", 18, 2)}<span>Only you can see your card. It's stored privately in your account, so you'll need a connection to open it.</span></p>
-      ${SIDES.map(slot).join("")}
-      <p class="form-error" role="alert" hidden></p>
-    </div>`;
+  body.innerHTML = `
+    <p class="notice notice-info">${icon("lock", 18, 2)}<span>Only you can see your card. It's stored privately in your account, so you'll need a connection to open it.</span></p>
+    ${SIDES.map(slot).join("")}
+    <p class="form-error" role="alert" hidden></p>`;
 
+  const root = body;
   const errEl = root.querySelector(".form-error");
   const showError = (m) => { errEl.textContent = m; errEl.hidden = !m; };
 
@@ -349,7 +378,7 @@ async function renderInsurance(root, ctx) {
         const prepared = await prepareUpload(file, { maxEdge: 2000, allowPdf: true });
         await uploadInsuranceCard(side, prepared.blob, prepared.ext, card[side]);
         toast("Insurance card saved", "ok");
-        if (ctx.isCurrent()) renderInsurance(root, ctx);
+        if (stillOpen()) drawInsurance(body, stillOpen);
       } catch (err) {
         label.classList.remove("busy");
         showError(`Couldn't save your card: ${errorMessage(err)}${card[side] ? " Your old picture was kept." : ""}`);
@@ -366,7 +395,7 @@ async function renderInsurance(root, ctx) {
       try {
         await removeInsuranceCard(side, card[side]);
         toast("Removed", "ok");
-        if (ctx.isCurrent()) renderInsurance(root, ctx);
+        if (stillOpen()) drawInsurance(body, stillOpen);
       } catch (err) {
         showError(errorMessage(err));
       }
