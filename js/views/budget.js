@@ -1,6 +1,5 @@
-// Budget (Maintenance Estimate): every repair for the car with a checkbox on the left,
-// the approximate price on the right, and the total of all of them at the bottom.
-// Totals come from the vehicle_task_summary view (summed in the database).
+// Maintenance Estimate: upcoming repairs with their approximate prices and a total.
+// The total comes from the vehicle_task_summary view (summed in the database).
 import { getProfile, getSettings, listVehicles, listTasks } from "../data.js";
 import { taskRow, bindTaskRows } from "../components.js";
 import { appBar, escapeHtml, loading, emptyState, formatMoney, icon } from "../ui.js";
@@ -27,10 +26,7 @@ export default async function render(root, ctx) {
     chosenVehicle = vehicles.some((v) => v.id === profile.active_vehicle_id) ? profile.active_vehicle_id : vehicles[0].id;
   }
   const vehicle = vehicles.find((v) => v.id === chosenVehicle);
-  const [open, done] = await Promise.all([
-    listTasks({ vehicleId: vehicle.id, completed: false }),
-    listTasks({ vehicleId: vehicle.id, completed: true }),
-  ]);
+  const open = await listTasks({ vehicleId: vehicle.id, completed: false });
   if (!ctx.isCurrent()) return;
   const s = vehicle.summary;
   const row = (t) => taskRow(t, { remindDays: settings.reminder_days_before, showCost: true });
@@ -48,19 +44,15 @@ export default async function render(root, ctx) {
         ${open.length ? `<ul class="task-list">${open.map(row).join("")}</ul>` : `<p class="muted-box">No upcoming repairs.</p>`}
       </section>
 
-      <section class="section">
-        <div class="section-head"><h3>Completed</h3><span class="tone-muted">${formatMoney(s.completed_cost_total)}</span></div>
-        ${done.length ? `<ul class="task-list">${done.map(row).join("")}</ul>` : `<p class="muted-box">Checked-off repairs show up here.</p>`}
-      </section>
       <p class="hint center">Check off a repair when it's done. Prices are estimates and vary by shop.</p>
     </div>
 
     <div class="total-bar">
       <div>
-        <span>Total</span>
-        <small>${s.open_count + done.length} repair${s.open_count + done.length === 1 ? "" : "s"} · ${escapeHtml(vehicle.label)}</small>
+        <span>Upcoming total</span>
+        <small>${s.open_count} upcoming repair${s.open_count === 1 ? "" : "s"} · ${escapeHtml(vehicle.label)}</small>
       </div>
-      <strong>${formatMoney(s.all_estimated_total)}</strong>
+      <strong>${formatMoney(s.open_estimated_total)}</strong>
     </div>
     <a class="fab" href="#/tasks/new?vehicle=${vehicle.id}">${icon("plus", 20, 2.6)}<span>Add task</span></a>`;
 
@@ -73,5 +65,5 @@ export default async function render(root, ctx) {
     }
     render(root, ctx);
   }));
-  bindTaskRows(root, new Map([...open, ...done].map((t) => [t.id, t])), () => render(root, ctx));
+  bindTaskRows(root, new Map(open.map((t) => [t.id, t])), () => render(root, ctx));
 }
