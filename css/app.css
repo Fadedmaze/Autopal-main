@@ -1044,6 +1044,23 @@ body.scanning #nav { display: none !important; }
   margin-bottom: 12px;
 }
 
+/* Compact closed DIY dropdowns */
+details.diy-dropdown:not([open]) {
+  height: auto;
+  min-height: 0;
+  padding: 0 !important;
+}
+
+
+details.diy-dropdown > summary {
+  margin: 0 !important;
+  padding: 18px 20px 10px !important;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .diy-dropdown > summary {
   cursor: pointer;
   padding: 16px;
@@ -1064,6 +1081,13 @@ body.scanning #nav { display: none !important; }
 
 .diy-dropdown-content {
   padding: 0 12px 12px;
+}
+
+/* Center dropdown labels vertically */
+details.diy-dropdown > summary > span,
+details.diy-dropdown > summary > svg {
+  position: relative;
+  top: 2px;
 }
 
 /* DIY Maintenance icons - difficulty colors */
