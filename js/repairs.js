@@ -8,6 +8,9 @@
 //   needs_diagnosis      true when the shop has to scan/test first (adds a diagnostic fee)
 //   repair_note          one plain sentence on what usually causes it and what it costs
 
+import { titleCase } from "./ui.js";
+import { findBrand } from "./vehicleCatalog.js";
+
 export const SERVICES = ["Oil change", "Brakes", "Tires", "Engine", "Transmission", "Electrical", "Alignment", "Inspection"];
 
 // Typical diagnostic fee at an independent US shop; often credited toward the repair.
@@ -21,10 +24,16 @@ const BRAND_FACTOR = {
   "range rover": 1.45, "jaguar": 1.4, "maserati": 1.5, "alfa romeo": 1.3, "mini": 1.2, "volvo": 1.25,
   "tesla": 1.3, "cadillac": 1.2, "lincoln": 1.2, "genesis": 1.15, "lexus": 1.15, "infiniti": 1.15,
   "acura": 1.1, "volkswagen": 1.1, "vw": 1.1,
+  // Added with the larger vehicle catalog (js/vehicleCatalog.js).
+  "bentley": 1.7, "rolls-royce": 1.8, "ferrari": 1.8, "lamborghini": 1.8, "mclaren": 1.8, "aston martin": 1.6,
+  "lotus": 1.45, "lucid": 1.35, "polestar": 1.25, "rivian": 1.3, "fisker": 1.3, "saab": 1.2, "hummer": 1.15,
 };
 
+// Lowercase brand used as the key for brand notes and prices. Shorthand like "Chevy"
+// or "vw" is mapped to the full brand first (see js/vehicleCatalog.js).
 export function brandKey(vehicle) {
-  return (vehicle?.brand ?? "").trim().toLowerCase();
+  const typed = (vehicle?.brand ?? "").trim();
+  return (findBrand(typed) ?? typed).toLowerCase();
 }
 
 export function vehicleFactor(vehicle) {
@@ -150,14 +159,16 @@ export function rankShops(shops, light, { areaMedian, vehicle }) {
 }
 
 function reasonsFor({ shop, cap }, light, { areaMedian, nearest, topRated }) {
+  // Short tags, in Title Case like other labels.
+  const svc = titleCase(light.repair_service);
   const out = [];
-  if (cap === "primary") out.push(isSpecialist(shop, light) ? `${light.repair_service} specialist` : `Does ${light.repair_service.toLowerCase()} work`);
-  else if (cap === "alt") out.push(`Can often handle this (${(light.repair_alt_services ?? []).filter((s) => shop.services?.includes(s)).join(", ").toLowerCase()})`);
+  if (cap === "primary") out.push(isSpecialist(shop, light) ? `${svc} Specialist` : `Does ${svc} Work`);
+  else if (cap === "alt") out.push(`Can Often Handle This (${(light.repair_alt_services ?? []).filter((s) => shop.services?.includes(s)).map(titleCase).join(", ")})`);
   if (!cap) return out;
-  if (topRated) out.push("Top rated");
+  if (topRated) out.push("Top Rated");
   if (nearest) out.push("Closest");
   const f = shopFactor(shop, areaMedian);
-  if (f <= 0.9) out.push("Lower prices");
-  else if (f >= 1.15) out.push("Higher prices");
+  if (f <= 0.9) out.push("Lower Prices");
+  else if (f >= 1.15) out.push("Higher Prices");
   return out;
 }

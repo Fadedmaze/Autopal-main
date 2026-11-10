@@ -37,7 +37,7 @@ export default async function render(root, ctx) {
       ${appBar({
         title: "Tasks",
         back: { href: "#/home", label: "Home" },
-        action: vehicles.length ? `<a class="icon-btn icon-btn-brand" href="${addHref}" aria-label="Add a task">${icon("plus", 22, 2.4)}</a>` : "",
+        action: vehicles.length ? `<a class="icon-btn icon-btn-brand" href="${addHref}" aria-label="Add a Task">${icon("plus", 22, 2.4)}</a>` : "",
       })}
       <div class="content">
         <div class="segmented" role="tablist">
@@ -47,7 +47,7 @@ export default async function render(root, ctx) {
 
         ${vehicles.length > 1 ? `
           <div class="chips scroll" role="group" aria-label="Filter by vehicle">
-            <button type="button" class="chip ${state.vehicle === "all" ? "on" : ""}" data-vehicle="all">All vehicles</button>
+            <button type="button" class="chip ${state.vehicle === "all" ? "on" : ""}" data-vehicle="all">All Vehicles</button>
             ${vehicles.map((v) => `<button type="button" class="chip ${v.id === state.vehicle ? "on" : ""}" data-vehicle="${v.id}">${escapeHtml(v.label)}</button>`).join("")}
           </div>` : ""}
 
@@ -115,7 +115,7 @@ async function showReceipt(path) {
   try {
     const url = await receiptUrl(path);
     view.innerHTML = /\.pdf$/i.test(path)
-      ? `<a class="btn" href="${escapeHtml(url)}" target="_blank" rel="noopener">${icon("receipt", 18, 2)}Open PDF receipt</a>`
+      ? `<a class="btn" href="${escapeHtml(url)}" target="_blank" rel="noopener">${icon("receipt", 18, 2)}Open PDF Receipt</a>`
       : `<img src="${escapeHtml(url)}" alt="Receipt">`;
   } catch (err) {
     view.innerHTML = `<p class="form-error">${escapeHtml(errorMessage(err))}</p>`;

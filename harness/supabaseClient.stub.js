@@ -23,9 +23,9 @@ const db = (window.__db = {
   vehicle_photos: [],
   maintenance_tasks: [],
   maintenance_catalog: [
-    ["Oil change", 75, 120, 30], ["Tire rotation", 40, 180, 45], ["Tire pressure check", 0, 30, 7],
-    ["Wiper blades", 30, 365, 90], ["Engine air filter", 35, 365, 120], ["Brake inspection", 50, 365, 150],
-    ["Emissions test", 30, 365, 180], ["Battery check", 25, 365, 200],
+    ["Oil change", 95, 182, 30], ["Tire rotation", 40, 182, 45], ["Tire pressure check", 0, 30, 7],
+    ["Wiper blades", 45, 365, 90], ["Engine air filter", 45, 365, 120], ["Cabin air filter", 55, 365, 135],
+    ["Brake inspection", 50, 365, 150], ["Emissions test", 30, 365, 180], ["Battery check", 0, 365, 200],
   ].map(([task_name, typical_cost, interval_days, first_due_days], i) => ({ id: i + 1, task_name, typical_cost, interval_days, first_due_days, sort_order: i + 1 })),
   mechanic_shops: [
     ["Joe's Auto Shop", "450 N University Ave", "Provo", 40.2403, -111.6586, 4.5, 285, ["Oil change", "Brakes", "Tires", "Inspection"]],

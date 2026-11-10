@@ -1,20 +1,22 @@
 // Discover (formerly Library): guides grouped into DIY Maintenance and Dashboard
 // Lights. /library/:slug opens one guide. The Dashboard Lights tab also opens the
 // camera scanner (views/discover.js). Every DIY guide carries a "see a mechanic" note.
-// DIY guides show difficulty, safety notes, a YouTube search for the selected car, and an "Add task" button that prefills the New Task form.
+// DIY guides show difficulty, safety notes, a YouTube search for the selected car, and an "Add Task" button that prefills the New Task form.
 import { listGuides, listWarningLights, getProfile, listVehicles, listTasks } from "../data.js";
 import { appBar, escapeHtml, icon, loading, formatDate, vehicleSpec } from "../ui.js";
 import { openScanner } from "./discover.js";
 import { diagramFor } from "../guideDiagrams.js";
+import { brandKey as brandKeyFor } from "../repairs.js";
+import { findBrand } from "../vehicleCatalog.js";
 
 const CATEGORIES = [
   { id: "diy", label: "DIY Maintenance", icon: "wrench" },
   { id: "dashboard", label: "Dashboard Lights", icon: "alert" },
 ];
 const SEVERITY = {
-  stop: { label: "Pull over now", text: "Stop driving as soon as it's safe to do so." },
-  soon: { label: "Check soon", text: "Safe to drive carefully, but get it checked soon." },
-  info: { label: "Good to know", text: "Usually not urgent." },
+  stop: { label: "Stop Now", text: "Stop driving as soon as it's safe to do so." },
+  soon: { label: "Check Soon", text: "Safe to drive carefully, but get it checked soon." },
+  info: { label: "Good to Know", text: "Usually not urgent." },
 };
 const DIFFICULTY = {
   easy: { label: "Easy", tone: "ok" },
@@ -182,7 +184,7 @@ export default async function render(root, ctx) {
       ${appBar({ title: "Discover", back: { href: "#/home", label: "Home" } })}
       <div class="error-state">
         ${icon("book", 40, 1.6)}
-        <h2>Couldn't load the guides</h2>
+        <h2>Couldn't Load the Guides</h2>
         <p>${navigator.onLine ? "Something went wrong on our end." : "It looks like you're offline."} Check your connection and try again.</p>
         <button class="btn" type="button" id="retry">Try Again</button>
       </div>`;
@@ -224,13 +226,16 @@ export default async function render(root, ctx) {
   try {
     const [profile, list] = await Promise.all([getProfile(), listVehicles()]);
     vehicles = list;
-    if (!vehicles.some((v) => v.id === chosenVehicleId)) {
+    const requestedVehicleId = Number(ctx.query.get("vehicle"));
+    if (vehicles.some((v) => v.id === requestedVehicleId)) {
+      chosenVehicleId = requestedVehicleId;
+    } else if (!vehicles.some((v) => v.id === chosenVehicleId)) {
       chosenVehicleId = vehicles.some((v) => v.id === profile.active_vehicle_id) ? profile.active_vehicle_id : vehicles[0]?.id ?? null;
     }
   } catch { /* scan without car tuning */ }
   if (!ctx.isCurrent()) return;
   const vehicle = () => vehicles.find((v) => v.id === chosenVehicleId) ?? null;
-  const brandKey = () => (vehicle()?.brand ?? "").trim().toLowerCase();
+  const brandKey = () => brandKeyFor(vehicle());
   const bySlug = new Map(warningLightsCache.map((l) => [l.slug, l]));
   let scanner = null;
 
@@ -368,12 +373,12 @@ function scanCard(vehicles, v) {
   return `
     <section class="scan-hero scan-hero-compact">
       <span class="scan-hero-icon">${icon("scan", 30, 1.8)}</span>
-      <h2>Scan your dashboard</h2>
+      <h2>Scan Your Dashboard</h2>
       <p>Turn the car on so the lights are glowing, then hold your phone about a foot from the dashboard. Yellow squares appear around the lights we find. Tap one to see what it means.</p>
       <button type="button" class="btn" id="start-scan">${icon("camera", 18, 2)}Scan My Dashboard</button>
       ${vehicles.length ? `
         <div class="scan-vehicle">
-          <span>Tuned for</span>
+          <span>Tuned For</span>
           ${vehicles.length > 1
             ? `<select id="scan-vehicle" aria-label="Vehicle to tune results for">${vehicles.map((x) => `<option value="${x.id}" ${x.id === v?.id ? "selected" : ""}>${escapeHtml(x.label)} · ${escapeHtml(vehicleSpec(x))}</option>`).join("")}</select>`
             : `<strong>${escapeHtml(v.label)} · ${escapeHtml(vehicleSpec(v))}</strong>`}
@@ -389,7 +394,7 @@ function guideFigure(g) {
   if (d) {
     return `
       <figure class="card guide-diagram">
-        <h3>What to look for</h3>
+        <h3>What to Look For</h3>
         <div class="diagram" role="img" aria-label="${escapeHtml(d.alt)}">${d.svg}</div>
         ${d.caption ? `<figcaption>${escapeHtml(d.caption)}</figcaption>` : ""}
       </figure>`;
@@ -446,12 +451,11 @@ async function renderGuide(root, ctx, g) {
   category = g.category;
   const isDiy = g.category === "diy";
   const isDashboard = g.category === "dashboard";
-  const sev = g.severity ? SEVERITY[g.severity] : null;
-
-  // The car tunes the video search and the Add Task button. If this fails (offline,
-  // say), the guide still shows; it just isn't tuned to a car.
+  // The car tunes the video search and the Add Task button (DIY), or shows what this
+  // light means on your brand (dashboard). If this fails (offline, say), the guide
+  // still shows; it just isn't tuned to a car.
   let vehicles = [];
-  if (isDiy) {
+  if (isDiy || isDashboard) {
     try {
       const [profile, list] = await Promise.all([getProfile(), listVehicles()]);
       vehicles = list;
@@ -462,6 +466,14 @@ async function renderGuide(root, ctx, g) {
     if (!ctx.isCurrent()) return;
   }
   const vehicle = () => vehicles.find((v) => v.id === chosenVehicleId) ?? null;
+
+  // Dashboard lights: the brand's own note and, where it differs, its severity
+  // (an amber wrench is a powertrain fault on a Ford, but routine service elsewhere).
+  const car = isDashboard ? vehicle() : null;
+  const carBrand = car ? brandKeyFor(car) : "";
+  const brandNote = car ? g.warningLight?.brand_notes?.[carBrand] : null;
+  const severity = (car && g.warningLight?.brand_severity?.[carBrand]) || g.severity;
+  const sev = severity ? SEVERITY[severity] : null;
 
   // Readable guides have step_details ({title, body}); older ones only have short steps.
   const detailed = Array.isArray(g.step_details) && g.step_details.length > 0;
@@ -475,29 +487,34 @@ async function renderGuide(root, ctx, g) {
           ${g.difficulty ? difficultyBadge(g.difficulty) : ""}
           ${g.time_estimate ? `<span>${icon("clock", 15, 2)} About ${escapeHtml(g.time_estimate)}</span>` : ""}
         </p>` : ""}
-      ${sev ? `<div class="notice notice-${g.severity === "stop" ? "danger" : "warn"}">${icon("alert", 18, 2)}<span><strong>${sev.label}.</strong> ${sev.text}</span></div>` : ""}
+      ${brandNote ? `
+        <section class="card brand-note">
+          <h3>${icon("car", 16, 2)}On Your ${escapeHtml(findBrand(car.brand) ?? car.brand)}</h3>
+          <p>${escapeHtml(brandNote)}</p>
+        </section>` : ""}
+      ${sev ? `<div class="notice notice-${severity === "stop" ? "danger" : "warn"}">${icon("alert", 18, 2)}<span><strong>${sev.label}.</strong> ${sev.text}</span></div>` : ""}
       ${isDiy ? `<section class="card guide-video" id="video-card"></section>` : ""}
       ${isDiy ? diyDropdown(
         "Why it matters",
         g.intro ? `
           <section class="guide-prose">
-            <h3>Why it matters</h3>
+            <h3>Why It Matters</h3>
             ${paragraphs(g.intro)}
           </section>` : ""
       ) : g.intro ? `
         <section class="guide-prose">
-          <h3>Why it matters</h3>
+          <h3>Why It Matters</h3>
           ${paragraphs(g.intro)}
         </section>` : ""}
       ${isDiy ? diyDropdown(
         "Before you start",
         g.prep ? `
           <section class="card guide-prose">
-            <h3>Before you start</h3>
+            <h3>Before You Start</h3>
             ${paragraphs(g.prep)}
           </section>` : g.tools?.length ? `
           <section class="card">
-            <div><strong>You'll need</strong>
+            <div><strong>You'll Need</strong>
               <ul class="tools">
                 ${g.tools.map((t) => `<li>${escapeHtml(t)}</li>`).join("")}
               </ul>
@@ -505,7 +522,7 @@ async function renderGuide(root, ctx, g) {
           </section>` : ""
       ) : g.prep ? `
         <section class="card guide-prose">
-          <h3>Before you start</h3>
+          <h3>Before You Start</h3>
           ${paragraphs(g.prep)}
         </section>` : ""}
       ${isDiy
@@ -576,7 +593,7 @@ async function renderGuide(root, ctx, g) {
       ${isDashboard && g.warningLight?.repair_service ? `
         <a class="card mechanic-cta" href="#/mechanics?problem=${encodeURIComponent(g.warningLight.slug)}${chosenVehicleId ? `&vehicle=${chosenVehicleId}` : ""}">
           <span class="guide-icon">${icon("pin", 20, 2)}</span>
-          <span class="guide-text"><strong>Find a shop that can fix this</strong><span>Nearby shops ranked for ${escapeHtml(g.warningLight.repair_service.toLowerCase())} work, with price estimates.</span></span>
+          <span class="guide-text"><strong>Find a Shop That Can Fix This</strong><span>Nearby shops ranked for ${escapeHtml(g.warningLight.repair_service.toLowerCase())} work, with price estimates.</span></span>
           ${icon("chevron", 18, 2)}
         </a>` : ""}
         ${isDiy ? diyDropdown(
@@ -596,7 +613,7 @@ async function renderGuide(root, ctx, g) {
         <div class="notice notice-info">${icon("wrench", 18, 2)}
           <span>Not comfortable doing this yourself? That's completely fine. <a href="#/mechanics">See a mechanic</a> near you.</span>
         </div>` : ""}
-      ${isDiy || isDashboard ? `<a class="fab" id="add-task" href="${addTaskHref(g, null)}">${icon("plus", 20, 2.6)}<span>Add task</span></a>` : ""}
+      ${isDiy || isDashboard ? `<a class="fab" id="add-task" href="${addTaskHref(g, null)}">${icon("plus", 20, 2.6)}<span>Add Task</span></a>` : ""}
     </article>`;
 
   if (!isDiy) return;
@@ -611,7 +628,7 @@ async function renderGuide(root, ctx, g) {
       <a class="video-link" href="${escapeHtml(videoUrl(g, v))}" target="_blank" rel="noopener">
         <span class="video-icon">${icon("play", 22, 2)}</span>
         <span class="video-text">
-          <strong>Watch how-to videos</strong>
+          <strong>Watch How-To Videos</strong>
           <span>${v ? `Searches YouTube for your ${escapeHtml([v.model_year, v.brand, v.make].filter(Boolean).join(" "))}` : "Searches YouTube for this job"}</span>
         </span>
         ${icon("chevron", 18, 2)}

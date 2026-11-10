@@ -47,7 +47,7 @@ export function reminderDate(task, defaultDays) {
 // One sentence for the task form, e.g. "We'll remind you on Fri, Nov 7."
 export function reminderPreview(dueISO, days, { enabled = true } = {}) {
   if (!dueISO) return "Pick a due date to see when you'll be reminded.";
-  if (!enabled) return "Reminders are turned off. Turn them on in Profile → Notifications.";
+  if (!enabled) return "Reminders are turned off. Turn them on in Profile → Notification Settings.";
   const on = addDays(dueISO, -days);
   const today = todayISO();
   if (daysBetween(today, dueISO) < 0) return "This task is already overdue, so it will show as overdue right away.";
@@ -151,7 +151,7 @@ function showReminderSheet(tasks, byId) {
       ${tasks.length > 6 ? `<p class="hint">and ${tasks.length - 6} more</p>` : ""}
       <div class="sheet-actions">
         <button type="button" class="btn btn-ghost" data-close>Later</button>
-        <a class="btn" href="#/tasks">See tasks</a>
+        <a class="btn" href="#/tasks">See Tasks</a>
       </div>
     </div>`;
   document.body.appendChild(dlg);
@@ -195,7 +195,7 @@ export function buildIcs(tasks, { defaultDays, vehicles = [] }) {
     const summary = car ? `${t.task_name} (${car})` : t.task_name;
     const desc = [
       `AutoPal maintenance task${car ? ` for ${car}` : ""}.`,
-      t.estimated_cost != null ? `Estimated cost: $${Number(t.estimated_cost).toFixed(2)}` : "",
+      t.estimated_cost != null ? `Estimated Cost: $${Number(t.estimated_cost).toFixed(2)}` : "",
       t.notes ?? "",
     ].filter(Boolean).join("\n");
     return [

@@ -10,9 +10,9 @@ export default async function render(root, ctx) {
   const mode = ctx.mode;
   const notice = ctx.query.get("notice");
   const titles = {
-    signin: ["Welcome to AutoPal", "Sign in to keep your car on schedule."],
-    signup: ["Create your account", "Track maintenance, costs and mechanics in one place."],
-    forgot: ["Forgot password?", "Enter the email on your account and we'll send you a reset link."],
+    signin: ["Welcome to AutoPal", "Log in to keep your car on schedule."],
+    signup: ["Create Your Account", "Track maintenance, costs and mechanics in one place."],
+    forgot: ["Forgot Password?", "Enter the email on your account and we'll send you a reset link."],
   };
   const [title, sub] = titles[mode];
   const field = (name, label, attrs) => `
@@ -52,10 +52,10 @@ export default async function render(root, ctx) {
       </form>
       <div class="auth-links">
         ${mode === "signin" ? `
-          <a href="#/forgot">Forgot password?</a>
-          <p>Don't have an account? <a href="#/signup">Create account</a></p>` : ""}
-        ${mode === "signup" ? `<p>Already have an account? <a href="#/signin">Log in</a></p>` : ""}
-        ${mode === "forgot" ? `<p><a href="#/signin">Back to log in</a></p>` : ""}
+          <a href="#/forgot">Forgot Password?</a>
+          <p>Don't have an account? <a href="#/signup">Create Account</a></p>` : ""}
+        ${mode === "signup" ? `<p>Already have an account? <a href="#/signin">Log In</a></p>` : ""}
+        ${mode === "forgot" ? `<p><a href="#/signin">Back to Log In</a></p>` : ""}
       </div>
     </div>`;
 
@@ -68,7 +68,7 @@ export default async function render(root, ctx) {
         <div class="empty-art">${icon(iconName, 64, 1.6)}</div>
         <h2>${heading}</h2>
         <p>${html}</p>
-        <p><a href="#/signin">Back to log in</a></p>
+        <p><a href="#/signin">Back to Log In</a></p>
       </div>`;
   };
 
@@ -94,13 +94,13 @@ export default async function render(root, ctx) {
           if (!(await isUsernameAvailable(f.username))) return showError("That username is already taken. Please pick a different one.");
           const { needsConfirmation } = await signUp({ email: f.email, password: f.password, username: f.username });
           if (needsConfirmation) {
-            done("check", "Check your email", `We sent a confirmation link to <strong>${escapeHtml(f.email)}</strong>. Open it to finish creating your account, then log in with your username.`);
+            done("check", "Check Your Email", `We sent a confirmation link to <strong>${escapeHtml(f.email)}</strong>. Open it to finish creating your account, then log in with your username.`);
           } else {
             ctx.navigate("#/home", { replace: true });
           }
         } else {
           await sendPasswordReset(f.email);
-          done("lock", "Check your email", `If an account exists for <strong>${escapeHtml(f.email)}</strong>, a reset link is on its way.`);
+          done("lock", "Check Your Email", `If an account exists for <strong>${escapeHtml(f.email)}</strong>, a reset link is on its way.`);
         }
       } catch (err) {
         showError(errorMessage(err));

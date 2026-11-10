@@ -30,13 +30,15 @@ export default async function render(root, ctx) {
     : { href: "#/tasks", label: "Tasks" };
   // From a mechanic shop (Find a Mechanic → "Add to my tasks"): the shop and the estimate.
   const presetShop = Number(ctx.query.get("shop")) || null;
-  const presetCost = Number(ctx.query.get("cost"));
+  const costParam = ctx.query.get("cost");
+  const parsedCost = costParam === null || costParam.trim() === "" ? NaN : Number(costParam);
+  const presetCost = Number.isFinite(parsedCost) && parsedCost >= 0 ? parsedCost : null;
   const presetNotes = (ctx.query.get("notes") ?? "").slice(0, 1000);
   const t = task ?? {
     vehicle_id: vehicles.some((v) => v.id === presetVehicle) ? presetVehicle : vehicles[0].id,
     task_name: presetName,
     due_date: "",
-    estimated_cost: presetCost > 0 ? presetCost : null,
+    estimated_cost: presetCost,
     notes: presetNotes,
     shop_id: presetShop,
     remind_days_before: null,
@@ -60,11 +62,11 @@ export default async function render(root, ctx) {
           </select>
         </label>` : `<input type="hidden" name="vehicle_id" value="${t.vehicle_id}">`}
       <label class="field">
-        <span>Task name</span>
+        <span>Task Name</span>
         <input name="task_name" required maxlength="80" placeholder="e.g. Replace headlight bulb" value="${escapeHtml(t.task_name)}">
       </label>
       <label class="field">
-        <span>Due date</span>
+        <span>Due Date</span>
         <input name="due_date" type="date" required value="${escapeHtml(t.due_date ?? "")}">
       </label>
       <label class="field">
@@ -72,7 +74,7 @@ export default async function render(root, ctx) {
         <textarea name="notes" rows="3" maxlength="1000" placeholder="Part numbers, which shop, anything to remember">${escapeHtml(t.notes ?? "")}</textarea>
       </label>
       <div class="field remind-field">
-        <label for="remind-select"><span>Remind me</span></label>
+        <label for="remind-select"><span>Remind Me</span></label>
         <div class="remind-row">
           <select id="remind-select" name="remind_choice">
             <option value="" ${t.remind_days_before == null ? "selected" : ""}>Default (${escapeHtml(remindLabel(defaultDays).toLowerCase())})</option>
@@ -85,10 +87,10 @@ export default async function render(root, ctx) {
           </span>
         </div>
         <p class="hint remind-preview" id="remind-preview" aria-live="polite"></p>
-        ${editing && !task.is_completed ? `<button type="button" class="btn-text" id="add-calendar">${icon("calendar", 16, 2)}Add to my calendar with this reminder</button>` : ""}
+        ${editing && !task.is_completed ? `<button type="button" class="btn-text" id="add-calendar">${icon("calendar", 16, 2)}Add to My Calendar with This Reminder</button>` : ""}
       </div>
       <label class="field">
-        <span>Estimated cost <em>optional, used in Maintenance Estimate</em></span>
+        <span>Estimated Cost <em>optional, used in Maintenance Estimator</em></span>
         <span class="input-prefix"><span>$</span><input name="estimated_cost" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00" value="${t.estimated_cost ?? ""}"></span>
       </label>
       <p class="form-error" role="alert" hidden></p>
@@ -96,7 +98,7 @@ export default async function render(root, ctx) {
         <a class="btn btn-ghost" href="${backLink.href}">Cancel</a>
         <button class="btn" type="submit">${editing ? "Save Changes" : "Add Task"}</button>
       </div>
-      ${editing ? `<div class="danger-zone"><button type="button" class="btn-text danger" id="delete-task">${icon("trash", 16, 2)}Delete task</button></div>` : ""}
+      ${editing ? `<div class="danger-zone"><button type="button" class="btn-text danger" id="delete-task">${icon("trash", 16, 2)}Delete Task</button></div>` : ""}
     </form>`;
 
   const form = root.querySelector("form");
@@ -177,7 +179,7 @@ export default async function render(root, ctx) {
   });
 
   root.querySelector("#delete-task")?.addEventListener("click", async () => {
-    const ok = await confirmDialog({ title: "Delete this task?", body: `“${task.task_name}” and any receipt attached to it will be removed.`, confirmLabel: "Delete", danger: true });
+    const ok = await confirmDialog({ title: "Delete This Task?", body: `“${task.task_name}” and any receipt attached to it will be removed.`, confirmLabel: "Delete", danger: true });
     if (!ok) return;
     try {
       await deleteTaskWithReceipt(task);
