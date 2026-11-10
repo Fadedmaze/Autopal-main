@@ -1,6 +1,6 @@
 // Markup + behavior reused across screens: task rows, the complete-task sheet
 // (receipt upload + undo), vehicle cards and image preparation.
-import { setTaskCompleted, uploadReceipt } from "./data.js";
+import { setTaskCompleted, updateTask, uploadReceipt } from "./data.js";
 import {
   escapeHtml, icon, dueLabel, dueTone, formatMoney, formatDate, formatMileage,
   vehicleIcon, vehicleSpec, vehicleTint, todayISO, toast, errorMessage, withBusy,
@@ -44,12 +44,15 @@ export function taskRow(task, { vehicle = null, remindDays = 7, showCost = false
     </li>`;
 }
 
-export function taskDetailsSheet(task) {
-  const params = new URLSearchParams({
-    name: task.task_name,
-    vehicle: String(task.vehicle_id),
-  });
-  if (task.estimated_cost > 0) params.set("cost", String(task.estimated_cost));
+export function taskDetailsSheet(task, { onChanged } = {}) {
+  const taskFormHref = () => {
+    const params = new URLSearchParams({
+      name: task.task_name,
+      vehicle: String(task.vehicle_id),
+    });
+    if (task.estimated_cost != null) params.set("cost", String(task.estimated_cost));
+    return `#/tasks/new?${params}`;
+  };
 
   const dlg = document.createElement("dialog");
   dlg.className = "sheet";
@@ -59,14 +62,55 @@ export function taskDetailsSheet(task) {
         <h2>${escapeHtml(task.task_name)}</h2>
         <button type="button" class="icon-btn" data-close aria-label="Close">${icon("close", 18, 2.2)}</button>
       </div>
-      <p>${task.estimated_cost !== null ? formatMoney(task.estimated_cost) : "—"}</p>
-      <a class="fab sheet-add-task" data-add-task href="#/tasks/new?${params}">${icon("plus", 20, 2.6)}<span>Add task</span></a>
+      <form class="form task-price-form" data-price-form novalidate>
+        <label class="field">
+          <span>Estimated cost</span>
+          <span class="input-prefix"><span>$</span><input name="estimated_cost" type="number" inputmode="decimal" min="0" step="0.01" value="${task.estimated_cost ?? ""}" aria-label="Estimated cost"></span>
+        </label>
+        <p class="form-error" role="alert" hidden></p>
+        <button class="btn" type="submit">Save price</button>
+      </form>
+      <a class="fab sheet-add-task" data-add-task href="${taskFormHref()}">${icon("plus", 20, 2.6)}<span>Add task</span></a>
     </div>`;
   document.body.appendChild(dlg);
   dlg.addEventListener("close", () => dlg.remove());
   dlg.addEventListener("click", (e) => { if (e.target === dlg) dlg.close(); });
   dlg.querySelector("[data-close]").addEventListener("click", () => dlg.close());
   dlg.querySelector("[data-add-task]").addEventListener("click", () => dlg.close());
+  const form = dlg.querySelector("[data-price-form]");
+  const input = form.elements.estimated_cost;
+  const error = form.querySelector(".form-error");
+  const addTaskLink = dlg.querySelector("[data-add-task]");
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const raw = input.value.trim();
+    const amount = raw === "" ? null : Number(raw);
+    if (amount !== null && (!Number.isFinite(amount) || amount < 0)) {
+      error.textContent = "Enter a valid cost of zero or more.";
+      error.hidden = false;
+      return;
+    }
+    withBusy(form.querySelector('[type="submit"]'), async () => {
+      error.hidden = true;
+      try {
+        const saved = await updateTask(task.id, {
+          estimated_cost: amount === null ? null : Math.round(amount * 100) / 100,
+        });
+        Object.assign(task, saved);
+        addTaskLink.href = taskFormHref();
+        toast("Price updated", "ok");
+        try {
+          await onChanged?.();
+        } catch (err) {
+          error.textContent = `Price saved, but the estimator couldn't refresh: ${errorMessage(err)}`;
+          error.hidden = false;
+        }
+      } catch (err) {
+        error.textContent = errorMessage(err);
+        error.hidden = false;
+      }
+    });
+  });
   dlg.showModal();
 }
 
