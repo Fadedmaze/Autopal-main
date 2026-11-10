@@ -45,6 +45,12 @@ export function taskRow(task, { vehicle = null, remindDays = 7, showCost = false
 }
 
 export function taskDetailsSheet(task) {
+  const params = new URLSearchParams({
+    name: task.task_name,
+    vehicle: String(task.vehicle_id),
+  });
+  if (task.estimated_cost > 0) params.set("cost", String(task.estimated_cost));
+
   const dlg = document.createElement("dialog");
   dlg.className = "sheet";
   dlg.innerHTML = `
@@ -54,11 +60,13 @@ export function taskDetailsSheet(task) {
         <button type="button" class="icon-btn" data-close aria-label="Close">${icon("close", 18, 2.2)}</button>
       </div>
       <p>${task.estimated_cost !== null ? formatMoney(task.estimated_cost) : "—"}</p>
+      <a class="fab sheet-add-task" data-add-task href="#/tasks/new?${params}">${icon("plus", 20, 2.6)}<span>Add task</span></a>
     </div>`;
   document.body.appendChild(dlg);
   dlg.addEventListener("close", () => dlg.remove());
   dlg.addEventListener("click", (e) => { if (e.target === dlg) dlg.close(); });
   dlg.querySelector("[data-close]").addEventListener("click", () => dlg.close());
+  dlg.querySelector("[data-add-task]").addEventListener("click", () => dlg.close());
   dlg.showModal();
 }
 
