@@ -7,7 +7,7 @@
 --                 (steps keeps just the headings, for older code)
 --   wrap_up       "Good to know" closing advice
 --   safety        warnings shown before the steps
---   task_name     what "Add task" prefills (matches the maintenance_catalog names where one exists)
+--   task_name     what "Add Task" prefills (matches the maintenance_catalog names where one exists)
 --   video_query   YouTube search phrase; the app appends the selected car, e.g. "... 2013 Honda Civic"
 --   image_path    reserved for diagrams later (a path under img/guides/); unused for now
 -- Content is generated from supabase/seed/diy_guides.json. Safe to re-run: guides are upserted by slug.
