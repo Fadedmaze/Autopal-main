@@ -74,7 +74,7 @@ export default async function render(root, ctx) {
   root.querySelectorAll("[data-task-details]").forEach((button) => {
     button.addEventListener("click", () => {
       const task = tasksById.get(Number(button.closest(".task").dataset.taskId));
-      if (task) taskDetailsSheet(task);
+      if (task) taskDetailsSheet(task, { onChanged: () => ctx.isCurrent() && render(root, ctx) });
     });
   });
   bindTaskRows(root, new Map(open.map((t) => [t.id, t])), () => render(root, ctx));
