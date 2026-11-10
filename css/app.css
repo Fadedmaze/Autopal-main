@@ -1192,6 +1192,7 @@ body.scanning #nav { display: none !important; }
   bottom: calc(var(--safe-b) + 20px);
   display: inline-flex; align-items: center; gap: 8px;
   min-height: 56px; padding: 0 22px 0 18px; border-radius: 999px;
+  border: 0; cursor: pointer; font-family: inherit;
   background: var(--brand); color: var(--brand-ink);
   font-size: 16px; font-weight: 700; text-decoration: none;
   box-shadow: 0 12px 28px -10px color-mix(in srgb, var(--brand) 80%, transparent), 0 2px 6px rgba(18, 24, 38, .12);
