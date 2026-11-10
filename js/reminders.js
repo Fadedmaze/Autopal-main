@@ -195,7 +195,7 @@ export function buildIcs(tasks, { defaultDays, vehicles = [] }) {
     const summary = car ? `${t.task_name} (${car})` : t.task_name;
     const desc = [
       `AutoPal maintenance task${car ? ` for ${car}` : ""}.`,
-      t.estimated_cost != null ? `Estimated cost: $${Number(t.estimated_cost).toFixed(2)}` : "",
+      t.estimated_cost != null ? `Estimated Cost: $${Number(t.estimated_cost).toFixed(2)}` : "",
       t.notes ?? "",
     ].filter(Boolean).join("\n");
     return [
