@@ -35,6 +35,7 @@ export default async function render(root, ctx) {
     showDueDate: false,
     showTaskDetails: true,
     showCheckbox: false,
+    showOverdueStyle: false,
   });
 
   root.innerHTML = `
