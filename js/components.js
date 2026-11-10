@@ -1,6 +1,6 @@
 // Markup + behavior reused across screens: task rows, the complete-task sheet
 // (receipt upload + undo), vehicle cards and image preparation.
-import { setTaskCompleted, updateTask, uploadReceipt } from "./data.js";
+import { createTask, setTaskCompleted, updateTask, uploadReceipt } from "./data.js";
 import {
   escapeHtml, icon, dueLabel, dueTone, formatMoney, formatDate, formatMileage,
   vehicleIcon, vehicleSpec, vehicleTint, todayISO, toast, errorMessage, withBusy,
@@ -104,6 +104,76 @@ export function taskDetailsSheet(task, { onChanged } = {}) {
         } catch (err) {
           error.textContent = `Price saved, but the estimator couldn't refresh: ${errorMessage(err)}`;
           error.hidden = false;
+        }
+      } catch (err) {
+        error.textContent = errorMessage(err);
+        error.hidden = false;
+      }
+    });
+  });
+  dlg.showModal();
+}
+
+export function addCustomTaskSheet(vehicleId, { onCreated } = {}) {
+  const dlg = document.createElement("dialog");
+  dlg.className = "sheet";
+  dlg.innerHTML = `
+    <div class="sheet-body left">
+      <div class="sheet-head">
+        <h2 class="task-details-title">Add Custom Item</h2>
+        <button type="button" class="icon-btn" data-close aria-label="Close">${icon("close", 18, 2.2)}</button>
+      </div>
+      <form class="form" data-custom-task-form novalidate>
+        <label class="field">
+          <span>Title</span>
+          <input name="task_name" required maxlength="80" placeholder="e.g. Replace a part">
+        </label>
+        <label class="field">
+          <span>Price</span>
+          <span class="input-prefix"><span>$</span><input name="estimated_cost" type="number" inputmode="decimal" min="0" step="0.01" required placeholder="0.00"></span>
+        </label>
+        <p class="form-error" role="alert" hidden></p>
+        <button class="btn" type="submit">Add Custom</button>
+      </form>
+    </div>`;
+  document.body.appendChild(dlg);
+  dlg.addEventListener("close", () => dlg.remove());
+  dlg.addEventListener("click", (e) => { if (e.target === dlg) dlg.close(); });
+  dlg.querySelector("[data-close]").addEventListener("click", () => dlg.close());
+
+  const form = dlg.querySelector("[data-custom-task-form]");
+  const error = form.querySelector(".form-error");
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const taskName = form.elements.task_name.value.trim();
+    const rawCost = form.elements.estimated_cost.value.trim();
+    const cost = Number(rawCost);
+    if (!taskName) {
+      error.textContent = "Enter a title for this item.";
+      error.hidden = false;
+      return;
+    }
+    if (!rawCost || !Number.isFinite(cost) || cost < 0) {
+      error.textContent = "Enter a valid price of zero or more.";
+      error.hidden = false;
+      return;
+    }
+
+    withBusy(form.querySelector('[type="submit"]'), async () => {
+      error.hidden = true;
+      try {
+        await createTask({
+          vehicle_id: vehicleId,
+          task_name: taskName,
+          estimated_cost: Math.round(cost * 100) / 100,
+          due_date: null,
+        });
+        dlg.close();
+        toast("Custom item added", "ok");
+        try {
+          await onCreated?.();
+        } catch (err) {
+          toast(`Item added, but the estimator couldn't refresh: ${errorMessage(err)}`, "error");
         }
       } catch (err) {
         error.textContent = errorMessage(err);
