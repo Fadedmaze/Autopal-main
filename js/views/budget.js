@@ -1,6 +1,6 @@
 // Maintenance Estimate: upcoming repairs with their approximate prices and a total.
 // The total comes from the vehicle_task_summary view (summed in the database).
-import { getProfile, getSettings, listVehicles, listTasks } from "../data.js";
+import { getProfile, getSettings, listVehicles, listTasks, listGuides } from "../data.js";
 import { taskRow, bindTaskRows } from "../components.js";
 import { appBar, escapeHtml, loading, emptyState, formatMoney, icon } from "../ui.js";
 
@@ -26,10 +26,27 @@ export default async function render(root, ctx) {
     chosenVehicle = vehicles.some((v) => v.id === profile.active_vehicle_id) ? profile.active_vehicle_id : vehicles[0].id;
   }
   const vehicle = vehicles.find((v) => v.id === chosenVehicle);
-  const open = await listTasks({ vehicleId: vehicle.id, completed: false });
+  const [open, guides] = await Promise.all([
+    listTasks({ vehicleId: vehicle.id, completed: false }),
+    listGuides(),
+  ]);
   if (!ctx.isCurrent()) return;
   const s = vehicle.summary;
-  const row = (t) => taskRow(t, { remindDays: settings.reminder_days_before, showCost: true, showDueDate: false });
+  const guidesByTaskName = new Map(guides
+    .filter((g) => g.category === "diy" && g.task_name)
+    .map((g) => [g.task_name.trim().toLowerCase(), g]));
+  const row = (t) => {
+    const guide = guidesByTaskName.get(t.task_name.trim().toLowerCase());
+    const guideHref = guide
+      ? `#/library/${encodeURIComponent(guide.slug)}?vehicle=${vehicle.id}`
+      : null;
+    return taskRow(t, {
+      remindDays: settings.reminder_days_before,
+      showCost: true,
+      showDueDate: false,
+      guideHref,
+    });
+  };
 
   root.innerHTML = `
     ${appBar(bar)}
