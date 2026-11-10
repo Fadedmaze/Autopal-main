@@ -1,7 +1,7 @@
 // Discover (formerly Library): guides grouped into DIY Maintenance and Dashboard
 // Lights. /library/:slug opens one guide. The Dashboard Lights tab also opens the
 // camera scanner (views/discover.js). Every DIY guide carries a "see a mechanic" note.
-// DIY guides show difficulty, safety notes, a YouTube search for the selected car, and an "Add task" button that prefills the New Task form.
+// DIY guides show difficulty, safety notes, a YouTube search for the selected car, and an "Add Task" button that prefills the New Task form.
 import { listGuides, listWarningLights, getProfile, listVehicles, listTasks } from "../data.js";
 import { appBar, escapeHtml, icon, loading, formatDate, vehicleSpec } from "../ui.js";
 import { openScanner } from "./discover.js";
@@ -550,7 +550,7 @@ async function renderGuide(root, ctx, g) {
         <div class="notice notice-info">${icon("wrench", 18, 2)}
           <span>Not comfortable doing this yourself? That's completely fine. <a href="#/mechanics">See a mechanic</a> near you.</span>
         </div>` : ""}
-      ${isDiy || isDashboard ? `<a class="fab" id="add-task" href="${addTaskHref(g, null)}">${icon("plus", 20, 2.6)}<span>Add task</span></a>` : ""}
+      ${isDiy || isDashboard ? `<a class="fab" id="add-task" href="${addTaskHref(g, null)}">${icon("plus", 20, 2.6)}<span>Add Task</span></a>` : ""}
     </article>`;
 
   if (!isDiy) return;
