@@ -1,6 +1,6 @@
 // AutoPal service worker. Bump CACHE on every release; it doubles as the
 // "is the new version live yet" probe after a deploy.
-const CACHE = "autopal-shell-v13";
+const CACHE = "autopal-shell-v14";
 
 const SHELL = [
   "./",

@@ -1291,7 +1291,17 @@ body.has-nav .fab { bottom: calc(var(--nav-h) + var(--safe-b) + 16px); }
 .dg-gap { fill: none; stroke: var(--warn); stroke-width: 2.5; stroke-linecap: round; }
 
 /* ---------- Profile: insurance card ---------- */
-.ins { gap: 18px; }
+.ins { display: flex; flex-direction: column; gap: 16px; }
+/* Insurance card pop-up (sheet on Profile): scrolls on short screens. */
+.ins-sheet { max-height: 92dvh; overflow-y: auto; overscroll-behavior: contain; }
+.ins-sheet .ins-preview { max-width: 360px; margin-inline: auto; }
+.ins-sheet .ins-actions { width: 100%; max-width: 360px; margin-inline: auto; }
+.ins-sheet .loading { min-height: 180px; }
+.ins-unavailable { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; padding: 20px 8px; color: var(--ink-2); }
+.ins-unavailable .icon { color: var(--ink-3); }
+.ins-unavailable strong { color: var(--ink); font-size: 17px; }
+/* "Insurance Card" opens a pop-up, so it's a button styled like the other menu rows. */
+button.menu-row { width: 100%; font: inherit; font-weight: 600; text-align: left; cursor: pointer; }
 .ins-side { display: flex; flex-direction: column; gap: 10px; }
 .ins-side > h3 { margin: 0; font-size: 16px; font-weight: 700; }
 /* Card shape (credit-card ratio) so the photo fills it naturally. */

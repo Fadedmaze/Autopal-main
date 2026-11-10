@@ -29,7 +29,7 @@ const ROUTES = [
   { path: "/profile", view: () => import("./views/profile.js"), tab: "profile" },
   { path: "/profile/password", view: () => import("./views/profile.js"), tab: "profile", mode: "password", nav: false },
   { path: "/profile/notifications", view: () => import("./views/profile.js"), tab: "profile", mode: "notifications", nav: false },
-  { path: "/profile/insurance", view: () => import("./views/profile.js"), tab: "profile", mode: "insurance", nav: false },
+  { path: "/profile/insurance", view: () => import("./views/profile.js"), tab: "profile", mode: "insurance" }, // Profile with the insurance pop-up open
 ];
 
 // Bottom bar, left to right, per the Home spec.
