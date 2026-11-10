@@ -350,6 +350,7 @@ input[type=date] { min-height: 48px; }
 .task { display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
 .task + .task { border-top: 1px solid var(--line); }
 .task-body { flex: 1; min-width: 0; display: flex; flex-direction: column; color: inherit; text-decoration: none; }
+button.task-body { border: 0; padding: 0; background: none; text-align: left; font: inherit; cursor: pointer; }
 .task-body:hover { text-decoration: none; }
 .task-body:hover .task-name { color: var(--brand); }
 .task-name { font-weight: 600; overflow-wrap: anywhere; }
