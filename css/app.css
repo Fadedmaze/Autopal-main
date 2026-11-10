@@ -512,6 +512,7 @@ button.task-body { border: 0; padding: 0; background: none; text-align: left; fo
 .sheet-body.left { align-items: stretch; text-align: left; }
 .sheet-body h2 { margin: 0; font-size: 20px; letter-spacing: -.02em; display: flex; align-items: center; gap: 8px; }
 .sheet-body p { margin: 0; color: var(--ink-2); }
+.sheet .sheet-add-task { position: static; z-index: auto; align-self: flex-start; }
 .sheet-icon { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; background: var(--ok-soft); color: var(--ok); }
 .sheet-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
 .sheet-head { display: flex; justify-content: space-between; align-items: center; }
