@@ -1044,55 +1044,52 @@ body.scanning #nav { display: none !important; }
 .light-actions:has(> :only-child) { grid-template-columns: 1fr; }
 .light-card { max-height: 85vh; overflow-y: auto; }
 
-/* DIY dropdowns */
-.diy-dropdown {
-  margin-bottom: 12px;
-}
 
-/* Compact closed DIY dropdowns */
-details.diy-dropdown:not([open]) {
+/* DIY dropdowns */
+details.diy-dropdown {
+  margin-bottom: 12px;
+  padding: 0 !important;
   height: auto;
   min-height: 0;
-  padding: 0 !important;
+  overflow: hidden;
 }
 
-
+/* Header stays in the same position open or closed */
 details.diy-dropdown > summary {
-  margin: 0 !important;
-  padding: 18px 20px 10px !important;
-  min-height: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.diy-dropdown > summary {
   cursor: pointer;
-  padding: 16px;
-  font-weight: 600;
   list-style: none;
+  margin: 0 !important;
+  padding: 22px 20px 6px !important;
+  min-height: 0;
+
   display: flex;
   align-items: center;
   justify-content: space-between;
+  font-weight: 600;
 }
 
-.diy-dropdown > summary::-webkit-details-marker {
+/* Hide default browser arrow */
+details.diy-dropdown > summary::-webkit-details-marker {
   display: none;
 }
 
-.diy-dropdown[open] > summary svg {
+details.diy-dropdown > summary::marker {
+  content: "";
+}
+
+/* Rotate only the chevron when expanded */
+details.diy-dropdown[open] > summary > svg {
   transform: rotate(90deg);
 }
 
-.diy-dropdown-content {
-  padding: 0 12px 12px;
+/* Space for content below the header */
+details.diy-dropdown > .diy-dropdown-content {
+  padding: 8px 20px 20px;
 }
 
-/* Center dropdown labels vertically */
-details.diy-dropdown > summary > span,
-details.diy-dropdown > summary > svg {
-  position: relative;
-  top: 2px;
+/* Remove unnecessary spacing at the top */
+.diy-dropdown-content > :first-child {
+  margin-top: 0;
 }
 
 /* DIY Maintenance icons - difficulty colors */
