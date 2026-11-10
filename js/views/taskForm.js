@@ -90,7 +90,7 @@ export default async function render(root, ctx) {
         ${editing && !task.is_completed ? `<button type="button" class="btn-text" id="add-calendar">${icon("calendar", 16, 2)}Add to my calendar with this reminder</button>` : ""}
       </div>
       <label class="field">
-        <span>Estimated cost <em>optional, used in Maintenance Estimate</em></span>
+        <span>Estimated Cost <em>optional, used in Maintenance Estimate</em></span>
         <span class="input-prefix"><span>$</span><input name="estimated_cost" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00" value="${t.estimated_cost ?? ""}"></span>
       </label>
       <p class="form-error" role="alert" hidden></p>
