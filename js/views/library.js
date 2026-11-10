@@ -436,10 +436,20 @@ function diyDropdown(title, content, open = false) {
 
   return `
     <details class="card diy-dropdown" ${open ? "open" : ""}>
-      <summary>
-        <span>${escapeHtml(title)}</span>
-        ${icon("chevron", 18, 2)}
-      </summary>
+    <summary>
+      <span class="diy-dropdown-label">
+        <span class="diy-dropdown-icon" aria-hidden="true">
+          ${icon({
+            "Why it matters": "shield",
+            "Before you start": "book",
+            "What to look for": "locate",
+            "Step by step": "tasks"
+          }[title] || "book", 20, 2)}
+        </span>
+        ${escapeHtml(title)}
+      </span>
+      ${icon("chevron", 18, 2)}
+    </summary>
       <div class="diy-dropdown-content">
         ${content}
       </div>
@@ -495,7 +505,7 @@ async function renderGuide(root, ctx, g) {
       ${sev ? `<div class="notice notice-${severity === "stop" ? "danger" : "warn"}">${icon("alert", 18, 2)}<span><strong>${sev.label}.</strong> ${sev.text}</span></div>` : ""}
       ${isDiy ? `<section class="card guide-video" id="video-card"></section>` : ""}
       ${isDiy ? diyDropdown(
-        "Why it matters",
+        "Why It Matters",
         g.intro ? `
           <section class="guide-prose">
             ${paragraphs(g.intro)}
@@ -505,7 +515,7 @@ async function renderGuide(root, ctx, g) {
           ${paragraphs(g.intro)}
         </section>` : ""}
       ${isDiy ? diyDropdown(
-        "Before you start",
+        "Before You Start",
         g.prep ? `
           <section class="guide-prose">
             ${paragraphs(g.prep)}
@@ -524,53 +534,22 @@ async function renderGuide(root, ctx, g) {
           ${paragraphs(g.prep)}
         </section>` : ""}
       ${isDiy
-        ? diyDropdown("What to look for", guideFigure(g))
+        ? diyDropdown("What To Look For", guideFigure(g))
         : guideFigure(g)}
-    
-      ${isDiy ? diyDropdown(
-        "Safety first",
-        g.safety?.length ? `
-          <div class="notice notice-warn guide-safety">
-            ${icon("alert", 18, 2)}
-            <div>
-              <strong>Safety first</strong>
-              ${g.safety.map((s) => `<p>${escapeHtml(s)}</p>`).join("")}
-            </div>
-          </div>` : ""
-      ) : g.safety?.length ? `
-        <div class="notice notice-warn guide-safety">
-          ${icon("alert", 18, 2)}
-          <div>
-            <strong>Safety first</strong>
-            ${g.safety.map((s) => `<p>${escapeHtml(s)}</p>`).join("")}
-          </div>
-        </div>` : ""}
 
-        ${isDiy ? diyDropdown(
-          "Step by step",
-          detailed ? `
-            <section class="guide-prose">
-              <h3>Step by step</h3>
-              <ol class="walkthrough">
-                ${g.step_details.map((s, i) => `
-                  <li class="walk-step">
-                    <span class="walk-num" aria-hidden="true">${i + 1}</span>
-                    <div class="walk-body">
-                      <h4><span class="sr-only">Step ${i + 1}: </span>${escapeHtml(s.title)}</h4>
-                      ${paragraphs(s.body)}
-                    </div>
-                  </li>`).join("")}
-              </ol>
-            </section>` : `
-            <section class="card">
-              <h3>Steps</h3>
-              <ol class="steps">
-                ${g.steps.map((s) => `<li>${escapeHtml(s)}</li>`).join("")}
-              </ol>
-            </section>`
-        ) : detailed ? `
+      ${isDiy ? diyDropdown(
+        "Step By Step",
+        `
+          ${g.safety?.length ? `
+            <div class="notice notice-warn guide-safety">
+              ${icon("alert", 18, 2)}
+              <div>
+                <strong>Safety First</strong>
+                ${g.safety.map((s) => `<p>${escapeHtml(s)}</p>`).join("")}
+              </div>
+            </div>` : ""}
+          ${detailed ? `
           <section class="guide-prose">
-            <h3>Step by step</h3>
             <ol class="walkthrough">
               ${g.step_details.map((s, i) => `
                 <li class="walk-step">
@@ -583,34 +562,62 @@ async function renderGuide(root, ctx, g) {
             </ol>
           </section>` : `
           <section class="card">
-            <h3>What to do</h3>
+            <h3>Steps</h3>
             <ol class="steps">
               ${g.steps.map((s) => `<li>${escapeHtml(s)}</li>`).join("")}
             </ol>
-          </section>`}        
+            </section>`}
+            `) : detailed ? `
+        <section class="guide-prose">
+          <h3>Step by step</h3>
+          <ol class="walkthrough">
+            ${g.step_details.map((s, i) => `
+              <li class="walk-step">
+                <span class="walk-num" aria-hidden="true">${i + 1}</span>
+                <div class="walk-body">
+                  <h4><span class="sr-only">Step ${i + 1}: </span>${escapeHtml(s.title)}</h4>
+                  ${paragraphs(s.body)}
+                </div>
+              </li>`).join("")}
+          </ol>
+        </section>` : `
+        <section class="card">
+          <h3>What to do</h3>
+          <ol class="steps">
+            ${g.steps.map((s) => `<li>${escapeHtml(s)}</li>`).join("")}
+          </ol>
+        </section>`}        
       ${isDashboard && g.warningLight?.repair_service ? `
         <a class="card mechanic-cta" href="#/mechanics?problem=${encodeURIComponent(g.warningLight.slug)}${chosenVehicleId ? `&vehicle=${chosenVehicleId}` : ""}">
           <span class="guide-icon">${icon("pin", 20, 2)}</span>
           <span class="guide-text"><strong>Find a Shop That Can Fix This</strong><span>Nearby shops ranked for ${escapeHtml(g.warningLight.repair_service.toLowerCase())} work, with price estimates.</span></span>
           ${icon("chevron", 18, 2)}
-        </a>` : ""}
-        ${isDiy ? diyDropdown(
-          "Good to know",
-          g.wrap_up ? `
-            <section class="card guide-prose guide-wrap">
-              <h3>Good to know</h3>
+        </a>` : ""}   
+      ${g.wrap_up ? `
+        <section class="card guide-prose guide-wrap">
+          <div class="good-to-know-layout">
+            <span class="good-to-know-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24"
+                  fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round">
+                <path d="M9 18h6M10 22h4"/>
+                <path d="M9 14.5C7.8 13.5 7 12 7 10a5 5 0 0 1 10 0c0 2-.8 3.5-2 4.5-.7.6-1 1.2-1 2.5h-4c0-1.3-.3-1.9-1-2.5Z"/>
+              </svg>
+            </span>
+            <div class="good-to-know-text">
+              <h3>Good To Know</h3>
               ${paragraphs(g.wrap_up)}
-            </section>` : ""
-        ) : g.wrap_up ? `
-          <section class="card guide-prose guide-wrap">
-            <h3>Good to know</h3>
-            ${paragraphs(g.wrap_up)}
-          </section>` : ""}        
+            </div>
+          </div>
+        </section>` : ""}        
       ${isDiy ? `
-        <p class="hint">Every car is a little different. Check your owner's manual for the exact parts, fluids, and amounts for yours.</p>
-        <div class="notice notice-info">${icon("wrench", 18, 2)}
+        <div class="notice notice-info">
+          ${icon("wrench", 18, 2)}
           <span>Not comfortable doing this yourself? That's completely fine. <a href="#/mechanics">See a mechanic</a> near you.</span>
-        </div>` : ""}
+        </div>
+        <p class="hint">Every car is different. Check your owner's manual for the exact parts, fluids, and amounts for yours.</p>` : ""}
+
       ${isDiy || isDashboard ? `<a class="fab" id="add-task" href="${addTaskHref(g, null)}">${icon("plus", 20, 2.6)}<span>Add Task</span></a>` : ""}
     </article>`;
 
