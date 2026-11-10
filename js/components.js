@@ -9,7 +9,7 @@ import { remindLabel, remindShort } from "./reminders.js";
 
 // One maintenance task row. The checkbox on the left completes / un-completes it.
 // Overdue tasks are red (spec). `showCost` puts the estimate on the right (Budget).
-export function taskRow(task, { vehicle = null, remindDays = 7, showCost = false, showReceipt = false, showDueDate = true } = {}) {
+export function taskRow(task, { vehicle = null, remindDays = 7, showCost = false, showReceipt = false, showDueDate = true, guideHref = null } = {}) {
   const done = task.is_completed;
   // A task's own reminder window wins over the user's default (null = use the default).
   const tone = done ? "muted" : dueTone(task.due_date, task.remind_days_before ?? remindDays);
@@ -22,20 +22,24 @@ export function taskRow(task, { vehicle = null, remindDays = 7, showCost = false
     : showReceipt && task.receipt_path
       ? `<button type="button" class="receipt-chip" data-receipt="${escapeHtml(task.receipt_path)}">${icon("receipt", 15, 2)}Receipt</button>`
       : `<a class="task-edit" href="#/tasks/${task.id}" aria-label="Edit ${escapeHtml(task.task_name)}">${icon("chevron", 18, 2)}</a>`;
+  const bodyTag = guideHref ? "a" : "div";
+  const bodyAttrs = guideHref
+    ? `href="${escapeHtml(guideHref)}" aria-label="Open DIY guide for ${escapeHtml(task.task_name)}"`
+    : "data-toggle";
   return `
     <li class="task ${done ? "done" : ""} ${tone === "danger" ? "overdue" : ""}" data-task-id="${task.id}">
       <label class="check" title="${done ? "Undo: mark as not done" : "Mark as completed"}">
         <input type="checkbox" ${done ? "checked" : ""} aria-label="${escapeHtml(task.task_name)} completed">
         <span class="check-box">${icon("check", 14, 3)}</span>
       </label>
-      <div class="task-body" data-toggle>
+      <${bodyTag} class="task-body" ${bodyAttrs}>
         <span class="task-name">${escapeHtml(task.task_name)}</span>
         <span class="task-meta">
           ${showDueDate ? `<span class="tone-${tone}">${escapeHtml(when)}</span>` : ""}
           ${vehicle ? `<span class="dot-sep">${escapeHtml(vehicle.label)}</span>` : ""}
           ${bell}
         </span>
-      </div>
+      </${bodyTag}>
       ${right}
     </li>`;
 }
