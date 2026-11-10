@@ -1138,7 +1138,7 @@ body.scanning #nav { display: none !important; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
-/* ---------- Library guide pages (Add task button, steps, video card, badges) ---------- */
+/* ---------- Library guide pages (Add Task button, steps, video card, badges) ---------- */
 
 .guide-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
 .difficulty { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; line-height: 1.5; }
@@ -1184,7 +1184,7 @@ body.scanning #nav { display: none !important; }
 .guide-figure { margin: 0; }
 .guide-figure img { display: block; width: 100%; height: auto; border-radius: var(--radius); border: 1.5px solid var(--line); background: var(--surface); }
 
-/* Floating "Add task" button: bottom right of the content column, above the tab bar. */
+/* Floating "Add Task" button: bottom right of the content column, above the tab bar. */
 .guide.has-fab { padding-bottom: 72px; }
 .fab {
   position: fixed; z-index: 15;
