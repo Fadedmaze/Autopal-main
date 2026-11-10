@@ -508,40 +508,89 @@ async function renderGuide(root, ctx, g) {
           <h3>Before you start</h3>
           ${paragraphs(g.prep)}
         </section>` : ""}
-      ${guideFigure(g)}
-      ${g.safety?.length ? `
-        <div class="notice notice-warn guide-safety">${icon("alert", 18, 2)}
-          <div><strong>Safety first</strong>${g.safety.map((s) => `<p>${escapeHtml(s)}</p>`).join("")}</div>
+      ${isDiy
+        ? diyDropdown("What to look for", guideFigure(g))
+        : guideFigure(g)}
+    
+      ${isDiy ? diyDropdown(
+        "Safety first",
+        g.safety?.length ? `
+          <div class="notice notice-warn guide-safety">
+            ${icon("alert", 18, 2)}
+            <div>
+              <strong>Safety first</strong>
+              ${g.safety.map((s) => `<p>${escapeHtml(s)}</p>`).join("")}
+            </div>
+          </div>` : ""
+      ) : g.safety?.length ? `
+        <div class="notice notice-warn guide-safety">
+          ${icon("alert", 18, 2)}
+          <div>
+            <strong>Safety first</strong>
+            ${g.safety.map((s) => `<p>${escapeHtml(s)}</p>`).join("")}
+          </div>
         </div>` : ""}
-      ${detailed ? `
-        <section class="guide-prose">
-          <h3>Step by step</h3>
-          <ol class="walkthrough">
-            ${g.step_details.map((s, i) => `
-              <li class="walk-step">
-                <span class="walk-num" aria-hidden="true">${i + 1}</span>
-                <div class="walk-body">
-                  <h4><span class="sr-only">Step ${i + 1}: </span>${escapeHtml(s.title)}</h4>
-                  ${paragraphs(s.body)}
-                </div>
-              </li>`).join("")}
-          </ol>
-        </section>` : `
-        <section class="card">
-          <h3>${isDiy ? "Steps" : "What to do"}</h3>
-          <ol class="steps">${g.steps.map((s) => `<li>${escapeHtml(s)}</li>`).join("")}</ol>
-        </section>`}
+
+        ${isDiy ? diyDropdown(
+          "Step by step",
+          detailed ? `
+            <section class="guide-prose">
+              <h3>Step by step</h3>
+              <ol class="walkthrough">
+                ${g.step_details.map((s, i) => `
+                  <li class="walk-step">
+                    <span class="walk-num" aria-hidden="true">${i + 1}</span>
+                    <div class="walk-body">
+                      <h4><span class="sr-only">Step ${i + 1}: </span>${escapeHtml(s.title)}</h4>
+                      ${paragraphs(s.body)}
+                    </div>
+                  </li>`).join("")}
+              </ol>
+            </section>` : `
+            <section class="card">
+              <h3>Steps</h3>
+              <ol class="steps">
+                ${g.steps.map((s) => `<li>${escapeHtml(s)}</li>`).join("")}
+              </ol>
+            </section>`
+        ) : detailed ? `
+          <section class="guide-prose">
+            <h3>Step by step</h3>
+            <ol class="walkthrough">
+              ${g.step_details.map((s, i) => `
+                <li class="walk-step">
+                  <span class="walk-num" aria-hidden="true">${i + 1}</span>
+                  <div class="walk-body">
+                    <h4><span class="sr-only">Step ${i + 1}: </span>${escapeHtml(s.title)}</h4>
+                    ${paragraphs(s.body)}
+                  </div>
+                </li>`).join("")}
+            </ol>
+          </section>` : `
+          <section class="card">
+            <h3>What to do</h3>
+            <ol class="steps">
+              ${g.steps.map((s) => `<li>${escapeHtml(s)}</li>`).join("")}
+            </ol>
+          </section>`}        
       ${isDashboard && g.warningLight?.repair_service ? `
         <a class="card mechanic-cta" href="#/mechanics?problem=${encodeURIComponent(g.warningLight.slug)}${chosenVehicleId ? `&vehicle=${chosenVehicleId}` : ""}">
           <span class="guide-icon">${icon("pin", 20, 2)}</span>
           <span class="guide-text"><strong>Find a shop that can fix this</strong><span>Nearby shops ranked for ${escapeHtml(g.warningLight.repair_service.toLowerCase())} work, with price estimates.</span></span>
           ${icon("chevron", 18, 2)}
         </a>` : ""}
-      ${g.wrap_up ? `
-        <section class="card guide-prose guide-wrap">
-          <h3>Good to know</h3>
-          ${paragraphs(g.wrap_up)}
-        </section>` : ""}
+        ${isDiy ? diyDropdown(
+          "Good to know",
+          g.wrap_up ? `
+            <section class="card guide-prose guide-wrap">
+              <h3>Good to know</h3>
+              ${paragraphs(g.wrap_up)}
+            </section>` : ""
+        ) : g.wrap_up ? `
+          <section class="card guide-prose guide-wrap">
+            <h3>Good to know</h3>
+            ${paragraphs(g.wrap_up)}
+          </section>` : ""}        
       ${isDiy ? `
         <p class="hint">Every car is a little different. Check your owner's manual for the exact parts, fluids, and amounts for yours.</p>
         <div class="notice notice-info">${icon("wrench", 18, 2)}
