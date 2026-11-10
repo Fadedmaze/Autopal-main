@@ -29,7 +29,7 @@ export default async function render(root, ctx) {
   const open = await listTasks({ vehicleId: vehicle.id, completed: false });
   if (!ctx.isCurrent()) return;
   const s = vehicle.summary;
-  const row = (t) => taskRow(t, { remindDays: settings.reminder_days_before, showCost: true });
+  const row = (t) => taskRow(t, { remindDays: settings.reminder_days_before, showCost: true, showDueDate: false });
 
   root.innerHTML = `
     ${appBar(bar)}
