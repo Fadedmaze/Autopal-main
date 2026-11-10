@@ -68,7 +68,7 @@ export function taskDetailsSheet(task, { onChanged } = {}) {
           <span class="input-prefix"><span>$</span><input name="estimated_cost" type="number" inputmode="decimal" min="0" step="0.01" value="${task.estimated_cost ?? ""}" aria-label="Estimated Cost"></span>
         </label>
         <p class="form-error" role="alert" hidden></p>
-        <button class="btn" type="submit">Save price</button>
+        <button class="btn" type="submit">Save Price</button>
       </form>
       <a class="fab sheet-add-task" data-add-task href="${taskFormHref()}">${icon("plus", 20, 2.6)}<span>Add Task</span></a>
     </div>`;
