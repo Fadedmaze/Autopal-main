@@ -230,6 +230,22 @@ const auth = {
 
 async function rpc(name, args) {
   calls.push({ rpc: name, args });
+  // Usage tracking (migrations/20261110_usage_tracking.sql), same caps as the database.
+  if (name === "start_app_session") {
+    db.app_sessions ??= [];
+    const row = { id: crypto.randomUUID(), user_id: USER_ID, started_at: new Date().toISOString(), last_seen_at: new Date().toISOString(), active_seconds: 0, page_views: 0, device: args.p_device ?? null, installed: !!args.p_installed };
+    db.app_sessions.push(row);
+    return { data: row.id, error: null };
+  }
+  if (name === "track_app_session") {
+    const row = (db.app_sessions ?? []).find((r) => r.id === args.p_session);
+    if (row) {
+      row.active_seconds = Math.min(86400, row.active_seconds + Math.max(0, Math.min(args.p_seconds ?? 0, 120)));
+      row.page_views += Math.max(0, Math.min(args.p_page_views ?? 0, 50));
+      row.last_seen_at = new Date().toISOString();
+    }
+    return { data: null, error: null };
+  }
   if (name === "is_username_available") return { data: !db.profiles.some((p) => p.username?.toLowerCase() === args.p_username.toLowerCase()) && args.p_username !== "taken", error: null };
   if (name === "nearby_shops") {
     const R = 3958.8, rad = (x) => (x * Math.PI) / 180;

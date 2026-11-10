@@ -1,5 +1,6 @@
 // Session state and auth actions. Views read the session through currentSession().
 import { supabase } from "./supabaseClient.js";
+import { stopUsageTracking } from "./usage.js";
 
 let session = null;
 
@@ -71,6 +72,7 @@ export async function signUp({ email, password, username }) {
 }
 
 export async function signOut() {
+  await stopUsageTracking(); // send the last minute of usage while still signed in
   await supabase.auth.signOut();
   session = null;
 }

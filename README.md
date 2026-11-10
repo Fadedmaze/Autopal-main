@@ -78,6 +78,7 @@ Every team member should be invited to the Supabase organization (**Organization
 - **Website changes deploy from GitHub, but database and Edge Function changes don't.** Run new files in `supabase/migrations/` in the Supabase **SQL Editor**, and redeploy a changed Edge Function in **Edge Functions → (function) → Deploy**.
 - **Vercel's free plan only auto-deploys commits from the account owner.** If a teammate's push shows as blocked, the owner can push any commit (or click **Redeploy** in Vercel) to publish it.
 - **The scanner needs the `ANTHROPIC_API_KEY` secret** in **Edge Functions → Secrets**. Never put that key in the code or the repo.
+- **See how much time people spend in the app** by running `select * from app_usage_daily;` (totals per day) or `select * from app_usage_by_user;` (totals per user) in the Supabase **SQL Editor**. Only active time is counted: while the app is on screen and in use.
 
 ## Verifying the Vertical Slice
 
@@ -103,6 +104,8 @@ js/auth.js            Sign-in, sign-up, password changes
 js/components.js      Shared pieces (task rows, receipt sheet, vehicle cards)
 js/lightDetector.js   On-device detection of glowing dashboard lights (camera scanner)
 js/guideDiagrams.js   Labeled diagrams for the DIY guides
+js/usage.js           Records time spent in the app (app_sessions table)
+js/settings.js        Settings menu (tire button) on the main pages
 js/views/             One file per screen (library.js is the Discover tab; discover.js is its camera scanner)
 sw.js                 Service worker (bump CACHE on each release)
 docs/erd.png          ERD

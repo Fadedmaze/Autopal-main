@@ -5,6 +5,7 @@ import { getProfile } from "./data.js";
 import { setDistanceUnit, applyTheme } from "./prefs.js";
 import { icon, escapeHtml, errorMessage } from "./ui.js";
 import { openSettings } from "./settings.js";
+import { startUsageTracking, stopUsageTracking } from "./usage.js";
 
 const ROUTES = [
   // Public
@@ -154,6 +155,7 @@ async function render() {
     if (seq !== renderSeq) return;
   }
   renderNav(found.route);
+  if (signedIn) startUsageTracking(); // time spent in the app (js/usage.js)
   if (location.hash !== currentHash) {
     previousHash = currentHash;
     currentHash = location.hash;
@@ -200,6 +202,7 @@ async function start() {
       recovering = true;
       navigate("#/reset-password", { replace: true });
     } else if (event === "SIGNED_OUT") {
+      stopUsageTracking();
       recovering = false;
       prefsLoaded = false;
       navigate("#/signin", { replace: true });

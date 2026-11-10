@@ -41,6 +41,7 @@ export function openSettings(profile = null) {
           <li>Your location is used only while you're on Find Mechanic, to sort shops by distance. It's never saved.</li>
           <li>Your email is used only for logging in and resetting your password.</li>
           <li>Appearance is remembered on this device only.</li>
+          <li>To improve the app, we record how long you use it, how many pages you view and your device type (phone, tablet or computer). Never what you type.</li>
         </ul>
       </details>
     </div>`;
