@@ -44,7 +44,7 @@ export default async function render(root, ctx) {
         ${open.length ? `<ul class="task-list">${open.map(row).join("")}</ul>` : `<p class="muted-box">No upcoming repairs.</p>`}
       </section>
 
-      <p class="hint center">Check off a repair when it's done. Prices are estimates and vary by shop.</p>
+      <p class="hint center">Prices are estimates and vary by shop.</p>
     </div>
 
     <div class="total-bar">
