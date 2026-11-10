@@ -1075,6 +1075,26 @@ details.diy-dropdown > summary {
   font-weight: 600;
 }
 
+/* Icons beside DIY dropdown headings */
+.diy-dropdown-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.diy-dropdown-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #1760c2;
+  flex-shrink: 0;
+}
+
+.diy-dropdown-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
 /* Hide default browser arrow */
 details.diy-dropdown > summary::-webkit-details-marker {
   display: none;
@@ -1089,16 +1109,78 @@ details.diy-dropdown[open] > summary > svg {
   transform: rotate(90deg);
 }
 
-/* Space for content below the header */
-details.diy-dropdown > .diy-dropdown-content {
-  padding: 8px 20px 20px;
+/* Inner border for all DIY dropdowns */
+.diy-dropdown-content {
+  margin: 0 16px 16px;
+  padding: 20px;
+  border: 1px solid #dfe4ec;
+  border-radius: 18px;
 }
 
+/* Remove double border around DIY pictures */
+.diy-dropdown-content > .card,
+.diy-dropdown-content > .guide-figure {
+  border: none;
+  box-shadow: none;
+}
+
+/* Only show the inner border when expanded */
+details.diy-dropdown:not([open]) .diy-dropdown-content {
+  display: none;
+}
 /* Remove unnecessary spacing at the top */
 .diy-dropdown-content > :first-child {
   margin-top: 0;
 }
 
+/* Space between safety warning and instructions */
+.diy-dropdown-content .guide-safety {
+  margin-bottom: 24px;
+}
+
+/* Good to know — aligned like Safety first */
+.guide .guide-wrap {
+  background: #e7f4eb;
+  border: none;
+  border-radius: 18px;
+  padding: 16px 18px;
+  color: #173d2b;
+}
+
+.good-to-know-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.good-to-know-icon {
+  flex-shrink: 0;
+  font-size: 18px;
+  line-height: 1.5;
+}
+
+.good-to-know-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.guide .guide-wrap .good-to-know-text h3 {
+  margin: 0 0 6px;
+  padding: 0;
+  font-size: 14px;
+  line-height: 1.4;
+  font-weight: 700;
+  color: #173d2b;
+}
+
+.guide .guide-wrap .good-to-know-text p {
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  font-weight: 400;
+  color: #214b35;
+}
 /* DIY Maintenance icons - difficulty colors */
 
 .guide-card .guide-icon.diy-easy {
