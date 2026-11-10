@@ -9,7 +9,7 @@ import { remindLabel, remindShort } from "./reminders.js";
 
 // One maintenance task row. The checkbox on the left completes / un-completes it.
 // Overdue tasks are red (spec). `showCost` puts the estimate on the right (Budget).
-export function taskRow(task, { vehicle = null, remindDays = 7, showCost = false, showReceipt = false, showDueDate = true, guideHref = null } = {}) {
+export function taskRow(task, { vehicle = null, remindDays = 7, showCost = false, showReceipt = false, showDueDate = true, showTaskDetails = false } = {}) {
   const done = task.is_completed;
   // A task's own reminder window wins over the user's default (null = use the default).
   const tone = done ? "muted" : dueTone(task.due_date, task.remind_days_before ?? remindDays);
@@ -22,9 +22,9 @@ export function taskRow(task, { vehicle = null, remindDays = 7, showCost = false
     : showReceipt && task.receipt_path
       ? `<button type="button" class="receipt-chip" data-receipt="${escapeHtml(task.receipt_path)}">${icon("receipt", 15, 2)}Receipt</button>`
       : `<a class="task-edit" href="#/tasks/${task.id}" aria-label="Edit ${escapeHtml(task.task_name)}">${icon("chevron", 18, 2)}</a>`;
-  const bodyTag = guideHref ? "a" : "div";
-  const bodyAttrs = guideHref
-    ? `href="${escapeHtml(guideHref)}" aria-label="Open DIY guide for ${escapeHtml(task.task_name)}"`
+  const bodyTag = showTaskDetails ? "button" : "div";
+  const bodyAttrs = showTaskDetails
+    ? `type="button" data-task-details aria-label="View details for ${escapeHtml(task.task_name)}"`
     : "data-toggle";
   return `
     <li class="task ${done ? "done" : ""} ${tone === "danger" ? "overdue" : ""}" data-task-id="${task.id}">
@@ -44,8 +44,26 @@ export function taskRow(task, { vehicle = null, remindDays = 7, showCost = false
     </li>`;
 }
 
-// Wire every task row inside `root`. Tapping the row body or the checkbox toggles
-// completion; completing opens the receipt/undo sheet. onChanged runs after saves.
+export function taskDetailsSheet(task) {
+  const dlg = document.createElement("dialog");
+  dlg.className = "sheet";
+  dlg.innerHTML = `
+    <div class="sheet-body left">
+      <div class="sheet-head">
+        <h2>${escapeHtml(task.task_name)}</h2>
+        <button type="button" class="icon-btn" data-close aria-label="Close">${icon("close", 18, 2.2)}</button>
+      </div>
+      <p>${task.estimated_cost !== null ? formatMoney(task.estimated_cost) : "—"}</p>
+    </div>`;
+  document.body.appendChild(dlg);
+  dlg.addEventListener("close", () => dlg.remove());
+  dlg.addEventListener("click", (e) => { if (e.target === dlg) dlg.close(); });
+  dlg.querySelector("[data-close]").addEventListener("click", () => dlg.close());
+  dlg.showModal();
+}
+
+// Wire task completion controls inside `root`; some views use the row body for
+// navigation or task details instead. Completing opens the receipt/undo sheet.
 // Views re-render into the same root, so bind once and just swap the callback.
 const bound = new WeakMap();
 export function bindTaskRows(root, tasksById, onChanged) {
