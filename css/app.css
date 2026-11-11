@@ -370,60 +370,6 @@ button.task-body { border: 0; padding: 0; background: none; text-align: left; fo
 .check input:focus-visible + .check-box { outline: 3px solid var(--brand-soft); outline-offset: 2px; }
 .check input:disabled + .check-box { opacity: .5; }
 
-/* Recurring task option */
-
-.task-repeat {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 16px;
-}
-
-.task-repeat-toggle {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  cursor: pointer;
-}
-
-.task-repeat-toggle input {
-  width: 20px;
-  height: 20px;
-  flex: none;
-  accent-color: var(--brand);
-}
-
-.task-repeat-toggle span {
-  display: grid;
-  gap: 3px;
-  color: var(--ink);
-}
-
-.task-repeat-toggle small {
-  font-size: 12px;
-  color: var(--ink-3);
-}
-
-.task-repeat-interval {
-  margin-top: 14px;
-}
-
-.task-repeat-interval[hidden] {
-  display: none;
-}
-
-/* Tasks page - spacing between due date and vehicle */
-.page-tasks .task-meta .dot-sep {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  margin-left: 0;
-}
-
-.page-tasks .task-meta .dot-sep::before {
-  content: "·";
-  margin: 0;
-}
 /* Tasks page - individual task cards */
 .page-tasks .task-list {
   display: flex;
@@ -442,15 +388,9 @@ button.task-body { border: 0; padding: 0; background: none; text-align: left; fo
   padding: 0;
 }
 
-/* Keep individual cards white */
 .page-tasks .task-list > .task {
-  background: #ffffff;
-  border-radius: 16px;
-}
-
-.page-tasks .task-list > .task {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: 16px;
   padding: 18px;
   box-shadow: 0 3px 12px rgba(15, 23, 42, 0.04);
@@ -574,7 +514,129 @@ button.task-body { border: 0; padding: 0; background: none; text-align: left; fo
   border-color: var(--danger, #e57373);
 }
 
-/* Custom recurring task interval */
+
+/* =========================================
+   TASK FORM — CLEAN LAYOUT
+   ========================================= */
+
+/* Quick due date buttons */
+
+.quick-dates {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: -6px;
+  margin-bottom: -6px;
+}
+
+
+.quick-date-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  padding: 5px 10px;
+
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+
+  background: var(--surface);
+  color: var(--ink-2);
+
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+
+  transition: background 0.2s, border-color 0.2s;
+}
+
+
+.quick-date-btn:hover {
+  background: var(--brand-soft);
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+.quick-date-btn:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+/* Recurring task container */
+
+
+.task-repeat {
+  margin-top: 0;
+  padding: 10px 14px;
+
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.task-repeat-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  cursor: pointer;
+}
+
+.task-repeat-toggle input {
+  order: 2;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  margin: 0 0 0 auto;
+  accent-color: var(--brand);
+  cursor: pointer;
+}
+
+.task-repeat-toggle span {
+  order: 1;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  gap: 4px;
+}
+
+.task-repeat-toggle strong {
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.task-repeat-toggle small {
+  color: var(--ink-3);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.task-repeat-toggle input {
+  order: 2;
+  flex-shrink: 0;
+
+  width: 20px;
+  height: 20px;
+  margin: 0 0 0 auto;
+
+  accent-color: var(--brand);
+  cursor: pointer;
+}
+
+/* Repeat interval dropdown */
+
+.task-repeat-interval {
+  margin-top: 16px;
+}
+
+.task-repeat-interval[hidden] {
+  display: none;
+}
+
+/* Custom repeat number and unit */
 
 .custom-repeat-fields {
   display: grid;
@@ -592,6 +654,482 @@ button.task-body { border: 0; padding: 0; background: none; text-align: left; fo
   width: 100%;
   min-width: 0;
 }
+
+/* Smaller screens */
+
+@media (max-width: 400px) {
+  .quick-dates {
+    gap: 8px;
+  }
+
+  .quick-date-btn {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+
+  .task-repeat {
+    padding: 14px;
+  }
+}
+
+/* =========================================
+   TASK PHOTO UPLOAD
+   ========================================= */
+
+   .task-photo-upload {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    grid-column: 1 / -1;
+  
+    gap: 7px;
+    padding: 22px 16px;
+  
+    background: var(--surface);
+    border: 2px dashed var(--line-strong);
+    border-radius: 14px;
+  
+    text-align: center;
+    cursor: pointer;
+  
+    transition:
+      border-color 0.2s ease,
+      background 0.2s ease;
+  }
+  
+  .task-photo-upload:hover {
+    border-color: var(--brand);
+    background: var(--brand-soft);
+  }
+  
+  .task-photo-upload:focus-within {
+    border-color: var(--brand);
+  }
+  
+  .task-photo-upload.busy {
+    opacity: 0.6;
+    cursor: wait;
+    pointer-events: none;
+  }
+  
+  .task-photo-upload-icon {
+    display: grid;
+    place-items: center;
+  
+    width: 44px;
+    height: 44px;
+  
+    background: var(--brand-soft);
+    color: var(--brand);
+    border-radius: 50%;
+  }
+  
+  .task-photo-upload-title {
+    color: var(--brand);
+    font-size: 14px;
+    font-weight: 700;
+  }
+  
+  .task-photo-upload-description {
+    color: var(--ink-2);
+    font-size: 12px;
+    line-height: 1.4;
+  }
+  
+  .task-photo-upload-count {
+    color: var(--ink-3);
+    font-size: 11px;
+    font-weight: 500;
+  }
+  
+  /* Keep uploaded photos in a neat grid */
+  
+  .task-photos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+    gap: 10px;
+  }
+  
+  .task-photos .task-photo {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  
+  .task-photos .task-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+
+/* =========================================
+   TASK REMINDER SECTION
+   ========================================= */
+
+.remind-field {
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  gap: 10px;
+}
+
+.remind-heading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.remind-heading .icon {
+  color: var(--brand);
+}
+
+.remind-explanation {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  color: var(--ink-3);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.remind-explanation .icon {
+  flex-shrink: 0;
+  color: var(--brand);
+  margin-top: 1px;
+}
+
+.remind-preview {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.remind-preview.tone-danger {
+  color: var(--danger-strong);
+}
+
+
+/* =========================================
+   NEW TASK / EDIT TASK SECTION CARDS
+   ========================================= */
+
+/* Apply the reminder card style to form sections */
+.form.content > .field:not(.task-repeat):not(.remind-field),
+.form.content > .task-repeat,
+.form.content > .remind-field {
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+/* Consistent spacing inside each section */
+.form.content > .field {
+  gap: 10px;
+}
+
+/* Make section labels stand out */
+.form.content > .field > span:first-child,
+.form.content > .field > label:first-child {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* Keep the repeat section matching the other cards */
+.form.content > .task-repeat {
+  margin-top: 0;
+}
+
+/* Keep the photo upload area inside its card */
+.form.content > .task-photos-field {
+  overflow: hidden;
+}
+
+/* Smooth card appearance in dark and light mode */
+.form.content > .field {
+  transition: border-color 0.2s ease;
+}
+
+.form.content > .field:focus-within {
+  border-color: var(--brand);
+}
+
+
+/* One unified scheduling card */
+
+.form.content > .task-schedule-card {
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.task-schedule-card .task-date-card {
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+}
+
+.task-schedule-card .task-repeat {
+  margin: 16px 0 0;
+  padding: 16px 0 0;
+  background: transparent;
+  border: none;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+}
+
+.task-schedule-card .task-repeat-toggle {
+  margin: 0;
+}
+
+/* Fix quick date button spacing */
+
+.task-schedule-card .quick-dates {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+
+  margin: 8px 0 14px;
+}
+
+.task-schedule-card .quick-date-btn {
+  min-height: 34px;
+  padding: 7px 12px;
+
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Give the date input breathing room */
+
+.task-schedule-card .task-date-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.task-schedule-card input[name="due_date"] {
+  margin-top: 0;
+}
+
+
+/* =========================================
+   ADDITIONAL DETAILS COLLAPSIBLE SECTION
+   ========================================= */
+
+   .task-additional-details {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  
+  .task-additional-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    cursor: pointer;
+    list-style: none;
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 700;
+  }
+  
+  .task-additional-heading::-webkit-details-marker {
+    display: none;
+  }
+  
+  .task-additional-heading > span {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .task-additional-heading svg {
+    color: var(--brand);
+  }
+  
+  .task-additional-heading > svg:last-child {
+    transition: transform 0.2s ease;
+  }
+  
+  .task-additional-details[open] .task-additional-heading > svg:last-child {
+    transform: rotate(180deg);
+  }
+  
+  .task-additional-content {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 0 16px 16px;
+  }
+  
+  /* Keep each field neatly spaced */
+  .task-additional-content > .field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  /* Separate the content from the heading */
+  .task-additional-details[open] .task-additional-content {
+    border-top: 1px solid var(--line);
+    padding-top: 16px;
+  }
+  
+  /* Hover effect */
+  .task-additional-heading:hover {
+    background: var(--surface-2, var(--surface));
+  }  
+
+
+/* =========================================
+   ADDITIONAL DETAILS POLISH
+   ========================================= */
+
+/* Header layout and icons */
+.task-additional-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 20px;
+}
+
+.task-additional-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.task-additional-title svg,
+.task-additional-chevron svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+  color: var(--brand);
+  flex-shrink: 0;
+}
+
+.task-additional-chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.task-additional-details[open] .task-additional-chevron {
+  transform: rotate(180deg);
+}
+
+/* More space between sections */
+.task-additional-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0 20px 20px;
+}
+
+/* Individual sections */
+.task-additional-content > .field {
+  padding: 22px 0;
+  margin: 0;
+}
+
+/* Subtle divider between sections */
+.task-additional-content > .field + .field {
+  border-top: 1px solid var(--line);
+}
+
+/* Avoid double borders around Reminder */
+.task-additional-content > .remind-field {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+}
+
+/* Remove unnecessary bottom spacing */
+.task-additional-content > .field:last-child {
+  padding-bottom: 0;
+}
+
+/* Make optional labels lighter and smaller */
+.task-additional-content em {
+  color: var(--ink-3);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+}
+
+/* Consistent field headings */
+.task-additional-content > .field > span:first-child,
+.task-additional-content > .field > label:first-child,
+.task-additional-content .field-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+
+/* =========================================
+   ADDITIONAL DETAILS SPACING FIXES
+   ========================================= */
+
+/* Reduce empty space above Notes */
+.task-additional-content > .field:first-child {
+  padding-top: 10px;
+}
+
+/* Align reminder explanation with the dropdown */
+.task-additional-content .remind-explanation {
+  padding-left: 0;
+  margin-left: 0;
+  gap: 8px;
+}
+
+/* Make reminder text start at the left edge */
+.task-additional-content .remind-explanation span {
+  margin-left: 0;
+  padding-left: 0;
+}
+
+/* Style Reminder's optional label */
+.remind-heading em {
+  color: var(--ink-3);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  margin-left: 2px;
+}
+
+/* Keep reminder description aligned */
+.task-additional-content .remind-field {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+
+/* Center reminder preview spacing */
+.task-additional-content .remind-preview {
+  margin-top: 8px;
+  margin-bottom: 4px;
+}
+
 /* ---------- Vehicle detail ---------- */
 
 .gallery { display: flex; flex-direction: column; gap: 10px; }
