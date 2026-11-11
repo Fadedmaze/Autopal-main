@@ -54,7 +54,7 @@ export default async function render(root, ctx) {
   const isPreset = (d) => d == null || REMIND_CHOICES.some(([x]) => x === d);
 
   root.innerHTML = `
-    ${appBar({ title: editing ? "Edit Task" : "New Task", sub: editing ? "" : "Add maintenance that isn't already on your list.", back: backLink })}
+    ${appBar({ title: editing ? "Edit Task" : "New Task", sub: editing ? "" : "Add maintenance that isn't already on your list", back: backLink })}
     <form class="form content" novalidate>
       ${vehicles.length > 1 ? `
         <label class="field">
