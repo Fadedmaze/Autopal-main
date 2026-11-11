@@ -2,17 +2,32 @@
 // optionally attach a receipt, or undo). The + in the top right adds a custom task.
 import { getProfile, getSettings, listVehicles, listTasks, receiptUrl } from "../data.js";
 import { taskRow, bindTaskRows, completedSheet } from "../components.js";
-import { appBar, escapeHtml, icon, loading, toast, errorMessage } from "../ui.js";
+import { appBar, escapeHtml, icon, loading, toast, errorMessage, todayISO } from "../ui.js";
 
 // Remembered for this visit so returning from a task keeps your place.
 const state = { tab: "upcoming", vehicle: null };
+
+function isOverdue(task) {
+  if (!task.due_date) return false;
+
+  const today = new Date();
+  const todayString = [
+    today.getFullYear(),
+    String(today.getMonth() + 1).padStart(2, "0"),
+    String(today.getDate()).padStart(2, "0")
+  ].join("-");
+
+  return String(task.due_date).slice(0, 10) < todayString;
+}
 
 export default async function render(root, ctx) {
   root.innerHTML = loading();
   const [profile, settings, vehicles] = await Promise.all([getProfile(), getSettings(), listVehicles()]);
   if (!ctx.isCurrent()) return;
 
-  if (ctx.query.get("tab") === "completed") state.tab = "completed";
+  if (["overdue", "upcoming", "completed"].includes(ctx.query.get("tab"))) {
+    state.tab = ctx.query.get("tab");
+  }
   if (!vehicles.some((v) => v.id === state.vehicle) && state.vehicle !== "all") {
     state.vehicle = vehicles.some((v) => v.id === profile.active_vehicle_id) ? profile.active_vehicle_id : "all";
   }
@@ -29,7 +44,20 @@ export default async function render(root, ctx) {
   };
 
   const draw = (upcoming, completed) => {
-    const list = state.tab === "upcoming" ? upcoming : completed;
+      const today = todayISO();
+    
+      const overdue = upcoming.filter(
+        (task) => task.due_date && task.due_date < today
+      );
+    
+      const upcomingOnly = upcoming.filter(
+        (task) => !task.due_date || task.due_date >= today
+      );
+    
+      const list =
+        state.tab === "overdue" ? overdue :
+        state.tab === "upcoming" ? upcomingOnly :
+        completed;
     const showVehicle = state.vehicle === "all" && vehicles.length > 1;
     const addHref = `#/tasks/new${typeof state.vehicle === "number" ? `?vehicle=${state.vehicle}` : ""}`;
 
@@ -39,11 +67,12 @@ export default async function render(root, ctx) {
         back: { href: "#/home", label: "Home" },
         action: vehicles.length ? `<a class="icon-btn icon-btn-brand" href="${addHref}" aria-label="Add a Task">${icon("plus", 22, 2.4)}</a>` : "",
       })}
-      <div class="content">
-        <div class="segmented" role="tablist">
-          <button role="tab" type="button" data-tab="upcoming" aria-selected="${state.tab === "upcoming"}">Upcoming (${upcoming.length})</button>
-          <button role="tab" type="button" data-tab="completed" aria-selected="${state.tab === "completed"}">Completed (${completed.length})</button>
-        </div>
+    <div class="content">
+      <div class="segmented" role="tablist">
+        <button role="tab" type="button" data-tab="overdue" aria-selected="${state.tab === "overdue"}">Overdue (${overdue.length})</button>
+        <button role="tab" type="button" data-tab="upcoming" aria-selected="${state.tab === "upcoming"}">Upcoming (${upcomingOnly.length})</button>
+        <button role="tab" type="button" data-tab="completed" aria-selected="${state.tab === "completed"}">Completed (${completed.length})</button>
+      </div>
 
         ${vehicles.length > 1 ? `
           <div class="chips scroll" role="group" aria-label="Filter by vehicle">
@@ -59,9 +88,9 @@ export default async function render(root, ctx) {
                 remindDays: settings.reminder_days_before,
                 showReceipt: state.tab === "completed",
               })).join("")}</ul>
-              <p class="hint center">${state.tab === "upcoming"
-                ? "Tap a task to mark it completed."
-                : "Uncheck a task to undo. Tap a task without a receipt to attach one."}</p>`
+              <p class="hint center">${state.tab === "completed"
+                  ? "Uncheck a task to undo. Tap a task without a receipt to attach one."
+                  : "Tap a task to mark it completed."}</p>`
             : `<p class="muted-box">No tasks yet</p>`}
       </div>`;
 
