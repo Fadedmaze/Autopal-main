@@ -49,6 +49,8 @@ export function openSettings(profile = null) {
         <summary><span class="setting-label">${icon("info", 18, 2)}About AutoPal</span>${icon("chevron", 16, 2)}</summary>
         <ul>
           <li>Version 17</li>
+          <li>Terms</li>
+          <li>Support</li>
         </ul>
       </details>
     </div>`;
