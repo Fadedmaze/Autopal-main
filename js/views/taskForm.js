@@ -67,10 +67,35 @@ export default async function render(root, ctx) {
         <span>Task Name</span>
         <input name="task_name" required maxlength="80" placeholder="e.g. Replace headlight bulb" value="${escapeHtml(t.task_name)}">
       </label>
-      <label class="field">
-        <span>Due Date</span>
-        <input name="due_date" type="date" required value="${escapeHtml(t.due_date ?? "")}">
-      </label>
+      
+      
+     <div class="task-schedule-card">
+        <div class="field task-date-card">
+        <label for="task-due-date">Due Date</label>
+
+        <div class="quick-dates">
+          <button type="button" class="quick-date-btn" data-days="1">
+            Tomorrow
+          </button>
+
+          <button type="button" class="quick-date-btn" data-days="7">
+            Next Week
+          </button>
+
+          <button type="button" class="quick-date-btn" data-months="1">
+            Next Month
+          </button>
+        </div>
+
+        <input
+          id="task-due-date"
+          name="due_date"
+          type="date"
+          required
+          value="${escapeHtml(t.due_date ?? "")}"
+        >
+      </div>
+
       ${!t.catalog_id ? `
         <div class="field task-repeat">
           <label class="task-repeat-toggle">
@@ -126,33 +151,90 @@ export default async function render(root, ctx) {
           </div>
 
           </label>
+        
         </div>
       ` : ""}
+
+      </div>
+
+      <details class="task-additional-details" ${editing ? "open" : ""}>   
+      
+      <summary class="task-additional-heading">
+        <span class="task-additional-title">
+          ${icon("wrench", 18, 2)}
+          Additional Details
+        </span>
+        <span class="task-additional-chevron" aria-hidden="true">
+          ${icon("chevron-down", 18, 2)}
+        </span>
+      </summary>
+
+  <div class="task-additional-content">
       <label class="field">
-        <span>Notes <em>optional</em></span>
+        <span>Notes <em>(Optional)</em></span>
         <textarea name="notes" rows="3" maxlength="1000" placeholder="Part numbers, which shop, anything to remember">${escapeHtml(t.notes ?? "")}</textarea>
       </label>
       <div class="field task-photos-field" id="task-photos"></div>
       <div class="field remind-field">
-        <label for="remind-select"><span>Remind Me</span></label>
+        <label for="remind-select">
+        <span class="remind-heading">
+          ${icon("bell", 18, 2)}
+          Reminder <em>(Optional)</em>
+        </span>
+        </label>
+
         <div class="remind-row">
           <select id="remind-select" name="remind_choice">
-            <option value="" ${t.remind_days_before == null ? "selected" : ""}>Default (${escapeHtml(remindLabel(defaultDays).toLowerCase())})</option>
-            ${REMIND_CHOICES.map(([d, label]) => `<option value="${d}" ${t.remind_days_before === d ? "selected" : ""}>${label}</option>`).join("")}
-            <option value="custom" ${isPreset(t.remind_days_before) ? "" : "selected"}>Custom…</option>
+            <option value="" ${t.remind_days_before == null ? "selected" : ""}>
+              Default (${escapeHtml(remindLabel(defaultDays).toLowerCase())})
+            </option>
+
+            ${REMIND_CHOICES.map(([d, label]) => `
+              <option value="${d}"
+                ${t.remind_days_before === d ? "selected" : ""}>
+                ${label}
+              </option>
+            `).join("")}
+
+            <option value="custom"
+              ${isPreset(t.remind_days_before) ? "" : "selected"}>
+              Custom…
+            </option>
           </select>
-          <span class="remind-custom" ${isPreset(t.remind_days_before) ? "hidden" : ""}>
-            <input name="remind_custom" type="number" inputmode="numeric" min="0" max="${MAX_REMIND_DAYS}" step="1" aria-label="Days before the due date" value="${isPreset(t.remind_days_before) ? "" : t.remind_days_before}">
+
+          <span class="remind-custom"
+            ${isPreset(t.remind_days_before) ? "hidden" : ""}>
+            <input
+              name="remind_custom"
+              type="number"
+              inputmode="numeric"
+              min="0"
+              max="${MAX_REMIND_DAYS}"
+              step="1"
+              aria-label="Days before the due date"
+              value="${isPreset(t.remind_days_before) ? "" : t.remind_days_before}"
+            >
             <span>days before</span>
           </span>
         </div>
-        <p class="hint remind-preview" id="remind-preview" aria-live="polite"></p>
-        ${editing && !task.is_completed ? `<button type="button" class="btn-text" id="add-calendar">${icon("calendar", 16, 2)}Add to My Calendar with This Reminder</button>` : ""}
+
+        <p class="hint remind-preview"
+          id="remind-preview"
+          aria-live="polite"></p>
+          
+        ${editing && !task.is_completed ? `
+          <button type="button" class="btn-text" id="add-calendar">
+            ${icon("calendar", 16, 2)}
+            Add to My Calendar with This Reminder
+          </button>
+        ` : ""}
       </div>
       <label class="field">
-        <span>Estimated Cost <em>optional, used in Maintenance Estimator</em></span>
+        <span>Estimated Cost <em>(Optional)</em></span>
         <span class="input-prefix"><span>$</span><input name="estimated_cost" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00" value="${t.estimated_cost ?? ""}"></span>
-      </label>
+        </div>
+      </details>
+        </label>
       <p class="form-error" role="alert" hidden></p>
       <div class="form-actions">
         <a class="btn btn-ghost" href="${backLink.href}">Cancel</a>
@@ -162,6 +244,57 @@ export default async function render(root, ctx) {
     </form>`;
 
   const form = root.querySelector("form");
+
+  const dueDateInput = form.elements.due_date;
+
+  // Format a date using the user's local time zone
+  const formatLocalDate = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+  };
+
+  // Set the due date and update the reminder preview
+  const setQuickDate = (date) => {
+    dueDateInput.value = formatLocalDate(date);
+    dueDateInput.dispatchEvent(
+      new Event("change", { bubbles: true })
+    );
+  };
+
+  // Tomorrow and Next Week
+  root.querySelectorAll(".quick-date-btn[data-days]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const date = new Date();
+      date.setDate(date.getDate() + Number(button.dataset.days));
+
+      setQuickDate(date);
+    });
+  });
+
+  // Next Month
+  root.querySelectorAll(".quick-date-btn[data-months]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const date = new Date();
+      const originalDay = date.getDate();
+
+      date.setDate(1);
+      date.setMonth(date.getMonth() + Number(button.dataset.months));
+
+      const lastDay = new Date(
+        date.getFullYear(),
+        date.getMonth() + 1,
+        0
+      ).getDate();
+
+      date.setDate(Math.min(originalDay, lastDay));
+
+      setQuickDate(date);
+    });
+  });
+
   const repeatToggle = form.elements.repeat_enabled;
 
   const repeatSelect = form.elements.repeat_interval_days;
