@@ -25,16 +25,37 @@ export function mountTaskPhotos(el, { task = null } = {}) {
     }
     const full = count() >= MAX_TASK_PHOTOS;
     el.innerHTML = `
-      <span class="field-label">Photos <em>optional, up to ${MAX_TASK_PHOTOS}</em></span>
+      <span class="field-label">Photos <em>(Optional, up to ${MAX_TASK_PHOTOS})</em></span>
       <div class="task-photos">
         ${items().map(({ i, url }) => `
           <button type="button" class="thumb task-photo" data-photo="${i}" aria-label="View photo ${i + 1}">
             ${url ? `<img src="${escapeHtml(url)}" alt="">` : icon("camera", 20, 1.8)}
           </button>`).join("")}
         ${full ? "" : `
-          <label class="thumb thumb-add task-photo-add ${busy ? "busy" : ""}" aria-label="Add photos">
-            <input type="file" accept="image/*" multiple hidden ${busy ? "disabled" : ""}>
-            ${icon("camera", 22, 1.9)}
+          <label class="task-photo-upload ${busy ? "busy" : ""}">
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              hidden
+              ${busy ? "disabled" : ""}
+            >
+
+            <span class="task-photo-upload-icon">
+              ${icon("camera", 24, 1.8)}
+            </span>
+
+            <span class="task-photo-upload-title">
+              ${busy ? "Adding Photos..." : "Add Photos"}
+            </span>
+
+            <span class="task-photo-upload-description">
+              Upload photos of repairs, parts, or your odometer
+            </span>
+
+            <span class="task-photo-upload-count">
+              ${count()} of ${MAX_TASK_PHOTOS} photos added
+            </span>
           </label>`}
       </div>
       <p class="hint">${saved
