@@ -25,11 +25,25 @@ export default async function render(root, ctx) {
       <h1>Profile</h1>
     </header>
     <div class="content profile">
-      <label class="avatar-picker" aria-label="Change profile picture">
-        <input type="file" accept="image/*" hidden>
-        <span class="avatar-lg">${picture ? `<img src="${escapeHtml(picture)}" alt="Your profile picture">` : icon("user", 56, 1.5)}</span>
+      
+    <div class="profile-avatar-section">
+      <button type="button" class="avatar-picker" id="avatar-options"
+        aria-label="Change profile picture">
+        <span class="avatar-lg">
+          ${picture
+            ? `<img src="${escapeHtml(picture)}" alt="Your profile picture">`
+            : icon("user", 56, 1.5)}
+        </span>
         <span class="avatar-edit">${icon("camera", 16, 2)}</span>
-      </label>
+      </button>
+
+      <input type="file" id="avatar-camera"
+        accept="image/*" capture="user" hidden>
+
+      <input type="file" id="avatar-gallery"
+        accept="image/*" hidden>
+    </div>
+
       <p class="form-error center" role="alert" hidden></p>
       <div class="profile-name" id="name-view">
         <h2 class="profile-display">${escapeHtml(profile.display_name || titleCase(profile.username || ""))}</h2>
@@ -59,29 +73,106 @@ export default async function render(root, ctx) {
     </div>`;
 
   const errEl = root.querySelector(".form-error");
-  const input = root.querySelector(".avatar-picker input");
-  const avatarEl = root.querySelector(".avatar-lg");
-  input.addEventListener("change", async () => {
-    const file = input.files?.[0];
-    input.value = "";
-    if (!file) return;
-    errEl.hidden = true;
-    avatarEl.classList.add("busy");
-    try {
-      const prepared = await prepareUpload(file, { maxEdge: 600 });
-      const saved = await uploadAvatar(prepared.blob, prepared.ext, profile.avatar_path);
-      profile.avatar_path = saved.avatar_path;
-      const url = await avatarUrl(saved.avatar_path);
-      avatarEl.innerHTML = `<img src="${escapeHtml(url)}" alt="Your profile picture">`;
-      toast("Profile picture updated", "ok");
-    } catch (err) {
-      // Spec: say so and keep the old picture (uploadAvatar only swaps after success).
-      errEl.textContent = `Couldn't update your picture: ${errorMessage(err)} Your old picture was kept.`;
-      errEl.hidden = false;
-    } finally {
-      avatarEl.classList.remove("busy");
-    }
+  
+
+const cameraInput = root.querySelector("#avatar-camera");
+const galleryInput = root.querySelector("#avatar-gallery");
+const avatarEl = root.querySelector(".avatar-lg");
+const avatarButton = root.querySelector("#avatar-options");
+
+// Show camera/gallery choices when tapping the profile picture
+avatarButton.addEventListener("click", () => {
+  const dlg = document.createElement("dialog");
+  dlg.className = "sheet avatar-choice-sheet";
+
+  dlg.innerHTML = `
+    <div class="sheet-body left">
+      <div class="sheet-head">
+        <h2>Change Profile Picture</h2>
+        <button type="button" class="icon-btn" data-close>
+          ${icon("close", 18, 2)}
+        </button>
+      </div>
+
+      <button type="button" class="menu-row" data-camera>
+        ${icon("camera", 20, 2)}
+        <span>Take Photo</span>
+      </button>
+
+      <button type="button" class="menu-row" data-gallery>
+        ${icon("image", 20, 2)}
+        <span>Choose from Gallery</span>
+      </button>
+    </div>
+  `;
+
+  document.body.appendChild(dlg);
+
+  dlg.addEventListener("close", () => dlg.remove());
+
+  dlg.querySelector("[data-close]").addEventListener("click", () => {
+    dlg.close();
   });
+
+  dlg.querySelector("[data-camera]").addEventListener("click", () => {
+    dlg.close();
+    cameraInput.click();
+  });
+
+  dlg.querySelector("[data-gallery]").addEventListener("click", () => {
+    dlg.close();
+    galleryInput.click();
+  });
+
+  dlg.showModal();
+});
+
+// Both options use the existing Supabase upload process
+async function handleAvatarUpload(input) {
+  const file = input.files?.[0];
+  input.value = "";
+
+  if (!file) return;
+
+  errEl.hidden = true;
+  avatarEl.classList.add("busy");
+
+  try {
+    const prepared = await prepareUpload(file, { maxEdge: 600 });
+
+    const saved = await uploadAvatar(
+      prepared.blob,
+      prepared.ext,
+      profile.avatar_path
+    );
+
+    profile.avatar_path = saved.avatar_path;
+
+    const url = await avatarUrl(saved.avatar_path);
+
+    avatarEl.innerHTML = `
+      <img src="${escapeHtml(url)}" alt="Your profile picture">
+    `;
+
+    toast("Profile picture updated", "ok");
+
+  } catch (err) {
+    errEl.textContent =
+      `Couldn't update your picture: ${errorMessage(err)} Your old picture was kept.`;
+    errEl.hidden = false;
+
+  } finally {
+    avatarEl.classList.remove("busy");
+  }
+}
+
+cameraInput.addEventListener("change", () => {
+  handleAvatarUpload(cameraInput);
+});
+
+galleryInput.addEventListener("change", () => {
+  handleAvatarUpload(galleryInput);
+});
 
   // Display name: view / inline edit. Username stays the login name and is not editable here.
   const nameView = root.querySelector("#name-view");
