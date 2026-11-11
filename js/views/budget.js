@@ -54,7 +54,7 @@ export default async function render(root, ctx) {
         </div>` : ""}
 
       <section class="section">
-        ${open.length ? `<ul class="task-list">${open.map(row).join("")}</ul>` : `<p class="muted-box">No upcoming repairs.</p>`}
+        ${open.length ? `<ul class="task-list">${open.map(row).join("")}</ul>` : `<p class="muted-box">No repairs found.</p>`}
       </section>
 
       <p class="hint center">Prices are estimates and vary by shop.</p>
@@ -63,7 +63,7 @@ export default async function render(root, ctx) {
     <div class="total-bar">
       <div>
         <span>Estimator Total</span>
-        <small>${s.open_count} upcoming repair${s.open_count === 1 ? "" : "s"} · ${escapeHtml(vehicle.label)}</small>
+        <small>${s.open_count} repair${s.open_count === 1 ? "" : "s"} · ${escapeHtml(vehicle.label)}</small>
       </div>
       <strong>${formatMoney(s.open_estimated_total)}</strong>
     </div>`;
