@@ -169,6 +169,7 @@ export async function deleteVehicle(id) {
     const { error } = await supabase.storage.from(RECEIPT_BUCKET).remove(receipts.map((r) => r.receipt_path));
     if (error) throw error;
   }
+  await removeTaskPhotoFiles({ vehicleId: id });
   check(await supabase.from("vehicles").delete().eq("id", id));
 }
 
@@ -291,7 +292,67 @@ export async function receiptUrl(path) {
 
 export async function deleteTaskWithReceipt(task) {
   if (task.receipt_path) await supabase.storage.from(RECEIPT_BUCKET).remove([task.receipt_path]);
+  await removeTaskPhotoFiles({ taskId: task.id });
   await deleteTask(task.id);
+}
+
+// ---- Task photos -------------------------------------------------------------
+// Pictures on a task (migrations/20261110_task_photos.sql). Files go in the
+// private vehicle-photos bucket under <user>/<vehicle>/tasks/<task>/.
+
+export const MAX_TASK_PHOTOS = 10;
+
+export async function listTaskPhotos(taskId) {
+  const { data: rows, error } = await supabase
+    .from("task_photos")
+    .select("id, task_id, storage_path, uploaded_at")
+    .eq("task_id", taskId)
+    .order("uploaded_at");
+  if (error) {
+    const err = new Error("Task photos need a database update. Ask the app owner to run the task photos update in Supabase.");
+    err.notConfigured = true;
+    throw err;
+  }
+  if (!rows.length) return [];
+  const { data, error: urlErr } = await supabase.storage.from(PHOTO_BUCKET)
+    .createSignedUrls(rows.map((r) => r.storage_path), 3600);
+  if (urlErr) throw urlErr;
+  const urls = new Map(data.map((d) => [d.path, d.signedUrl]));
+  return rows.map((r) => ({ ...r, url: urls.get(r.storage_path) ?? null }));
+}
+
+export async function uploadTaskPhoto(task, blob, ext = "jpg") {
+  const path = `${currentUserId()}/${task.vehicle_id}/tasks/${task.id}/${crypto.randomUUID()}.${ext}`;
+  const { error: upErr } = await supabase.storage.from(PHOTO_BUCKET)
+    .upload(path, blob, { contentType: contentTypeFor(blob, ext), upsert: false });
+  if (upErr) throw upErr;
+  const { data, error } = await supabase.from("task_photos")
+    .insert({ task_id: task.id, storage_path: path })
+    .select("id, task_id, storage_path, uploaded_at")
+    .single();
+  if (error) {
+    // Don't leave an orphaned file if the row couldn't be saved (e.g. over the limit).
+    await supabase.storage.from(PHOTO_BUCKET).remove([path]);
+    throw /up to 10 photos/i.test(error.message ?? "") ? new Error(`A task can have up to ${MAX_TASK_PHOTOS} photos.`) : error;
+  }
+  return data;
+}
+
+export async function deleteTaskPhoto(photo) {
+  const { error } = await supabase.storage.from(PHOTO_BUCKET).remove([photo.storage_path]);
+  if (error) throw error;
+  check(await supabase.from("task_photos").delete().eq("id", photo.id));
+}
+
+// Storage doesn't cascade: remove the files before the task (or car) row goes.
+// Quietly does nothing if task photos aren't set up yet.
+async function removeTaskPhotoFiles({ taskId = null, vehicleId = null }) {
+  const { data, error } = taskId
+    ? await supabase.from("task_photos").select("storage_path").eq("task_id", taskId)
+    : await supabase.from("task_photos").select("storage_path, maintenance_tasks!inner(vehicle_id)").eq("maintenance_tasks.vehicle_id", vehicleId);
+  if (error || !data?.length) return;
+  const { error: rmErr } = await supabase.storage.from(PHOTO_BUCKET).remove(data.map((r) => r.storage_path));
+  if (rmErr) throw rmErr;
 }
 
 // ---- Profile picture -------------------------------------------------------

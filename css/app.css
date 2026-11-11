@@ -1075,6 +1075,26 @@ details.diy-dropdown > summary {
   font-weight: 600;
 }
 
+/* Icons beside DIY dropdown headings */
+.diy-dropdown-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.diy-dropdown-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #1760c2;
+  flex-shrink: 0;
+}
+
+.diy-dropdown-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
 /* Hide default browser arrow */
 details.diy-dropdown > summary::-webkit-details-marker {
   display: none;
@@ -1089,16 +1109,78 @@ details.diy-dropdown[open] > summary > svg {
   transform: rotate(90deg);
 }
 
-/* Space for content below the header */
-details.diy-dropdown > .diy-dropdown-content {
-  padding: 8px 20px 20px;
+/* Inner border for all DIY dropdowns */
+.diy-dropdown-content {
+  margin: 0 16px 16px;
+  padding: 20px;
+  border: 1px solid #dfe4ec;
+  border-radius: 18px;
 }
 
+/* Remove double border around DIY pictures */
+.diy-dropdown-content > .card,
+.diy-dropdown-content > .guide-figure {
+  border: none;
+  box-shadow: none;
+}
+
+/* Only show the inner border when expanded */
+details.diy-dropdown:not([open]) .diy-dropdown-content {
+  display: none;
+}
 /* Remove unnecessary spacing at the top */
 .diy-dropdown-content > :first-child {
   margin-top: 0;
 }
 
+/* Space between safety warning and instructions */
+.diy-dropdown-content .guide-safety {
+  margin-bottom: 24px;
+}
+
+/* Good to know — aligned like Safety first */
+.guide .guide-wrap {
+  background: #e7f4eb;
+  border: none;
+  border-radius: 18px;
+  padding: 16px 18px;
+  color: #173d2b;
+}
+
+.good-to-know-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.good-to-know-icon {
+  flex-shrink: 0;
+  font-size: 18px;
+  line-height: 1.5;
+}
+
+.good-to-know-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.guide .guide-wrap .good-to-know-text h3 {
+  margin: 0 0 6px;
+  padding: 0;
+  font-size: 14px;
+  line-height: 1.4;
+  font-weight: 700;
+  color: #173d2b;
+}
+
+.guide .guide-wrap .good-to-know-text p {
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  font-weight: 400;
+  color: #214b35;
+}
 /* DIY Maintenance icons - difficulty colors */
 
 .guide-card .guide-icon.diy-easy {
@@ -1368,3 +1450,20 @@ button.menu-row { width: 100%; font: inherit; font-weight: 600; text-align: left
   width: 44px; height: 44px; border-radius: 50%; border: 0; background: rgba(255,255,255,.18); color: #fff; cursor: pointer;
 }
 .btn-ghost.busy::after { border-color: var(--brand); border-right-color: transparent; }
+
+/* ---------- Task photos (task page) ---------- */
+.task-photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 8px; }
+.task-photos .thumb { width: 100%; height: auto; aspect-ratio: 1; display: grid; place-items: center; padding: 0; cursor: pointer; color: var(--ink-3); }
+.task-photo-add { cursor: pointer; }
+.task-photo-add.busy { pointer-events: none; position: relative; }
+.task-photo-add.busy > .icon { opacity: .2; }
+.task-photo-add.busy::after {
+  content: ""; position: absolute; inset: 0; margin: auto; width: 26px; height: 26px; border-radius: 50%;
+  border: 3px solid var(--brand); border-right-color: transparent; animation: spin .8s linear infinite;
+}
+.photo-viewer-delete {
+  position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+  display: inline-flex; align-items: center; gap: 8px; min-height: 46px; padding: 0 20px; border: 0; border-radius: 999px;
+  background: rgba(255,255,255,.16); color: #fff; font: inherit; font-weight: 700; cursor: pointer;
+}
+.photo-viewer-delete:hover { background: rgba(220,38,38,.85); }
