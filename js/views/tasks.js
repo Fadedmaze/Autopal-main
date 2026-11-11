@@ -63,22 +63,32 @@ export default async function render(root, ctx) {
     const overdue = incompleteTasks.filter(
       (task) => task.due_date && task.due_date < today
     );
-  
-    // Calculate the date 30 days from today
-    const futureDate = new Date();
-    futureDate.setDate(futureDate.getDate() + 30);
-    const thirtyDaysFromNow = [
-      futureDate.getFullYear(),
-      String(futureDate.getMonth() + 1).padStart(2, "0"),
-      String(futureDate.getDate()).padStart(2, "0")
-    ].join("-");
 
     // Only show tasks due within the next 30 days
-    const upcomingOnly = incompleteTasks.filter(
-      (task) =>
-        !task.due_date ||
-        (task.due_date >= today && task.due_date < thirtyDaysFromNow)
-    );
+    
+      const upcomingOnly = incompleteTasks.filter((task) => {
+        // Tasks without a due date remain visible
+        if (!task.due_date) return true;
+
+        // Overdue tasks belong in the Overdue tab
+        if (task.due_date < today) return false;
+
+        // Recurring tasks appear 7 days before their due date
+        // Regular tasks appear 60 days before their due date
+        const daysBefore = task.generated_from_task_id != null ? 7 : 60;
+
+        const futureDate = new Date(`${today}T12:00:00`);
+        futureDate.setDate(futureDate.getDate() + daysBefore);
+
+        const cutoff = [
+          futureDate.getFullYear(),
+          String(futureDate.getMonth() + 1).padStart(2, "0"),
+          String(futureDate.getDate()).padStart(2, "0")
+        ].join("-");
+
+        return task.due_date <= cutoff;
+      });
+
 
       const list =
         state.tab === "overdue" ? overdue :
