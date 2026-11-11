@@ -1738,6 +1738,44 @@ body.has-nav .map-screen { bottom: calc(var(--nav-h) + var(--safe-b)); }
 .card h3 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 16px; font-weight: 700; }
 .card h3 .icon { color: var(--brand); }
 
+
+/* =========================================
+   PROFILE PHOTO CAMERA OPTIONS
+   ========================================= */
+
+   .profile-avatar-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .profile-avatar-section .avatar-picker {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .profile-avatar-section .avatar-picker:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 4px;
+    border-radius: 50%;
+  }
+  
+  .avatar-choice-sheet .menu-row {
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+  }
+  
+  .avatar-choice-sheet .menu-row svg {
+    color: var(--brand);
+  }  
+
 /* ---------- Discover ---------- */
 
 .scan-hero {
