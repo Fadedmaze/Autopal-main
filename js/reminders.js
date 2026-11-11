@@ -46,7 +46,7 @@ export function reminderDate(task, defaultDays) {
 
 // One sentence for the task form, e.g. "We'll remind you on Fri, Nov 7."
 export function reminderPreview(dueISO, days, { enabled = true } = {}) {
-  if (!dueISO) return "Pick a due date to see when you'll be reminded.";
+  if (!dueISO) return "Pick a due date to see when you'll be reminded";
   if (!enabled) return "Reminders are turned off. Turn them on in Profile → Notification Settings.";
   const on = addDays(dueISO, -days);
   const today = todayISO();
