@@ -43,6 +43,7 @@ export default async function render(root, ctx) {
     notes: presetNotes,
     shop_id: presetShop,
     remind_days_before: null,
+    repeat_interval_days: null,
   };
   if (!editing && ctx.query.get("from") === "mechanics") {
     backLink.href = "#/mechanics";
@@ -70,6 +71,63 @@ export default async function render(root, ctx) {
         <span>Due Date</span>
         <input name="due_date" type="date" required value="${escapeHtml(t.due_date ?? "")}">
       </label>
+      ${!t.catalog_id ? `
+        <div class="field task-repeat">
+          <label class="task-repeat-toggle">
+            <input
+              type="checkbox"
+              name="repeat_enabled"
+              ${t.repeat_interval_days ? "checked" : ""}
+            >
+            <span>
+              <strong>Repeat this task</strong>
+              <small>Automatically schedule the next occurrence after completion</small>
+            </span>
+          </label>
+
+          <label class="field task-repeat-interval"
+            ${t.repeat_interval_days ? "" : "hidden"}>
+            <span>Repeat every</span>
+            
+          <select name="repeat_interval_days">
+            ${[
+              [30, "30 days"],
+              [90, "3 months"],
+              [180, "6 months"],
+              [365, "1 year"]
+            ].map(([days, label]) => `
+              <option value="${days}"
+                ${Number(t.repeat_interval_days || 30) === days ? "selected" : ""}>
+                ${label}
+              </option>
+            `).join("")}
+            <option value="custom"
+              ${t.repeat_interval_days &&
+                ![30, 90, 180, 365].includes(Number(t.repeat_interval_days))
+                  ? "selected" : ""}>
+              Custom…
+            </option>
+          </select>
+
+          <div class="custom-repeat-fields" hidden>
+            <input
+              type="number"
+              name="custom_repeat_number"
+              min="1"
+              max="3650"
+              value="${t.repeat_interval_days && ![30, 90, 180, 365].includes(Number(t.repeat_interval_days)) ? t.repeat_interval_days : 1}"
+              placeholder="Number"
+            >
+            <select name="custom_repeat_unit">
+              <option value="days">Days</option>
+              <option value="weeks">Weeks</option>
+              <option value="months">Months</option>
+            </select>
+          </div>
+
+          </label>
+        </div>
+      ` : ""}
       <label class="field">
         <span>Notes <em>optional</em></span>
         <textarea name="notes" rows="3" maxlength="1000" placeholder="Part numbers, which shop, anything to remember">${escapeHtml(t.notes ?? "")}</textarea>
@@ -104,6 +162,23 @@ export default async function render(root, ctx) {
     </form>`;
 
   const form = root.querySelector("form");
+  const repeatToggle = form.elements.repeat_enabled;
+
+  const repeatSelect = form.elements.repeat_interval_days;
+  const customRepeatFields = root.querySelector(".custom-repeat-fields");
+
+  if (repeatSelect && customRepeatFields) {
+    const updateCustomRepeat = () => {
+      customRepeatFields.hidden = repeatSelect.value !== "custom";
+    };
+
+    repeatSelect.addEventListener("change", updateCustomRepeat);
+    updateCustomRepeat();
+  }
+
+  repeatToggle?.addEventListener("change", () => {
+    root.querySelector(".task-repeat-interval").hidden = !repeatToggle.checked;
+  });
   if (!editing && presetName) form.elements.due_date.focus();
   const photos = mountTaskPhotos(root.querySelector("#task-photos"), { task: editing ? task : null });
   const errEl = root.querySelector(".form-error");
@@ -167,6 +242,36 @@ export default async function render(root, ctx) {
     if (missing.length) return fail(`Please enter ${missing.join(" and ")}. ${missing.length > 1 ? "Both are" : "It's"} required.`);
     if (fields.estimated_cost !== null && !(fields.estimated_cost >= 0)) return fail("Cost must be zero or more.");
     if (Number.isNaN(fields.remind_days_before)) return fail(`Reminder days must be a whole number from 0 to ${MAX_REMIND_DAYS}.`);
+    if (repeatToggle) {
+      let repeatDays = null;
+
+      if (repeatToggle.checked) {
+        if (repeatSelect.value === "custom") {
+          const number = Number(form.elements.custom_repeat_number.value);
+          const unit = form.elements.custom_repeat_unit.value;
+
+          if (!Number.isInteger(number) || number < 1) {
+            return fail("Enter a valid repeat interval.");
+          }
+
+          const multipliers = {
+            days: 1,
+            weeks: 7,
+            months: 30
+          };
+
+          repeatDays = number * multipliers[unit];
+
+          if (!Number.isInteger(repeatDays) || repeatDays > 3650) {
+            return fail("Repeat interval must be between 1 and 3650 days.");
+          }
+        } else {
+          repeatDays = Number(repeatSelect.value);
+        }
+      }
+
+  fields.repeat_interval_days = repeatDays;
+}
     if (!editing && t.shop_id) fields.shop_id = t.shop_id;
 
     withBusy(form.querySelector("button[type=submit]"), async () => {
