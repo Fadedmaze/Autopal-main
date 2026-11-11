@@ -370,6 +370,48 @@ button.task-body { border: 0; padding: 0; background: none; text-align: left; fo
 .check input:focus-visible + .check-box { outline: 3px solid var(--brand-soft); outline-offset: 2px; }
 .check input:disabled + .check-box { opacity: .5; }
 
+/* Recurring task option */
+
+.task-repeat {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.task-repeat-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.task-repeat-toggle input {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  accent-color: var(--brand);
+}
+
+.task-repeat-toggle span {
+  display: grid;
+  gap: 3px;
+  color: var(--ink);
+}
+
+.task-repeat-toggle small {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.task-repeat-interval {
+  margin-top: 14px;
+}
+
+.task-repeat-interval[hidden] {
+  display: none;
+}
+
 /* Tasks page - spacing between due date and vehicle */
 .page-tasks .task-meta .dot-sep {
   display: inline-flex;
@@ -532,6 +574,24 @@ button.task-body { border: 0; padding: 0; background: none; text-align: left; fo
   border-color: var(--danger, #e57373);
 }
 
+/* Custom recurring task interval */
+
+.custom-repeat-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.custom-repeat-fields[hidden] {
+  display: none;
+}
+
+.custom-repeat-fields input,
+.custom-repeat-fields select {
+  width: 100%;
+  min-width: 0;
+}
 /* ---------- Vehicle detail ---------- */
 
 .gallery { display: flex; flex-direction: column; gap: 10px; }
@@ -1221,6 +1281,37 @@ details.diy-dropdown {
   height: auto;
   min-height: 0;
   overflow: hidden;
+}
+
+
+:root[data-theme="dark"] .guide .guide-wrap {
+  background: #173d2b;
+  color: #e7f6ec;
+}
+
+:root[data-theme="dark"] .guide .guide-wrap .good-to-know-text h3,
+:root[data-theme="dark"] .good-to-know-icon {
+  color: #86efac;
+}
+
+:root[data-theme="dark"] .guide .guide-wrap .good-to-know-text p {
+  color: #e7f6ec;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .guide .guide-wrap {
+    background: #173d2b;
+    color: #e7f6ec;
+  }
+
+  :root:not([data-theme="light"]) .guide .guide-wrap .good-to-know-text h3,
+  :root:not([data-theme="light"]) .good-to-know-icon {
+    color: #86efac;
+  }
+
+  :root:not([data-theme="light"]) .guide .guide-wrap .good-to-know-text p {
+    color: #e7f6ec;
+  }
 }
 
 /* Header stays in the same position open or closed */
