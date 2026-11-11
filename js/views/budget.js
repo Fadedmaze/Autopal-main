@@ -62,7 +62,7 @@ export default async function render(root, ctx) {
 
     <div class="total-bar">
       <div>
-        <span>Upcoming Total</span>
+        <span>Estimator Total</span>
         <small>${s.open_count} upcoming repair${s.open_count === 1 ? "" : "s"} · ${escapeHtml(vehicle.label)}</small>
       </div>
       <strong>${formatMoney(s.open_estimated_total)}</strong>
