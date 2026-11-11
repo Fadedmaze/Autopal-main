@@ -182,6 +182,7 @@ export function vehicleInkColor(index) {
 
 const PATHS = {
   car: '<path d="M5 17h14M3 13l2-5.5A2 2 0 0 1 6.9 6h10.2a2 2 0 0 1 1.9 1.5L21 13v4a1 1 0 0 1-1 1h-1M3 13v4a1 1 0 0 0 1 1h1M3 13h18"/><circle cx="7" cy="17" r="1.8"/><circle cx="17" cy="17" r="1.8"/>',
+  dashboard: '<rect x="2.5" y="4" width="19" height="16" rx="3"/><path d="M5.5 14a3.5 3.5 0 0 1 7 0M6.8 12.8l2.2-1.3M14 14a3.5 3.5 0 0 1 4.5-3.3M16.3 12.8l1.2-1.2M7 17h2M15 17h2"/>',
   truck: '<path d="M2 16V9a1 1 0 0 1 1-1h9v8M12 10h5l3 3.5V16a1 1 0 0 1-1 1h-1M2 16a1 1 0 0 0 1 1h1M8.5 17h7"/><circle cx="6.5" cy="17" r="1.8"/><circle cx="17" cy="17" r="1.8"/>',
   suv: '<path d="M3 16v-4l1.5-4.5A2 2 0 0 1 6.4 6H16l3 4 2 1v5a1 1 0 0 1-1 1h-1M3 16a1 1 0 0 0 1 1h1M3 12h18M8.8 17h6.4"/><circle cx="7" cy="17" r="1.8"/><circle cx="17" cy="17" r="1.8"/>',
   home: '<path d="M3 10.5 12 3l9 7.5M5 9v11h14V9"/><path d="M10 20v-6h4v6"/>',
