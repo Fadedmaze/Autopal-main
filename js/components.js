@@ -1,9 +1,9 @@
 // Markup + behavior reused across screens: task rows, the complete-task sheet
 // (receipt upload + undo), vehicle cards and image preparation.
-import { createTask, deleteTaskWithReceipt, setTaskCompleted, updateTask, uploadReceipt } from "./data.js";
+import { createTask, setTaskCompleted, updateTask, uploadReceipt } from "./data.js";
 import {
   escapeHtml, icon, dueLabel, dueTone, formatMoney, formatDate, formatMileage,
-  vehicleIcon, vehicleSpec, vehicleTint, todayISO, toast, errorMessage, withBusy, confirmDialog,
+  vehicleIcon, vehicleSpec, vehicleTint, todayISO, toast, errorMessage, withBusy,
 } from "./ui.js";
 import { remindLabel, remindShort } from "./reminders.js";
 
@@ -46,7 +46,6 @@ export function taskRow(task, { vehicle = null, remindDays = 7, showCost = false
 }
 
 export function taskDetailsSheet(task, { onChanged } = {}) {
-  const isCustomItem = task.catalog_id == null && task.due_date == null;
   const taskFormHref = () => {
     const params = new URLSearchParams({
       name: task.task_name,
@@ -73,7 +72,6 @@ export function taskDetailsSheet(task, { onChanged } = {}) {
         <button class="btn" type="submit">Save Price</button>
       </form>
       <a class="fab sheet-add-task" data-add-task href="${taskFormHref()}">${icon("plus", 20, 2.6)}<span>Add Task</span></a>
-      ${isCustomItem ? `<button class="btn btn-ghost danger" type="button" data-delete-custom>${icon("trash", 18, 2)}<span>Delete Custom Item</span></button>` : ""}
     </div>`;
   document.body.appendChild(dlg);
   dlg.addEventListener("close", () => dlg.remove());
@@ -107,31 +105,6 @@ export function taskDetailsSheet(task, { onChanged } = {}) {
         } catch (err) {
           error.textContent = `Price saved, but the estimator couldn't refresh: ${errorMessage(err)}`;
           error.hidden = false;
-        }
-      } catch (err) {
-        error.textContent = errorMessage(err);
-        error.hidden = false;
-      }
-    });
-  });
-  dlg.querySelector("[data-delete-custom]")?.addEventListener("click", async (e) => {
-    const button = e.currentTarget;
-    const confirmed = await confirmDialog({
-      title: "Delete Custom Item?",
-      body: `“${task.task_name}” will be removed from this vehicle's maintenance estimate.`,
-      confirmLabel: "Delete",
-      danger: true,
-    });
-    if (!confirmed) return;
-    await withBusy(button, async () => {
-      try {
-        await deleteTaskWithReceipt(task);
-        dlg.close();
-        toast("Custom item deleted", "ok");
-        try {
-          await onChanged?.();
-        } catch (err) {
-          toast(`Item deleted, but the estimator couldn't refresh: ${errorMessage(err)}`, "error");
         }
       } catch (err) {
         error.textContent = errorMessage(err);
