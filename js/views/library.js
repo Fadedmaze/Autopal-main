@@ -372,7 +372,7 @@ export default async function render(root, ctx) {
 function scanCard(vehicles, v) {
   return `
     <section class="scan-hero scan-hero-compact">
-      <span class="scan-hero-icon">${icon("scan", 30, 1.8)}</span>
+      <span class="scan-hero-icon">${icon("dashboard", 30, 1.8)}</span>
       <h2>Scan Your Dashboard</h2>
       <p>Turn the car on so the lights are glowing, then hold your phone about a foot from the dashboard. Yellow squares appear around the lights we find. Tap one to see what it means.</p>
       <button type="button" class="btn" id="start-scan">${icon("camera", 18, 2)}Scan My Dashboard</button>
