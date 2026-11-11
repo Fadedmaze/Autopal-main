@@ -43,7 +43,7 @@ export default async function render(root, ctx) {
     showTaskDetails: true,
     showCheckbox: false,
     showOverdueStyle: false,
-    showDeleteCustom: true,
+    showDelete: true,
   });
 
   root.innerHTML = `
@@ -95,7 +95,7 @@ export default async function render(root, ctx) {
       const task = tasksById.get(Number(button.closest(".task").dataset.taskId));
       if (!task) return;
       const confirmed = await confirmDialog({
-        title: "Delete Custom Item?",
+        title: "Delete Maintenance Item?",
         body: `“${task.task_name}” will be removed from this vehicle's maintenance estimate.`,
         confirmLabel: "Delete",
         danger: true,
@@ -104,7 +104,7 @@ export default async function render(root, ctx) {
       await withBusy(button, async () => {
         try {
           await deleteTaskWithReceipt(task);
-          toast("Custom item deleted", "ok");
+          toast("Maintenance item deleted", "ok");
           if (ctx.isCurrent()) await render(root, ctx);
         } catch (err) {
           toast(errorMessage(err), "error");
