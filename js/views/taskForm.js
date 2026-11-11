@@ -65,7 +65,7 @@ export default async function render(root, ctx) {
         </label>` : `<input type="hidden" name="vehicle_id" value="${t.vehicle_id}">`}
       <label class="field">
         <span>Task Name</span>
-        <input name="task_name" required maxlength="80" placeholder="e.g. Replace headlight bulb" value="${escapeHtml(t.task_name)}">
+        <input name="task_name" required maxlength="80" placeholder="e.g. Replace Headlight Bulb" value="${escapeHtml(t.task_name)}">
       </label>
       
       
