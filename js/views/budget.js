@@ -12,7 +12,7 @@ export default async function render(root, ctx) {
   if (!ctx.isCurrent()) return;
   const bar = {
     title: "Maintenance Estimator",
-    sub: "Estimate costs for upcoming repairs",
+    sub: "Estimate costs for repairs",
     back: { href: "#/home", label: "Home" },
     action: vehicles.length
       ? `<button class="btn btn-sm" type="button" data-add-custom>${icon("plus", 18, 2.4)}<span>Add Custom</span></button>`
