@@ -9,7 +9,7 @@ import { remindLabel, remindShort } from "./reminders.js";
 
 // One maintenance task row. The checkbox on the left completes / un-completes it.
 // Overdue tasks are red (spec). `showCost` puts the estimate on the right (Budget).
-export function taskRow(task, { vehicle = null, remindDays = 7, showCost = false, showReceipt = false, showDueDate = true, showTaskDetails = false, showCheckbox = true, showOverdueStyle = true, showDeleteCustom = false } = {}) {
+export function taskRow(task, { vehicle = null, remindDays = 7, showCost = false, showReceipt = false, showDueDate = true, showTaskDetails = false, showCheckbox = true, showOverdueStyle = true, showDelete = false } = {}) {
   const done = task.is_completed;
   // A task's own reminder window wins over the user's default (null = use the default).
   const tone = done ? "muted" : dueTone(task.due_date, task.remind_days_before ?? remindDays);
@@ -41,7 +41,7 @@ export function taskRow(task, { vehicle = null, remindDays = 7, showCost = false
         </span>
       </${bodyTag}>
       ${right}
-      ${showDeleteCustom && task.catalog_id == null && task.due_date == null ? `<button type="button" class="task-delete" data-delete-task aria-label="Delete ${escapeHtml(task.task_name)}" title="Delete custom item">${icon("trash", 17, 2)}</button>` : ""}
+      ${showDelete ? `<button type="button" class="task-delete" data-delete-task aria-label="Delete ${escapeHtml(task.task_name)}" title="Delete item">${icon("trash", 17, 2)}</button>` : ""}
     </li>`;
 }
 
