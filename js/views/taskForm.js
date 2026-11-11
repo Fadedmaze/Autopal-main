@@ -43,6 +43,7 @@ export default async function render(root, ctx) {
     notes: presetNotes,
     shop_id: presetShop,
     remind_days_before: null,
+    repeat_interval_days: null,
   };
   if (!editing && ctx.query.get("from") === "mechanics") {
     backLink.href = "#/mechanics";
@@ -70,6 +71,19 @@ export default async function render(root, ctx) {
         <span>Due Date</span>
         <input name="due_date" type="date" required value="${escapeHtml(t.due_date ?? "")}">
       </label>
+      ${!t.catalog_id ? `
+      <div class="field task-repeat">
+        <label class="task-repeat-toggle">
+          <input type="checkbox" name="repeat_enabled" ${t.repeat_interval_days ? "checked" : ""}>
+          <span><strong>Repeat this task</strong><small>Schedule the next occurrence after completing this one</small></span>
+        </label>
+        <label class="field task-repeat-interval" ${t.repeat_interval_days ? "" : "hidden"}>
+          <span>Repeat every</span>
+          <select name="repeat_interval_days">
+            ${[[30,"30 days"],[90,"3 months"],[180,"6 months"],[365,"1 year"]].map(([days,label]) => `<option value="${days}" ${Number(t.repeat_interval_days || 30) === days ? "selected" : ""}>${label}</option>`).join("")}
+          </select>
+        </label>
+      </div>` : ""}
       <label class="field">
         <span>Notes <em>optional</em></span>
         <textarea name="notes" rows="3" maxlength="1000" placeholder="Part numbers, which shop, anything to remember">${escapeHtml(t.notes ?? "")}</textarea>
@@ -104,6 +118,10 @@ export default async function render(root, ctx) {
     </form>`;
 
   const form = root.querySelector("form");
+  const repeatToggle = form.elements.repeat_enabled;
+  repeatToggle?.addEventListener("change", () => {
+    root.querySelector(".task-repeat-interval").hidden = !repeatToggle.checked;
+  });
   if (!editing && presetName) form.elements.due_date.focus();
   const photos = mountTaskPhotos(root.querySelector("#task-photos"), { task: editing ? task : null });
   const errEl = root.querySelector(".form-error");
@@ -167,6 +185,7 @@ export default async function render(root, ctx) {
     if (missing.length) return fail(`Please enter ${missing.join(" and ")}. ${missing.length > 1 ? "Both are" : "It's"} required.`);
     if (fields.estimated_cost !== null && !(fields.estimated_cost >= 0)) return fail("Cost must be zero or more.");
     if (Number.isNaN(fields.remind_days_before)) return fail(`Reminder days must be a whole number from 0 to ${MAX_REMIND_DAYS}.`);
+    if (repeatToggle) fields.repeat_interval_days = repeatToggle.checked ? Number(form.elements.repeat_interval_days.value) : null;
     if (!editing && t.shop_id) fields.shop_id = t.shop_id;
 
     withBusy(form.querySelector("button[type=submit]"), async () => {
