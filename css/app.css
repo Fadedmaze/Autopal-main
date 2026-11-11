@@ -355,7 +355,7 @@ button.task-body { border: 0; padding: 0; background: none; text-align: left; fo
 .task-name { font-weight: 600; overflow-wrap: anywhere; }
 .task-meta { display: flex; flex-wrap: wrap; gap: 2px 0; font-size: 13px; color: var(--ink-3); }
 .remind-hint { display: inline-flex; align-items: center; gap: 3px; margin-left: 8px; font-size: 12px; color: var(--ink-3); }
-.dot-sep::before { content: "·"; margin: 0 6px; }
+.dot-sep::before { content: "·"; margin: 0; }
 .task-cost { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .task.done .task-name { text-decoration: line-through; color: var(--ink-3); }
 .task.done .task-cost { color: var(--ink-3); }
@@ -369,6 +369,168 @@ button.task-body { border: 0; padding: 0; background: none; text-align: left; fo
 .check input:checked + .check-box { background: var(--ok); border-color: var(--ok); color: #fff; }
 .check input:focus-visible + .check-box { outline: 3px solid var(--brand-soft); outline-offset: 2px; }
 .check input:disabled + .check-box { opacity: .5; }
+
+/* Tasks page - spacing between due date and vehicle */
+.page-tasks .task-meta .dot-sep {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: 0;
+}
+
+.page-tasks .task-meta .dot-sep::before {
+  content: "·";
+  margin: 0;
+}
+/* Tasks page - individual task cards */
+.page-tasks .task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 0;
+  margin: 20px 0;
+  list-style: none;
+}
+
+/* Remove background behind task cards */
+.page-tasks .task-list {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+
+/* Keep individual cards white */
+.page-tasks .task-list > .task {
+  background: #ffffff;
+  border-radius: 16px;
+}
+
+.page-tasks .task-list > .task {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 3px 12px rgba(15, 23, 42, 0.04);
+}
+
+.page-tasks .task-list > .task.overdue {
+  border-color: #f1b5b5;
+}
+
+.page-tasks .task-list .task-name {
+  display: block;
+  font-size: 16px;
+  font-weight: 700;
+  color: #172033;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.page-tasks .task-list .task-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  margin-top: 3px;
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+/* Tasks page - empty states */
+.page-tasks .tasks-empty {
+  text-align: center;
+  padding: 48px 20px;
+  margin-top: 20px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+}
+
+.page-tasks .tasks-empty-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
+  background: #edf4ff;
+  color: #1760c2;
+  border-radius: 50%;
+  margin-bottom: 14px;
+}
+
+.page-tasks .tasks-empty h3 {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+
+.page-tasks .tasks-empty p {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Tasks page - sticky header */
+.page-tasks .appbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: #f7f8fb;
+}
+
+/* =========================================
+   TASKS PAGE - DARK MODE FIX
+   ========================================= */
+
+/* Use theme colors instead of hardcoded white */
+.page-tasks .task-list > .task {
+  background: var(--surface);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+/* Task names */
+.page-tasks .task-list .task-name {
+  color: var(--ink);
+}
+
+/* Task details */
+.page-tasks .task-list .task-meta {
+  color: var(--ink-3);
+}
+
+/* Empty state container */
+.page-tasks .tasks-empty {
+  background: var(--surface);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+/* Empty state heading */
+.page-tasks .tasks-empty h3 {
+  color: var(--ink);
+}
+
+/* Empty state description */
+.page-tasks .tasks-empty p {
+  color: var(--ink-3);
+}
+
+/* Empty state icon */
+.page-tasks .tasks-empty-icon {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+/* Sticky header */
+.page-tasks .appbar {
+  background: var(--bg);
+}
+
+/* Keep overdue tasks visually distinct */
+.page-tasks .task-list > .task.overdue {
+  border-color: var(--danger, #e57373);
+}
 
 /* ---------- Vehicle detail ---------- */
 
