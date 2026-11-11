@@ -80,6 +80,19 @@ Every team member should be invited to the Supabase organization (**Organization
 - **The scanner needs the `ANTHROPIC_API_KEY` secret** in **Edge Functions → Secrets**. Never put that key in the code or the repo.
 - **See how much time people spend in the app** by running `select * from app_usage_daily;` (totals per day) or `select * from app_usage_by_user;` (totals per user) in the Supabase **SQL Editor**. Only active time is counted: while the app is on screen and in use.
 
+### Maintenance notifications (push + email)
+
+Reminders reach people even when AutoPal is closed. Every morning at 9 AM Mountain, Supabase runs the `send-reminders` Edge Function. It finds open tasks whose reminder day has arrived and sends one phone/computer notification per device and one email per person. `reminder_log` makes sure each task is only reminded once per channel. People turn these on in **Profile → Notification Settings** and can press **Send a Test**. On iPhone, push only works after adding AutoPal to the Home Screen (iOS 16.4 or newer).
+
+One-time setup:
+
+1. Run `supabase/migrations/20261111_maintenance_notifications.sql` in the SQL Editor.
+2. Make the push keys: `sh supabase/setup/make_vapid_keys.sh` in Terminal. Put the **public** key in `js/config.js` (`VAPID_PUBLIC_KEY`).
+3. Email uses Brevo's free plan (300 emails a day). Create an account, verify a sender email, and create an API key.
+4. In **Edge Functions → Secrets**, add `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` (`mailto:` + your email), `BREVO_API_KEY`, `EMAIL_FROM` (the verified sender) and `CRON_SECRET` (any long random text). Secrets never go in the code.
+5. Deploy `supabase/functions/send-reminders/index.ts` as a function named `send-reminders`, with **Verify JWT turned off** (the function checks callers itself).
+6. Fill in the two placeholders in `supabase/setup/schedule_reminders.sql` and run it in the SQL Editor. Don't commit the file with the secret in it.
+
 ## Verifying the Vertical Slice
 
 The working button is **Save Vehicle** on the Add Vehicle screen. It writes a new row to the `vehicles` table in Supabase, and a database trigger also creates that car's maintenance schedule in `maintenance_tasks`.

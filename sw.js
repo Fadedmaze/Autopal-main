@@ -1,6 +1,6 @@
 // AutoPal service worker. Bump CACHE on every release; it doubles as the
 // "is the new version live yet" probe after a deploy.
-const CACHE = "autopal-shell-v17";
+const CACHE = "autopal-shell-v18";
 
 const SHELL = [
   "./",
@@ -22,6 +22,7 @@ const SHELL = [
   "./js/usage.js",
   "./js/taskPhotos.js",
   "./js/reminders.js",
+  "./js/push.js",
   "./js/repairs.js",
   "./js/supabaseClient.js",
   "./js/ui.js",
@@ -71,6 +72,19 @@ self.addEventListener("fetch", (event) => {
       })
       .catch(() => caches.match(req).then((hit) => hit || caches.match("./index.html"))),
   );
+});
+
+// A reminder pushed by the send-reminders Edge Function while AutoPal may be closed.
+self.addEventListener("push", (event) => {
+  let msg = {};
+  try { msg = event.data?.json() ?? {}; } catch { msg = { body: event.data?.text() }; }
+  event.waitUntil(self.registration.showNotification(msg.title || "AutoPal reminder", {
+    body: msg.body || "You have maintenance coming up.",
+    tag: msg.tag || "autopal-reminders",
+    icon: "./icons/icon-192.png",
+    badge: "./icons/icon-192.png",
+    data: { url: msg.url || "./#/tasks" },
+  }));
 });
 
 // Tapping a reminder notification opens (or focuses) AutoPal on the Tasks screen.

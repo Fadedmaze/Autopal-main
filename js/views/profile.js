@@ -6,6 +6,7 @@ import { getProfile, getSettings, updateSettings, uploadAvatar, avatarUrl, saveD
 import {
   REMIND_CHOICES, remindLabel, deviceNotificationsOn, enableDeviceNotifications, disableDeviceNotifications, buildIcs, downloadIcs,
 } from "../reminders.js";
+import { pushStatus, pushOn, enablePush, disablePush, sendTestReminder } from "../push.js";
 import { prepareUpload } from "../components.js";
 import { verifyPassword, updatePassword, signOut } from "../auth.js";
 import { appBar, escapeHtml, icon, loading, toast, confirmDialog, errorMessage, withBusy, titleCase } from "../ui.js";
@@ -283,7 +284,21 @@ async function renderNotifications(root, ctx) {
   root.innerHTML = loading();
   const settings = await getSettings();
   if (!ctx.isCurrent()) return;
-  const supported = "Notification" in window;
+  // Phone Notifications: real push (arrives while AutoPal is closed) when the server is
+  // set up, otherwise the older in-app notifications (only while AutoPal is open).
+  const status = pushStatus();
+  const push = status === "ready";
+  const supported = push || ("Notification" in window && status !== "install-first");
+  const deviceOn = push ? await pushOn() : deviceNotificationsOn();
+  if (!ctx.isCurrent()) return;
+  const hasEmailSetting = "email_reminders" in settings;
+  const emailOn = hasEmailSetting && settings.email_reminders !== false;
+  const deviceHint = {
+    ready: "Get a notification on this phone or computer on the morning a reminder is due, even when AutoPal is closed. Turn it on for each device you use.",
+    "install-first": "On iPhone and iPad, add AutoPal to your Home Screen first (Share → Add to Home Screen), open it from there, then turn this on.",
+    unsupported: "This browser can't show notifications. Email reminders still work.",
+    "not-configured": "Get a notification on this device when a reminder is due. Right now they only arrive while AutoPal is open.",
+  }[status] ?? "";
   root.innerHTML = `
     ${appBar({ title: "Notifications", back: { href: "#/profile", label: "Profile" } })}
     <div class="content">
@@ -305,18 +320,34 @@ async function renderNotifications(root, ctx) {
 
       <section class="card">
         <label class="toggle">
-          <input type="checkbox" name="device_notifications" ${deviceNotificationsOn() ? "checked" : ""} ${supported ? "" : "disabled"}>
+          <input type="checkbox" name="device_notifications" ${deviceOn ? "checked" : ""} ${supported ? "" : "disabled"}>
           <span class="toggle-ui"></span>
-          <span>Notifications on This Device</span>
+          <span>Phone Notifications</span>
         </label>
-        <p class="hint" id="device-hint">${supported
-          ? "Get a notification on this phone or computer when a reminder is due. They arrive when you open AutoPal."
-          : "This browser can't show notifications. On iPhone, add AutoPal to your Home Screen first (Share → Add to Home Screen)."}</p>
+        <p class="hint" id="device-hint">${escapeHtml(deviceHint)}</p>
+      </section>
+
+      <section class="card">
+        <label class="toggle">
+          <input type="checkbox" name="email_reminders" ${emailOn ? "checked" : ""} ${hasEmailSetting && settings.task_reminders_enabled ? "" : "disabled"}>
+          <span class="toggle-ui"></span>
+          <span>Email Reminders</span>
+        </label>
+        <p class="hint">${hasEmailSetting
+          ? "Get an email at the address you signed up with on the morning a reminder is due."
+          : "Email reminders aren't set up on the server yet."}</p>
+      </section>
+
+      <section class="card">
+        <strong class="card-title">${icon("bell", 18, 2)}Test Your Reminders</strong>
+        <p class="hint">Sends a test notification to every device where Phone Notifications are on, and a test email.</p>
+        <button type="button" class="btn btn-soft" id="send-test">${icon("bell", 18, 2)}Send a Test</button>
+        <p class="hint" id="test-result" role="status" aria-live="polite"></p>
       </section>
 
       <section class="card">
         <strong class="card-title">${icon("calendar", 18, 2)}Calendar Reminders</strong>
-        <p class="hint">Want an alert even when AutoPal is closed? Add your upcoming tasks to your phone's calendar. Each one gets an alarm at 9 AM on its reminder day.</p>
+        <p class="hint">Prefer your calendar? Add your upcoming tasks to your phone's calendar. Each one gets an alarm at 9 AM on its reminder day.</p>
         <button type="button" class="btn btn-soft" id="export-calendar">${icon("calendar", 18, 2)}Add Tasks to Calendar</button>
       </section>
     </div>`;
@@ -325,6 +356,8 @@ async function renderNotifications(root, ctx) {
   const days = root.querySelector("[name=reminder_days_before]");
   const save = async () => {
     days.disabled = !enabled.checked;
+    const emailBox = root.querySelector("[name=email_reminders]");
+    if ("email_reminders" in settings) emailBox.disabled = !enabled.checked;
     try {
       await updateSettings({ task_reminders_enabled: enabled.checked, reminder_days_before: Number(days.value) });
       settings.task_reminders_enabled = enabled.checked;
@@ -339,17 +372,60 @@ async function renderNotifications(root, ctx) {
 
   const device = root.querySelector("[name=device_notifications]");
   device.addEventListener("change", async () => {
-    if (!device.checked) {
-      disableDeviceNotifications();
-      return toast("Notifications off for this device", "ok");
+    device.disabled = true;
+    try {
+      if (!device.checked) {
+        disableDeviceNotifications();
+        if (push) await disablePush();
+        return toast("Phone notifications off for this device", "ok");
+      }
+      const result = push ? await enablePush() : await enableDeviceNotifications();
+      if (result === "on") {
+        if (push) await enableDeviceNotifications(); // also show them while the app is open
+        return toast("Phone notifications on for this device", "ok");
+      }
+      device.checked = false;
+      toast(result === "denied"
+        ? "Notifications are blocked. Allow them for this site in your browser settings, then try again."
+        : result === "install-first"
+          ? "Add AutoPal to your Home Screen first, then turn this on from there."
+          : "This browser can't show notifications.", "error");
+    } catch (err) {
+      device.checked = false;
+      toast(errorMessage(err), "error");
+    } finally {
+      device.disabled = false;
     }
-    const result = await enableDeviceNotifications();
-    if (result === "on") return toast("Notifications on for this device", "ok");
-    device.checked = false;
-    toast(result === "denied"
-      ? "Notifications are blocked. Allow them for this site in your browser settings, then try again."
-      : "This browser can't show notifications.", "error");
   });
+
+  const email = root.querySelector("[name=email_reminders]");
+  email.addEventListener("change", async () => {
+    try {
+      await updateSettings({ email_reminders: email.checked });
+      settings.email_reminders = email.checked;
+      toast(email.checked ? "Email reminders on" : "Email reminders off", "ok");
+    } catch (err) {
+      email.checked = !email.checked;
+      toast(errorMessage(err), "error");
+    }
+  });
+
+  const testResult = root.querySelector("#test-result");
+  root.querySelector("#send-test").addEventListener("click", (e) => withBusy(e.currentTarget, async () => {
+    testResult.textContent = "";
+    try {
+      const r = await sendTestReminder();
+      const parts = [];
+      if (!r.push_ready) parts.push("Phone notifications aren't set up on the server yet.");
+      else if (r.devices) parts.push(`Test notification sent to ${r.devices} device${r.devices === 1 ? "" : "s"}.`);
+      else parts.push("No devices have Phone Notifications on yet.");
+      if (!r.email_ready) parts.push("Email isn't set up on the server yet.");
+      else parts.push(r.email ? "Test email sent. Check your inbox (and spam)." : "The test email couldn't be sent.");
+      testResult.textContent = parts.join(" ");
+    } catch (err) {
+      testResult.textContent = errorMessage(err);
+    }
+  }));
 
   root.querySelector("#export-calendar").addEventListener("click", (e) => withBusy(e.currentTarget, async () => {
     try {

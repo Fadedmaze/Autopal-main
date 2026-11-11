@@ -95,20 +95,36 @@ export async function saveDisplayName(name) {
   return updateProfile({ display_name: name });
 }
 
+// email_reminders comes from migrations/20261111_maintenance_notifications.sql. If that
+// hasn't been run yet, fall back to the older columns so Home and Profile still load.
+const SETTINGS_COLS = "task_reminders_enabled, reminder_days_before, email_reminders";
+const SETTINGS_COLS_OLD = "task_reminders_enabled, reminder_days_before";
+let settingsCols = SETTINGS_COLS;
+const missingColumn = (e) => e && (e.code === "42703" || /email_reminders/.test(e.message || ""));
+
+async function settingsQuery(build) {
+  let res = await build(settingsCols);
+  if (settingsCols === SETTINGS_COLS && missingColumn(res.error)) {
+    settingsCols = SETTINGS_COLS_OLD;
+    res = await build(settingsCols);
+  }
+  return check(res);
+}
+
 export async function getSettings() {
-  return check(await supabase
+  return settingsQuery((cols) => supabase
     .from("notification_settings")
-    .select("task_reminders_enabled, reminder_days_before")
+    .select(cols)
     .eq("user_id", currentUserId())
     .single());
 }
 
 export async function updateSettings(fields) {
-  return check(await supabase
+  return settingsQuery((cols) => supabase
     .from("notification_settings")
     .update(fields)
     .eq("user_id", currentUserId())
-    .select("task_reminders_enabled, reminder_days_before")
+    .select(cols)
     .single());
 }
 

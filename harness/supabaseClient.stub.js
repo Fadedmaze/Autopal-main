@@ -18,7 +18,7 @@ const scenario = params.get("scenario") || "full"; // full | empty | signedout
 
 const db = (window.__db = {
   profiles: [{ id: USER_ID, username: "andrew", display_name: null, avatar_path: null, distance_unit: "mi", active_vehicle_id: null, insurance_front_path: null, insurance_back_path: null }],
-  notification_settings: [{ user_id: USER_ID, task_reminders_enabled: true, reminder_days_before: 7 }],
+  notification_settings: [{ user_id: USER_ID, task_reminders_enabled: true, reminder_days_before: 7, email_reminders: true }],
   vehicles: [],
   vehicle_photos: [],
   task_photos: [],
@@ -255,6 +255,17 @@ async function rpc(name, args) {
     }
     return { data: null, error: null };
   }
+  // Push notifications (migrations/20261111_maintenance_notifications.sql).
+  if (name === "save_push_subscription") {
+    db.push_subscriptions ??= [];
+    db.push_subscriptions = db.push_subscriptions.filter((r) => r.endpoint !== args.p_endpoint);
+    db.push_subscriptions.push({ user_id: USER_ID, endpoint: args.p_endpoint, p256dh: args.p_p256dh, auth: args.p_auth });
+    return { data: null, error: null };
+  }
+  if (name === "remove_push_subscription") {
+    db.push_subscriptions = (db.push_subscriptions ?? []).filter((r) => r.endpoint !== args.p_endpoint);
+    return { data: null, error: null };
+  }
   if (name === "is_username_available") return { data: !db.profiles.some((p) => p.username?.toLowerCase() === args.p_username.toLowerCase()) && args.p_username !== "taken", error: null };
   if (name === "nearby_shops") {
     const R = 3958.8, rad = (x) => (x * Math.PI) / 180;
@@ -285,6 +296,9 @@ const functions = {
           vehicle_note: slug === "service-wrench" ? "Stub note: brand-specific meaning." : "" };
       });
       return { data: { results }, error: null };
+    }
+    if (name === "send-reminders") {
+      return { data: { test: true, push_ready: true, email_ready: true, devices: (db.push_subscriptions ?? []).length, email: true }, error: null };
     }
     if (body.username === "andrew" && body.password === "correct-horse") return { data: { access_token: "a", refresh_token: "r" }, error: null };
     const res = new Response(JSON.stringify({ error: "The username or password is incorrect." }), { status: 401 });
