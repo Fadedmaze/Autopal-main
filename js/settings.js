@@ -1,11 +1,11 @@
 // Settings menu (the tire button): appearance (this device), units (account),
-// privacy. Home draws its own tire button; on the other main pages app.js adds
+// privacy and app information. Home draws its own tire button; on the other main pages app.js adds
 // one to the page header (routes marked settings: true).
 import { updateProfile } from "./data.js";
 import { distanceUnit, setDistanceUnit, getTheme, applyTheme } from "./prefs.js";
 import { icon, toast, errorMessage } from "./ui.js";
 
-// Settings menu: appearance (this device), units (account), privacy.
+// Settings menu: appearance (this device), units (account), privacy and app info.
 export function openSettings(profile = null) {
   const dlg = document.createElement("dialog");
   dlg.className = "sheet";
@@ -42,6 +42,13 @@ export function openSettings(profile = null) {
           <li>Your email is used only for logging in and resetting your password.</li>
           <li>Appearance is remembered on this device only.</li>
           <li>To improve the app, we record how long you use it, how many pages you view and your device type (phone, tablet or computer). Never what you type.</li>
+        </ul>
+      </details>
+
+      <details class="setting privacy">
+        <summary><span class="setting-label">${icon("info", 18, 2)}About AutoPal</span>${icon("chevron", 16, 2)}</summary>
+        <ul>
+          <li>Version 17</li>
         </ul>
       </details>
     </div>`;
