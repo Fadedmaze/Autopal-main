@@ -1302,6 +1302,8 @@ button.task-body { border: 0; padding: 0; background: none; text-align: left; fo
 .task.overdue { box-shadow: inset 3px 0 0 var(--danger-strong); }
 .task-edit { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 10px; color: var(--ink-3); }
 .task-edit:hover { background: var(--surface-2); color: var(--brand); }
+.task-delete { display: grid; place-items: center; width: 32px; height: 32px; flex: 0 0 32px; border: 0; border-radius: 10px; background: transparent; color: var(--ink-3); cursor: pointer; }
+.task-delete:hover { background: var(--danger-soft, var(--surface-2)); color: var(--danger, #b42318); }
 .task-body { cursor: pointer; }
 .task.done .task-body { cursor: default; }
 .task.done .task-body.clickable { cursor: pointer; }
