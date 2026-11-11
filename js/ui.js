@@ -78,7 +78,7 @@ export function formatDate(iso, opts = { month: "short", day: "numeric", year: "
 export function dueLabel(iso) {
   if (!iso) return "No due date";
   const diff = daysBetween(todayISO(), iso);
-  if (diff < 0) return `Overdue ${-diff} day${diff === -1 ? "" : "s"}`;
+  if (diff < 0) return `${-diff} day${diff === -1 ? "" : "s"} overdue`;
   if (diff === 0) return "Due today";
   if (diff === 1) return "Due tomorrow";
   if (diff <= 14) return `Due in ${diff} days`;
