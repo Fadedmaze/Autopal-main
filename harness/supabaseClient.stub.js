@@ -21,6 +21,7 @@ const db = (window.__db = {
   notification_settings: [{ user_id: USER_ID, task_reminders_enabled: true, reminder_days_before: 7 }],
   vehicles: [],
   vehicle_photos: [],
+  task_photos: [],
   maintenance_tasks: [],
   maintenance_catalog: [
     ["Oil change", 95, 182, 30], ["Tire rotation", 40, 182, 45], ["Tire pressure check", 0, 30, 7],
@@ -158,6 +159,10 @@ class Query {
     }
     let data;
     if (this.op === "insert") {
+      // Same 10-photo limit as the task_photos trigger in the database.
+      if (this.table === "task_photos" && db.task_photos.filter((r) => r.task_id === this.payload.task_id).length >= 10) {
+        return { data: null, error: { message: "A task can have up to 10 photos." } };
+      }
       const items = (Array.isArray(this.payload) ? this.payload : [this.payload]).map((p) => {
         const row = this.table === "maintenance_tasks" ? task(p)
           : { id: nextId++, created_at: new Date().toISOString(), uploaded_at: new Date().toISOString(), ...(this.table === "vehicles" ? { user_id: USER_ID, current_mileage: null, description: null } : {}), ...p };
@@ -176,6 +181,10 @@ class Query {
         });
       } else if (this.op === "delete") {
         db[this.table] = db[this.table].filter((r) => !rows.includes(r));
+        if (this.table === "maintenance_tasks") {
+          const ids = rows.map((r) => r.id);
+          db.task_photos = db.task_photos.filter((p) => !ids.includes(p.task_id));
+        }
         if (this.table === "vehicles") {
           const ids = rows.map((r) => r.id);
           db.maintenance_tasks = db.maintenance_tasks.filter((t) => !ids.includes(t.vehicle_id));

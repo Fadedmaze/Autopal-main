@@ -1,7 +1,8 @@
-// Create a custom task (name + due date required, notes optional), or edit one.
+// Create a custom task (name + due date required, notes and photos optional), or edit one.
 import { listVehicles, getTask, createTask, updateTask, deleteTaskWithReceipt, getSettings } from "../data.js";
 import { appBar, escapeHtml, icon, loading, toast, confirmDialog, errorMessage, withBusy } from "../ui.js";
 import { REMIND_CHOICES, MAX_REMIND_DAYS, remindLabel, reminderPreview, buildIcs, downloadIcs } from "../reminders.js";
+import { mountTaskPhotos } from "../taskPhotos.js";
 
 export default async function render(root, ctx) {
   root.innerHTML = loading();
@@ -73,6 +74,7 @@ export default async function render(root, ctx) {
         <span>Notes <em>optional</em></span>
         <textarea name="notes" rows="3" maxlength="1000" placeholder="Part numbers, which shop, anything to remember">${escapeHtml(t.notes ?? "")}</textarea>
       </label>
+      <div class="field task-photos-field" id="task-photos"></div>
       <div class="field remind-field">
         <label for="remind-select"><span>Remind Me</span></label>
         <div class="remind-row">
@@ -103,6 +105,7 @@ export default async function render(root, ctx) {
 
   const form = root.querySelector("form");
   if (!editing && presetName) form.elements.due_date.focus();
+  const photos = mountTaskPhotos(root.querySelector("#task-photos"), { task: editing ? task : null });
   const errEl = root.querySelector(".form-error");
   const fail = (msg) => { errEl.textContent = msg; errEl.hidden = false; };
 
@@ -168,9 +171,14 @@ export default async function render(root, ctx) {
 
     withBusy(form.querySelector("button[type=submit]"), async () => {
       try {
-        if (editing) await updateTask(task.id, fields);
-        else await createTask(fields);
-        toast(editing ? "Task updated" : "Task added", "ok");
+        if (editing) {
+          await updateTask(task.id, fields);
+          toast("Task updated", "ok");
+        } else {
+          const created = await createTask(fields);
+          const failed = photos.hasStaged() ? await photos.uploadStaged(created) : 0;
+          toast(failed ? `Task added, but ${failed} photo${failed === 1 ? "" : "s"} couldn't be saved. Open the task to try again.` : "Task added", failed ? "error" : "ok");
+        }
         ctx.navigate("#/tasks", { replace: true });
       } catch (err) {
         fail(errorMessage(err));
@@ -179,7 +187,7 @@ export default async function render(root, ctx) {
   });
 
   root.querySelector("#delete-task")?.addEventListener("click", async () => {
-    const ok = await confirmDialog({ title: "Delete This Task?", body: `“${task.task_name}” and any receipt attached to it will be removed.`, confirmLabel: "Delete", danger: true });
+    const ok = await confirmDialog({ title: "Delete This Task?", body: `“${task.task_name}” and any receipt or photos attached to it will be removed.`, confirmLabel: "Delete", danger: true });
     if (!ok) return;
     try {
       await deleteTaskWithReceipt(task);
