@@ -11,7 +11,7 @@ const taskOut = (t) => (t && t.task_name ? { ...t, task_name: titleCase(t.task_n
 const taskIn = (f) => (f && typeof f.task_name === "string" ? { ...f, task_name: titleCase(f.task_name.trim()) } : f);
 
 const VEHICLE_COLS = "id, vehicle_nickname, brand, make, model, model_year, current_mileage, description, created_at";
-const TASK_COLS = "id, vehicle_id, shop_id, catalog_id, task_name, due_date, estimated_cost, is_completed, completed_date, notes, receipt_path, remind_days_before, generated_from_task_id, created_at";
+const TASK_COLS = "id, vehicle_id, shop_id, catalog_id, task_name, due_date, estimated_cost, is_completed, completed_date, notes, receipt_path, remind_days_before, generated_from_task_id, repeat_interval_days, created_at";
 const PROFILE_COLS = "id, username, display_name, avatar_path, distance_unit, active_vehicle_id";
 
 const LIGHT_COLS = "id, slug, name, colors, severity, symbol_hint, meaning, action, drive_advice, brand_notes, brand_severity, sort_order, repair_service, repair_alt_services, repair_cost_low, repair_cost_high, needs_diagnosis, repair_note";
