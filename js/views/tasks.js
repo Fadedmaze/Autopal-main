@@ -40,20 +40,46 @@ export default async function render(root, ctx) {
       listTasks({ vehicleId, completed: true }),
     ]);
     if (!ctx.isCurrent()) return;
+    console.table(
+      [...upcoming, ...completed].map((task) => ({
+        id: task.id,
+        name: task.task_name,
+        vehicle: task.vehicle_id,
+        completed: task.is_completed,
+        due: task.due_date
+      }))
+    );    
     draw(upcoming, completed);
   };
 
   const draw = (upcoming, completed) => {
-      const today = todayISO();
-    
-      const overdue = upcoming.filter(
-        (task) => task.due_date && task.due_date < today
-      );
-    
-      const upcomingOnly = upcoming.filter(
-        (task) => !task.due_date || task.due_date >= today
-      );
-    
+    const today = todayISO();
+  
+    // Only incomplete tasks belong in Overdue or Upcoming
+    const incompleteTasks = upcoming.filter(
+      (task) => !task.is_completed
+    );
+  
+    const overdue = incompleteTasks.filter(
+      (task) => task.due_date && task.due_date < today
+    );
+  
+    // Calculate the date 30 days from today
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + 30);
+    const thirtyDaysFromNow = [
+      futureDate.getFullYear(),
+      String(futureDate.getMonth() + 1).padStart(2, "0"),
+      String(futureDate.getDate()).padStart(2, "0")
+    ].join("-");
+
+    // Only show tasks due within the next 30 days
+    const upcomingOnly = incompleteTasks.filter(
+      (task) =>
+        !task.due_date ||
+        (task.due_date >= today && task.due_date < thirtyDaysFromNow)
+    );
+
       const list =
         state.tab === "overdue" ? overdue :
         state.tab === "upcoming" ? upcomingOnly :
@@ -91,7 +117,30 @@ export default async function render(root, ctx) {
               <p class="hint center">${state.tab === "completed"
                   ? "Uncheck a task to undo. Tap a task without a receipt to attach one."
                   : "Tap a task to mark it completed."}</p>`
-            : `<p class="muted-box">No tasks yet</p>`}
+                  : `
+                  <div class="tasks-empty">
+                    <div class="tasks-empty-icon">
+                      ${icon(
+                        state.tab === "overdue" ? "check" :
+                        state.tab === "completed" ? "history" : "calendar",
+                        28, 2
+                      )}
+                    </div>
+                
+                    <h3>${
+                      state.tab === "overdue" ? "You're all caught up!" :
+                      state.tab === "completed" ? "No completed tasks yet" :
+                      "Nothing coming up!"
+                    }</h3>
+                
+                    <p>${
+                      state.tab === "overdue"
+                        ? "You have no overdue maintenance tasks."
+                        : state.tab === "completed"
+                          ? "Completed maintenance tasks will appear here."
+                          : "You have no upcoming maintenance tasks."
+                    }</p>
+                  </div>`}
       </div>`;
 
     root.querySelectorAll("[data-tab]").forEach((b) => b.addEventListener("click", () => {
