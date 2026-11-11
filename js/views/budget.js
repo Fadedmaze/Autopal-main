@@ -1,8 +1,8 @@
 // Maintenance Estimator: upcoming repairs with their approximate prices and a total.
 // The total comes from the vehicle_task_summary view (summed in the database).
-import { getProfile, getSettings, listVehicles, listTasks } from "../data.js";
+import { getProfile, getSettings, listVehicles, listTasks, deleteTaskWithReceipt } from "../data.js";
 import { taskRow, bindTaskRows, taskDetailsSheet, addCustomTaskSheet } from "../components.js";
-import { appBar, escapeHtml, loading, emptyState, formatMoney, icon } from "../ui.js";
+import { appBar, escapeHtml, loading, emptyState, formatMoney, icon, confirmDialog, withBusy, toast, errorMessage } from "../ui.js";
 
 let chosenVehicle = null;
 
@@ -43,6 +43,7 @@ export default async function render(root, ctx) {
     showTaskDetails: true,
     showCheckbox: false,
     showOverdueStyle: false,
+    showDeleteCustom: true,
   });
 
   root.innerHTML = `
@@ -87,6 +88,28 @@ export default async function render(root, ctx) {
     button.addEventListener("click", () => {
       const task = tasksById.get(Number(button.closest(".task").dataset.taskId));
       if (task) taskDetailsSheet(task, { onChanged: () => ctx.isCurrent() && render(root, ctx) });
+    });
+  });
+  root.querySelectorAll("[data-delete-task]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const task = tasksById.get(Number(button.closest(".task").dataset.taskId));
+      if (!task) return;
+      const confirmed = await confirmDialog({
+        title: "Delete Custom Item?",
+        body: `“${task.task_name}” will be removed from this vehicle's maintenance estimate.`,
+        confirmLabel: "Delete",
+        danger: true,
+      });
+      if (!confirmed) return;
+      await withBusy(button, async () => {
+        try {
+          await deleteTaskWithReceipt(task);
+          toast("Custom item deleted", "ok");
+          if (ctx.isCurrent()) await render(root, ctx);
+        } catch (err) {
+          toast(errorMessage(err), "error");
+        }
+      });
     });
   });
   bindTaskRows(root, new Map(open.map((t) => [t.id, t])), () => render(root, ctx));
