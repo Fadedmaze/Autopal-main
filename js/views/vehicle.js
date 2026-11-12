@@ -1,8 +1,9 @@
-// Vehicle: name at the top, then the image, a "car care at a glance" summary (status,
+// Vehicle: name at the top, then the image, "Your Car in 3D" (customize its look), a "car care at a glance" summary (status,
 // completed tasks, total spent, next up, spending by month), the description (with Edit),
 // and a box of maintenance history (type on the left, date on the right).
 import { getVehicle, getSettings, listTasks, listPhotos, deletePhoto, updateVehicle } from "../data.js";
 import { careSummary, careCard, bindCareCard } from "../carCare.js";
+import { lookCard, openCustomizer } from "../carCustomizer.js";
 import {
   appBar, escapeHtml, icon, loading, formatDate, formatMileage, vehicleIcon, vehicleSpec, vehicleTint,
   toast, confirmDialog, errorMessage, withBusy,
@@ -55,6 +56,8 @@ export default async function render(root, ctx) {
           </div>
         </section>
 
+        ${lookCard(vehicle)}
+
         ${careCard(vehicle, care, { remindDays })}
 
         <section class="card">
@@ -94,6 +97,7 @@ export default async function render(root, ctx) {
       </div>`;
 
     bindCareCard(root);
+    root.querySelector("#customize-look").addEventListener("click", () => openCustomizer(vehicle, { onSaved: draw }));
 
     root.querySelectorAll(".thumb[data-index]").forEach((b) =>
       b.addEventListener("click", () => { selectedPhoto = Number(b.dataset.index); draw(); }));

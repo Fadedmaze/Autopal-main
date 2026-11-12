@@ -233,6 +233,7 @@ const auth = {
   async signOut() { session = null; emit("SIGNED_OUT"); return { error: null }; },
   async updateUser(u) { calls.push({ auth: "updateUser", u }); return { data: {}, error: null }; },
   async resetPasswordForEmail() { return { error: null }; },
+  async signInWithOtp({ email, options }) { calls.push({ auth: "signInWithOtp", email, options }); return { error: null }; },
 };
 
 // ---- RPC / functions / storage ---------------------------------------------

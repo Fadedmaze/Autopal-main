@@ -110,7 +110,6 @@ body.has-nav #nav {
   flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
   color: var(--ink-3); font-size: 10.5px; font-weight: 600; text-decoration: none; white-space: nowrap; min-width: 0; letter-spacing: -.01em;
 }
-#nav .tab.tab-home { display: none; } /* bottom bar is the spec's four items; Home shows on the desktop rail */
 #nav .tab.active { color: var(--brand); }
 
 /* Desktop: left rail */
@@ -120,7 +119,6 @@ body.has-nav #nav {
     top: 0; right: auto; width: 220px; height: auto; padding: 24px 14px;
     border-top: 0; border-right: 1px solid var(--line);
   }
-  #nav .tab.tab-home { display: flex; }
   #nav .brand {
     display: flex; align-items: center; gap: 10px; padding: 4px 12px 22px;
     font-size: 19px; font-weight: 800; letter-spacing: -.02em; color: var(--ink); text-decoration: none;
@@ -1708,9 +1706,11 @@ body.has-nav .map-screen { bottom: calc(var(--nav-h) + var(--safe-b)); }
 .guide-search + .guide-list {
   margin-top: 0 !important;
 }
-/* ---------- Profile ---------- */
+/* ---------- Profile (the "Your Account" section at the bottom of Home) ---------- */
 
-.profile { align-items: center; }
+.home-account { margin-top: 32px; padding-top: 22px; border-top: 1px solid var(--line); scroll-margin-top: 16px; }
+.home-account .section-title { margin: 0 0 12px; font-size: 20px; font-weight: 800; letter-spacing: -.02em; }
+.profile { display: flex; flex-direction: column; gap: 14px; align-items: center; }
 .avatar-picker { position: relative; cursor: pointer; margin-top: 6px; }
 .avatar-lg {
   display: grid; place-items: center; width: 120px; height: 120px; border-radius: 50%; overflow: hidden;
@@ -2298,3 +2298,43 @@ button.menu-row { width: 100%; font: inherit; font-weight: 600; text-align: left
   background: rgba(255,255,255,.16); color: #fff; font: inherit; font-weight: 700; cursor: pointer;
 }
 .photo-viewer-delete:hover { background: rgba(220,38,38,.85); }
+
+/* Forgot Username result sheet and the two "forgot" links on Log In */
+.username-reveal { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -.02em; color: var(--ink) !important; overflow-wrap: anywhere; }
+.auth-forgot { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 10px; margin: 0; }
+.auth-forgot span { color: var(--ink-3); }
+
+/* "Your Car in 3D" card (vehicle page) and the customizer sheet (js/carCustomizer.js) */
+.look-row { display: flex; align-items: center; gap: 12px; }
+.look-swatch, .paint-chip { --swatch: #888; background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--swatch) 55%, #fff), var(--swatch) 55%, color-mix(in srgb, var(--swatch) 70%, #000)); }
+.look-swatch { flex: none; width: 44px; height: 44px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px rgba(0,0,0,.12); }
+.look-swatch.finish-matte, .look-swatch.finish-gloss { background: var(--swatch); }
+.look-text { display: flex; flex-direction: column; min-width: 0; }
+.look-text span { font-size: 13px; color: var(--ink-2); }
+.customizer .sheet-body { gap: 14px; }
+.customizer-stage {
+  position: relative; display: grid; place-items: center; width: 100%; aspect-ratio: 16 / 10; border-radius: 18px; overflow: hidden;
+  background: radial-gradient(circle at 50% 62%, var(--brand-soft), var(--surface-2));
+}
+.customizer-stage .car-3d { position: absolute; inset: 0; }
+.customizer-loading { font-size: 13px; color: var(--ink-3); padding: 0 16px; text-align: center; }
+.customizer-summary { margin: -4px 0 0; font-size: 13px; font-weight: 600; color: var(--ink-2) !important; text-align: center; }
+.custom-group { display: flex; flex-direction: column; gap: 8px; }
+.custom-group .filter-label { margin: 0; }
+.paint-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(38px, 1fr)); gap: 10px; }
+.paint-chip {
+  position: relative; display: grid; place-items: center; width: 100%; aspect-ratio: 1; border-radius: 50%; border: 0; padding: 0; cursor: pointer;
+  box-shadow: inset 0 0 0 1.5px rgba(0,0,0,.14);
+}
+.paint-chip[aria-checked="true"], .paint-custom.on { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--brand); }
+.paint-custom { background: conic-gradient(#e33, #fc3, #3c6, #39f, #93f, #e33); color: #fff; }
+.paint-custom input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.paint-custom .icon { filter: drop-shadow(0 1px 2px rgba(0,0,0,.5)); pointer-events: none; }
+.wheel-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.wheel-chip {
+  display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 10px; border-radius: 12px; cursor: pointer;
+  border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-size: 13.5px; font-weight: 600;
+}
+.wheel-chip span { flex: none; width: 18px; height: 18px; border-radius: 50%; background: var(--swatch); box-shadow: inset 0 0 0 4px rgba(0,0,0,.25); }
+.wheel-chip[aria-checked="true"] { border-color: var(--brand); background: var(--brand-soft); color: var(--brand); }
+.custom-toggles { flex-direction: row; flex-wrap: wrap; gap: 4px 20px; }

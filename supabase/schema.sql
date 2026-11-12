@@ -39,8 +39,11 @@ create table public.vehicles (
   model_year       integer check (model_year between 1900 and 2100),
   current_mileage  integer check (current_mileage >= 0),
   description      text,
+  appearance       jsonb,   -- 3D look (paint, wheels, roof, tint); see migrations/20261111_vehicle_appearance.sql
   created_at       timestamptz not null default now()
 );
+-- Brand / make / model / year must come from public.vehicle_catalog for new or changed
+-- cars: see migrations/20261111_vehicle_catalog.sql (generated from js/vehicleCatalogData.js).
 create index vehicles_user_id_idx on public.vehicles (user_id);
 
 alter table public.profiles

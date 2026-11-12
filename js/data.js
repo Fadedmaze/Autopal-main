@@ -10,7 +10,7 @@ import { titleCase } from "./ui.js";
 const taskOut = (t) => (t && t.task_name ? { ...t, task_name: titleCase(t.task_name.trim()) } : t);
 const taskIn = (f) => (f && typeof f.task_name === "string" ? { ...f, task_name: titleCase(f.task_name.trim()) } : f);
 
-const VEHICLE_COLS = "id, vehicle_nickname, brand, make, model, model_year, current_mileage, description, created_at";
+const VEHICLE_COLS = "id, vehicle_nickname, brand, make, model, model_year, current_mileage, description, appearance, created_at";
 const TASK_COLS = "id, vehicle_id, shop_id, catalog_id, task_name, due_date, estimated_cost, is_completed, completed_date, notes, receipt_path, remind_days_before, generated_from_task_id, repeat_interval_days, created_at";
 const PROFILE_COLS = "id, username, display_name, avatar_path, distance_unit, active_vehicle_id";
 
@@ -26,6 +26,7 @@ function check({ data, error }) {
 // new columns yet, queries fall back to the older column list, and saving a value that
 // needs a new column fails with a clear message instead of breaking the whole screen.
 const NEW_COLS = {
+  vehicles: ["appearance"], // 2026-11-11: 3D car paint, wheels, roof, tint
   profiles: ["display_name"],
   maintenance_tasks: ["remind_days_before"],
   warning_lights: ["repair_service", "repair_alt_services", "repair_cost_low", "repair_cost_high", "needs_diagnosis", "repair_note"],
@@ -134,7 +135,7 @@ export async function updateSettings(fields) {
 // list position, per the Garage mockup) and its task rollup from the DB view.
 export async function listVehicles() {
   const [vehicles, summaries] = await Promise.all([
-    supabase.from("vehicles").select(VEHICLE_COLS).order("created_at").order("id").then(check),
+    run("vehicles", () => supabase.from("vehicles").select(cols("vehicles", VEHICLE_COLS)).order("created_at").order("id")),
     supabase.from("vehicle_task_summary")
       .select("vehicle_id, open_count, overdue_count, next_due_date, open_estimated_total, completed_cost_total, all_estimated_total")
       .then(check),
@@ -160,7 +161,7 @@ export async function getVehicle(id) {
 }
 
 export async function createVehicle(fields) {
-  const vehicle = check(await supabase.from("vehicles").insert(fields).select(VEHICLE_COLS).single());
+  const vehicle = await run("vehicles", () => supabase.from("vehicles").insert(fieldsFor("vehicles", fields)).select(cols("vehicles", VEHICLE_COLS)).single());
   // First car added becomes the one shown on Home.
   const profile = await getProfile();
   if (!profile.active_vehicle_id) await updateProfile({ active_vehicle_id: vehicle.id });
@@ -168,7 +169,7 @@ export async function createVehicle(fields) {
 }
 
 export async function updateVehicle(id, fields) {
-  return check(await supabase.from("vehicles").update(fields).eq("id", id).select(VEHICLE_COLS).single());
+  return run("vehicles", () => supabase.from("vehicles").update(fieldsFor("vehicles", fields)).eq("id", id).select(cols("vehicles", VEHICLE_COLS)).single());
 }
 
 // Storage doesn't cascade, so remove the vehicle's photos and receipts before the row.

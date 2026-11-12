@@ -1,6 +1,6 @@
 // Sign In (username + password), Create Account (email, username, password),
-// and Forgot Password. One module, three modes.
-import { signIn, signUp, sendPasswordReset, isUsernameAvailable } from "../auth.js";
+// Forgot Password and Forgot Username. One module, four modes.
+import { signIn, signUp, sendPasswordReset, sendUsernameLink, isUsernameAvailable } from "../auth.js";
 import { icon, escapeHtml, errorMessage, withBusy } from "../ui.js";
 
 const USERNAME_RE = /^[A-Za-z0-9_.]{3,30}$/;
@@ -13,6 +13,7 @@ export default async function render(root, ctx) {
     signin: ["Welcome to AutoPal", "Log in to keep your car on schedule."],
     signup: ["Create Your Account", "Track maintenance, costs and mechanics in one place."],
     forgot: ["Forgot Password?", "Enter the email on your account and we'll send you a reset link."],
+    "forgot-username": ["Forgot Username?", "Enter the email on your account. We'll email you a link that logs you in and shows your username."],
   };
   const [title, sub] = titles[mode];
   const field = (name, label, attrs) => `
@@ -46,16 +47,16 @@ export default async function render(root, ctx) {
             <input name="password" type="password" autocomplete="new-password">
             <small class="hint">At least 8 characters.</small>
           </label>` : ""}
-        ${mode === "forgot" ? field("email", "Email", 'type="email" autocomplete="email" autocapitalize="off" spellcheck="false"') : ""}
+        ${mode === "forgot" || mode === "forgot-username" ? field("email", "Email", 'type="email" autocomplete="email" autocapitalize="off" spellcheck="false"') : ""}
         <p class="form-error" role="alert" hidden></p>
-        <button class="btn" type="submit">${{ signin: "Log In", signup: "Create Account", forgot: "Send Reset Link" }[mode]}</button>
+        <button class="btn" type="submit">${{ signin: "Log In", signup: "Create Account", forgot: "Send Reset Link", "forgot-username": "Email Me a Link" }[mode]}</button>
       </form>
       <div class="auth-links">
         ${mode === "signin" ? `
-          <a href="#/forgot">Forgot Password?</a>
+          <p class="auth-forgot"><a href="#/forgot-username">Forgot Username?</a><span aria-hidden="true">·</span><a href="#/forgot">Forgot Password?</a></p>
           <p>Don't have an account? <a href="#/signup">Create Account</a></p>` : ""}
         ${mode === "signup" ? `<p>Already have an account? <a href="#/signin">Log In</a></p>` : ""}
-        ${mode === "forgot" ? `<p><a href="#/signin">Back to Log In</a></p>` : ""}
+        ${mode === "forgot" || mode === "forgot-username" ? `<p><a href="#/signin">Back to Log In</a></p>` : ""}
       </div>
     </div>`;
 
@@ -98,6 +99,9 @@ export default async function render(root, ctx) {
           } else {
             ctx.navigate("#/home", { replace: true });
           }
+        } else if (mode === "forgot-username") {
+          await sendUsernameLink(f.email);
+          done("user", "Check Your Email", `If an account exists for <strong>${escapeHtml(f.email)}</strong>, we sent it a link. Open it to log in and see your username. The link works once and expires in an hour.`);
         } else {
           await sendPasswordReset(f.email);
           done("lock", "Check Your Email", `If an account exists for <strong>${escapeHtml(f.email)}</strong>, a reset link is on its way.`);

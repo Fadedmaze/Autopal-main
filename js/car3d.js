@@ -7,6 +7,7 @@
 // for it. mountCar3D() resolves to null when WebGL or the import is unavailable, and the
 // caller keeps the 2D icon.
 import { bodyStyle } from "./ui.js";
+import { normalizeLook, WHEELS } from "./carLook.js";
 
 const THREE_URL = "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
 let threePromise = null;
@@ -78,17 +79,37 @@ function studioEnvironment(THREE, renderer) {
   return tex;
 }
 
-function buildCar(THREE, style, paintColor) {
-  const s = SHAPES[style];
+// Paint finishes: how metallic, how rough, and whether there's a glossy clear coat.
+const FINISH = {
+  metallic: { metalness: 0.55, roughness: 0.32, clearcoat: 1, clearcoatRoughness: 0.06 },
+  gloss: { metalness: 0.05, roughness: 0.22, clearcoat: 1, clearcoatRoughness: 0.03 },
+  pearl: { metalness: 0.3, roughness: 0.28, clearcoat: 1, clearcoatRoughness: 0.05, iridescence: 0.45, iridescenceIOR: 1.6 },
+  matte: { metalness: 0.15, roughness: 0.7, clearcoat: 0, clearcoatRoughness: 1 },
+};
+const TINT = { light: 0x2b3846, medium: 0x0f1620, dark: 0x040507 };
+
+function buildCar(THREE, style, look) {
+  const s = { ...SHAPES[style] };
+  if (look.rails !== null) s.rails = look.rails;
+  if (look.spoiler !== null) s.spoiler = look.spoiler;
   const half = s.len / 2;
   const car = new THREE.Group();
 
   // Materials: clear-coated metallic paint, tinted glass, satin black trim, brushed alloy.
-  const paint = new THREE.MeshPhysicalMaterial({ color: paintColor, metalness: 0.55, roughness: 0.32, clearcoat: 1, clearcoatRoughness: 0.06 });
-  const glass = new THREE.MeshPhysicalMaterial({ color: 0x070b11, metalness: 0, roughness: 0.06, clearcoat: 1, clearcoatRoughness: 0.03, envMapIntensity: 0.75 });
+  const paint = new THREE.MeshPhysicalMaterial({ color: look.paint, ...FINISH[look.finish] });
+  // A black roof also turns the pillars black, for the "floating roof" look.
+  const roofPaint = look.roof === "black"
+    ? new THREE.MeshPhysicalMaterial({ color: 0x0d0e10, ...FINISH.gloss })
+    : paint;
+  const glass = new THREE.MeshPhysicalMaterial({ color: TINT[look.tint], metalness: 0, roughness: 0.06, clearcoat: 1, clearcoatRoughness: 0.03, envMapIntensity: look.tint === "light" ? 0.95 : 0.75 });
   const trim = new THREE.MeshStandardMaterial({ color: 0x14161a, roughness: 0.55, metalness: 0.2 });
   const rubber = new THREE.MeshStandardMaterial({ color: 0x1b1c1f, roughness: 0.92, metalness: 0 });
-  const alloy = new THREE.MeshStandardMaterial({ color: 0xd5dbe2, roughness: 0.22, metalness: 0.95 });
+  const wheelHex = WHEELS.find((w) => w.id === look.wheels)?.hex ?? "#d5dbe2";
+  const alloy = new THREE.MeshStandardMaterial({
+    color: wheelHex,
+    roughness: look.wheels === "chrome" ? 0.06 : look.wheels === "black" || look.wheels === "white" ? 0.4 : 0.22,
+    metalness: look.wheels === "black" || look.wheels === "white" ? 0.35 : 0.95,
+  });
   const darkAlloy = new THREE.MeshStandardMaterial({ color: 0x5c636b, roughness: 0.35, metalness: 0.9 });
   const headlamp = new THREE.MeshStandardMaterial({ color: 0xf6f9ff, emissive: 0xdfeaff, emissiveIntensity: 0.9, roughness: 0.15, metalness: 0.3 });
   const taillamp = new THREE.MeshStandardMaterial({ color: 0x7a0b12, emissive: 0xe0101e, emissiveIntensity: 0.75, roughness: 0.25 });
@@ -181,7 +202,7 @@ function buildCar(THREE, style, paintColor) {
   roof.lineTo(r1 + 0.03, s.roofY - 0.01);
   roof.lineTo(r1, s.roofY - 0.06);
   roof.closePath();
-  add(extrudeAcross(roof, CABIN_W + 0.04, 0.05), paint, 0, 0, 0, cabin);
+  add(extrudeAcross(roof, CABIN_W + 0.04, 0.05), roofPaint, 0, 0, 0, cabin);
 
   // Pillars: thin painted bars along the edges of the glass (A at the front, C at the back, B in between).
   // They sit on the flat side of the glass, inside its rounded edges, and stop just
@@ -190,7 +211,7 @@ function buildCar(THREE, style, paintColor) {
   const pillar = (z0, y0, z1, y1, w) => {
     const len = Math.hypot(z1 - z0, y1 - y0);
     for (const x of [-PX, PX]) {
-      const m = add(new THREE.BoxGeometry(0.035, len, w), paint, x, (y0 + y1) / 2, (z0 + z1) / 2, cabin);
+      const m = add(new THREE.BoxGeometry(0.035, len, w), roofPaint, x, (y0 + y1) / 2, (z0 + z1) / 2, cabin);
       m.rotation.x = Math.atan2(z1 - z0, y1 - y0);
     }
   };
@@ -314,8 +335,11 @@ function buildCar(THREE, style, paintColor) {
 }
 
 // Mounts a 3D car into `host` (the platform element). Returns { destroy } or null.
-// Options: spin (auto-rotate, default on) and angle (starting yaw in radians).
-export async function mountCar3D(host, vehicle, paintColor, { spin = true, angle = 0.6 } = {}) {
+// Options: spin (auto-rotate, default on), angle (starting yaw in radians) and look (a
+// paint/wheels/roof/tint override; otherwise the vehicle's saved appearance is used,
+// with `paintColor` as the paint until the owner picks one). The returned handle has
+// setLook(look) to repaint live, and destroy().
+export async function mountCar3D(host, vehicle, paintColor, { spin = true, angle = 0.6, look = null } = {}) {
   let THREE;
   try {
     THREE = await loadThree();
@@ -348,10 +372,21 @@ export async function mountCar3D(host, vehicle, paintColor, { spin = true, angle
   rim.position.set(-5, 3, -6);
   scene.add(rim);
 
-  const car = buildCar(THREE, bodyStyle(vehicle), paintColor);
-  car.scale.setScalar(0.72);
-  car.rotation.y = angle;
-  scene.add(car);
+  const style = bodyStyle(vehicle);
+  const place = (c, yaw) => {
+    c.scale.setScalar(0.72);
+    c.rotation.y = yaw;
+    scene.add(c);
+    return c;
+  };
+  const disposeTree = (root) => root.traverse((o) => {
+    o.geometry?.dispose();
+    if (o.material) {
+      o.material.map?.dispose();
+      o.material.dispose();
+    }
+  });
+  let car = place(buildCar(THREE, style, normalizeLook(look ?? vehicle.appearance, paintColor)), angle);
 
   const camera = new THREE.PerspectiveCamera(28, 1, 0.1, 100);
   camera.position.set(0, 2.6, 9);
@@ -431,6 +466,14 @@ export async function mountCar3D(host, vehicle, paintColor, { spin = true, angle
   if (!document.hidden) start();
 
   return {
+    // Rebuild the car with a new look, keeping its current angle.
+    setLook(next) {
+      const yaw = car.rotation.y;
+      scene.remove(car);
+      disposeTree(car);
+      car = place(buildCar(THREE, style, normalizeLook(next, paintColor)), yaw);
+      renderer.render(scene, camera);
+    },
     destroy() {
       stop();
       ro.disconnect();

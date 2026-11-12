@@ -86,6 +86,33 @@ export async function sendPasswordReset(email) {
   if (error) throw error;
 }
 
+// Forgot Username: Supabase emails a one-time login link (no new accounts are made).
+// Opening it logs the person in, and Home shows their username (see app.js and
+// views/home.js). For privacy, an unknown email looks the same as a known one.
+export const USERNAME_LOOKUP_KEY = "autopal.usernameLookup";
+export async function sendUsernameLink(email) {
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
+    options: { shouldCreateUser: false, emailRedirectTo: `${location.origin}${location.pathname}?recover=username` },
+  });
+  // "Signups not allowed for otp" means no account uses that email; don't reveal it.
+  if (error && !/signups? not allowed|user not found/i.test(error.message)) throw error;
+  try { localStorage.setItem(USERNAME_LOOKUP_KEY, String(Date.now())); } catch { /* optional */ }
+}
+
+// True once per lookup: the person arrived from a Forgot Username link.
+export function takeUsernameLookup() {
+  const fromLink = new URLSearchParams(location.search).get("recover") === "username";
+  let fromDevice = false;
+  try {
+    const at = Number(localStorage.getItem(USERNAME_LOOKUP_KEY));
+    fromDevice = at > 0 && Date.now() - at < 60 * 60 * 1000;
+    localStorage.removeItem(USERNAME_LOOKUP_KEY);
+  } catch { /* optional */ }
+  if (fromLink) history.replaceState(null, "", `${location.pathname}${location.hash}`);
+  return fromLink || fromDevice;
+}
+
 export async function updatePassword(password) {
   const { error } = await supabase.auth.updateUser({ password });
   if (error) throw error;

@@ -1,6 +1,6 @@
 // Hash router + app shell. Each view module exports a default
 // `render(root, ctx)` that may return a cleanup function.
-import { initAuth, currentSession } from "./auth.js";
+import { initAuth, currentSession, takeUsernameLookup } from "./auth.js";
 import { getProfile } from "./data.js";
 import { setDistanceUnit, applyTheme } from "./prefs.js";
 import { icon, escapeHtml, errorMessage } from "./ui.js";
@@ -12,9 +12,10 @@ const ROUTES = [
   { path: "/signin", view: () => import("./views/auth.js"), public: true, mode: "signin" },
   { path: "/signup", view: () => import("./views/auth.js"), public: true, mode: "signup" },
   { path: "/forgot", view: () => import("./views/auth.js"), public: true, mode: "forgot" },
+  { path: "/forgot-username", view: () => import("./views/auth.js"), public: true, mode: "forgot-username" },
   { path: "/reset-password", view: () => import("./views/resetPassword.js") },
   // Signed in
-  { path: "/home", view: () => import("./views/home.js"), settings: true },
+  { path: "/home", view: () => import("./views/home.js"), tab: "home", settings: true },
   { path: "/garage", view: () => import("./views/garage.js"), tab: "garage", settings: true },
   { path: "/vehicles/new", view: () => import("./views/vehicleForm.js"), tab: "garage", nav: false },
   { path: "/vehicles/:id", view: () => import("./views/vehicle.js"), tab: "garage" },
@@ -28,15 +29,16 @@ const ROUTES = [
   { path: "/discover", view: () => import("./views/discover.js"), tab: "library" }, // redirects to the Dashboard Lights tab
   { path: "/library", view: () => import("./views/library.js"), tab: "library", settings: true },
   { path: "/library/:slug", view: () => import("./views/library.js"), tab: "library" },
-  { path: "/profile", view: () => import("./views/profile.js"), tab: "profile", settings: true },
-  { path: "/profile/password", view: () => import("./views/profile.js"), tab: "profile", mode: "password", nav: false },
-  { path: "/profile/notifications", view: () => import("./views/profile.js"), tab: "profile", mode: "notifications", nav: false },
-  { path: "/profile/insurance", view: () => import("./views/profile.js"), tab: "profile", mode: "insurance", settings: true }, // Profile with the insurance pop-up open
+  // Profile is part of Home now; these keep old links working (see views/profile.js).
+  { path: "/profile", view: () => import("./views/profile.js"), tab: "home" },
+  { path: "/profile/password", view: () => import("./views/profile.js"), tab: "home", mode: "password", nav: false },
+  { path: "/profile/notifications", view: () => import("./views/profile.js"), tab: "home", mode: "notifications", nav: false },
+  { path: "/profile/insurance", view: () => import("./views/profile.js"), tab: "home", mode: "insurance" },
 ];
 
-// Bottom bar, left to right, per the Home spec.
+// Bottom bar, left to right. Home also holds the account details that used to be Profile.
 const TABS = [
-  { id: "profile", label: "Profile", icon: "user", href: "#/profile" },
+  { id: "home", label: "Home", icon: "home", href: "#/home" },
   { id: "garage", label: "Garage", icon: "garage", href: "#/garage" },
   { id: "tasks", label: "Tasks", icon: "tasks", href: "#/tasks" },
   { id: "mechanics", label: "Find Mechanic", icon: "pin", href: "#/mechanics" },
@@ -83,7 +85,6 @@ function renderNav(route) {
   }
   navEl.innerHTML = `
     <a class="brand" href="#/home">${icon("wrench", 22, 2)}<span>AutoPal</span></a>
-    <a href="#/home" class="tab tab-home ${!route.tab ? "active" : ""}">${icon("home", 22, 1.9)}<span>Home</span></a>
     ${TABS.map((t) => `
       <a href="${t.href}" class="tab ${t.id === route.tab ? "active" : ""}" ${t.id === route.tab ? 'aria-current="page"' : ""}>
         ${icon(t.icon, 22, 1.9)}<span>${t.label}</span>
@@ -208,10 +209,15 @@ async function start() {
       prefsLoaded = false;
       navigate("#/signin", { replace: true });
     } else if (event === "SIGNED_IN" && /(^|&)(access_token|error)=/.test(location.hash.slice(1))) {
-      // Arrived from an email confirmation link.
-      navigate("#/home", { replace: true });
+      // Arrived from an email link: account confirmation, or Forgot Username.
+      navigate(takeUsernameLookup() ? "#/home?username=1" : "#/home", { replace: true });
     }
   });
+  // supabase-js can finish reading an email link before the listener above exists, so
+  // also check here: a Forgot Username link lands on Home with the username shown.
+  if (currentSession() && new URLSearchParams(location.search).get("recover") === "username" && takeUsernameLookup()) {
+    history.replaceState(null, "", "#/home?username=1");
+  }
   window.addEventListener("hashchange", render);
   render();
 }
