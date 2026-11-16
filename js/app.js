@@ -84,7 +84,7 @@ function renderNav(route) {
     return;
   }
   navEl.innerHTML = `
-    <a class="brand" href="#/home">${icon("wrench", 22, 2)}<span>AutoPal</span></a>
+    <a class="brand" href="#/home"><img class="brand-logo" src="icons/icon.svg" alt="" width="30" height="30"><span>AutoPal</span></a>
     ${TABS.map((t) => `
       <a href="${t.href}" class="tab ${t.id === route.tab ? "active" : ""}" ${t.id === route.tab ? 'aria-current="page"' : ""}>
         ${icon(t.icon, 22, 1.9)}<span>${t.label}</span>

@@ -123,7 +123,7 @@ body.has-nav #nav {
     display: flex; align-items: center; gap: 10px; padding: 4px 12px 22px;
     font-size: 19px; font-weight: 800; letter-spacing: -.02em; color: var(--ink); text-decoration: none;
   }
-  #nav .brand .icon { color: var(--brand); }
+  #nav .brand .brand-logo { width: 30px; height: 30px; border-radius: 8px; flex: none; }
   #nav .tab {
     flex: none; flex-direction: row; justify-content: flex-start; gap: 12px;
     padding: 11px 12px; border-radius: 12px; font-size: 15px; font-weight: 600; color: var(--ink-2);
@@ -264,7 +264,7 @@ input[type=date] { min-height: 48px; }
 
 .auth { max-width: 420px; margin: 0 auto; padding: 48px 4px 24px; display: flex; flex-direction: column; gap: 6px; }
 .auth-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
-.auth-logo { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 14px; background: var(--brand); color: #fff; }
+.auth-logo { display: block; width: 48px; height: 48px; border-radius: 12px; }
 .auth-name { font-size: 22px; font-weight: 800; letter-spacing: -.02em; }
 .auth h1 { margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -.03em; }
 .auth .sub { margin: 0 0 18px; color: var(--ink-2); }
