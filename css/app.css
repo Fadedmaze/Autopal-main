@@ -3672,3 +3672,24 @@ button.menu-row { width: 100%; font: inherit; font-weight: 600; text-align: left
               color 0.2s ease,
               box-shadow 0.2s ease;
 }
+
+/* Mobile mechanic toolbar */
+@media (max-width: 699px) {
+  .map-top.mechanic-toolbar {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .mechanic-heading h1 {
+    font-size: 20px;
+  }
+
+  .mechanic-search {
+    min-width: 0;
+  }
+
+  .mechanic-view-toggle {
+    min-height: 38px;
+  }
+}
+
