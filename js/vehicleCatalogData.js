@@ -19,7 +19,7 @@
 export const CATALOG_DATA = {
   "Acura": `
 ADX | u | 2025 | | Base, A-Spec, A-Spec Advance
-CL | c | 1997 | 2003 | 2.2, 2.3, 3.0, Type-S
+CL | c | 1997-1999, 2001, 2003 | 2003 | 2.2, 2.3, 3.0, Type-S
 ILX | s | 2013 | 2022 | Base, Premium, Technology, A-Spec
 Integra | h | 1990-2001, 2023 |  | Base [2023-], A-Spec [2023-], A-Spec Technology [2023-], Type S [2024-], RS [1990-1999], LS [1990-2001], GS [1990-2001], GS-R [1992-2001], Type R [1997-2001]
 Legend | s | 1986 | 1995 | L, LS, GS
@@ -34,7 +34,7 @@ TL | s | 1996 | 2014 | Base, Technology, Type-S, SH-AWD
 TLX | s | 2015 | | Base, Technology, A-Spec, Advance, Type S
 TSX | s | 2004 | 2014 | Base, Technology, Sport Wagon, V6
 Vigor | s | 1992 | 1994 | GS, LS
-ZDX | u | 2010 | | Base, A-Spec, Type S`,
+ZDX | u | 2010-2013, 2024 | | Base, A-Spec, Type S`,
 
   "Alfa Romeo": `
 164 | s | 1991 | 1995 | L, S, LS
@@ -73,18 +73,18 @@ Q3 | u | 2015 | | Premium, Premium Plus, Prestige
 Q4 e-tron | u | 2022 | | Premium, Premium Plus, Prestige
 Q5 | u | 2009 | | Premium, Premium Plus, Prestige
 Q6 e-tron | u | 2025 | | Premium, Premium Plus, Prestige
-Q7 | u | 2007 | | Premium, Premium Plus, Prestige
+Q7 | u | 2007-2015, 2017 | | Premium, Premium Plus, Prestige
 Q8 | u | 2019 | | Premium, Premium Plus, Prestige
 R8 | c | 2008 | 2024 | V10, V10 Performance, GT
 RS 3 | s | 2017 | | Base
-RS 5 | c | 2013 | | Base, Sportback
+RS 5 | c | 2013-2015, 2018 | | Base, Sportback
 RS 6 Avant | h | 2021 | | Base, Performance
-RS 7 | h | 2014 | | Base, Performance
+RS 7 | h | 2014-2018, 2020 | | Base, Performance
 S3 | s | 2015 | | Premium, Premium Plus, Prestige
-S4 | s | 2000 | | Premium, Premium Plus, Prestige
+S4 | s | 2000-2002, 2004-2016, 2018 | | Premium, Premium Plus, Prestige
 S5 | c | 2008 | | Premium, Premium Plus, Prestige
 SQ5 | u | 2014 | | Premium, Premium Plus, Prestige
-TT | c | 2000 | 2023 | Base, S, RS
+TT | c | 2000-2006, 2008 | 2023 | Base, S, RS
 V8 | s | 1990 | 1994 | Quattro`,
 
   "Bentley": `
@@ -100,7 +100,7 @@ Flying Spur | s | 2006 | | V8, Azure, S, Speed, Mulliner`,
 4 Series | c | 2014 | | 428i, 430i, 435i, 440i, M440i
 4 Series Gran Coupe | h | 2015 | | 430i, 440i, M440i
 5 Series | s | 1982 | | 528i, 530i, 530e, 535i, 540i, 550i, M550i
-6 Series | c | 2004 | 2019 | 640i, 650i, Gran Turismo
+6 Series | c | 2004-2010, 2012 | 2019 | 640i, 650i, Gran Turismo
 7 Series | s | 1978 | | 740i, 750i, 760i, i7
 8 Series | c | 1991-1997, 2019 | 2025 | 840i [2019-], M850i [2019-], Gran Coupe [2020-], 850i [1991-1995], 850Ci [1996-1997], 840Ci [1994-1997], 850CSi [1994-1995]
 i3 | h | 2014 | 2021 | Base, REx, s
@@ -110,9 +110,9 @@ i7 | s | 2023 | | eDrive50, xDrive60, M70
 i8 | c | 2014 | 2020 | Coupe, Roadster
 iX | u | 2022 | | xDrive45, xDrive50, xDrive60, M60
 M2 | c | 2016 | | Base, Competition
-M3 | s | 1988 | | Base, Competition, CS
+M3 | s | 1988-1991, 1995-2006, 2008-2018, 2021 | | Base, Competition, CS
 M4 | c | 2015 | | Base, Competition, CS, CSL
-M5 | s | 1988 | | Base, Competition, CS
+M5 | s | 1988, 1991-1993, 2000-2003, 2006-2010, 2013 | | Base, Competition, CS
 M8 | c | 2020 | 2025 | Competition, Gran Coupe
 X1 | u | 2013 | | sDrive28i, xDrive28i, M35i
 X2 | u | 2018 | | sDrive28i, xDrive28i, M35i
@@ -123,7 +123,7 @@ X6 | u | 2008 | | sDrive40i, xDrive40i, M60i, X6 M
 X7 | u | 2019 | | xDrive40i, M60i, Alpina XB7
 XM | u | 2023 | | Base, Label
 Z3 | c | 1996 | 2002 | 1.9, 2.3, 2.8, 3.0i, M Roadster, M Coupe
-Z4 | c | 2003 | | sDrive30i, M40i`,
+Z4 | c | 2003-2016, 2019 | | sDrive30i, M40i`,
 
   "Buick": `
 Cascada | c | 2016 | 2019 | 1SV, Premium, Sport Touring
@@ -139,9 +139,9 @@ Lucerne | s | 2006 | 2011 | CX, CXL, Super
 Park Avenue | s | 1991 | 2005 | Base, Ultra
 Rainier | u | 2004 | 2007 | CXL
 Reatta | c | 1988 | 1991 | Base, Convertible
-Regal | s | 1973 | 2020 | Preferred, Essence, Sportback, TourX, GS
+Regal | s | 1973-2004, 2011 | 2020 | Preferred, Essence, Sportback, TourX, GS
 Rendezvous | u | 2002 | 2007 | CX, CXL, Ultra
-Riviera | c | 1963 | 1999 | Base, Supercharged
+Riviera | c | 1963-1993, 1995 | 1999 | Base, Supercharged
 Roadmaster | s | 1991 | 1996 | Base, Limited, Estate Wagon
 Skylark | s | 1975 | 1998 | Custom, Limited, Gran Sport
 Terraza | v | 2005 | 2007 | CX, CXL
@@ -160,7 +160,7 @@ DeVille | s | 1959 | 2005 | Base, DHS, DTS, Concours
 DTS | s | 2006 | 2011 | Base, Luxury, Premium, Platinum
 Eldorado | c | 1967 | 2002 | Base, ETC, ESC, Touring Coupe
 ELR | c | 2014 | 2016 | Base, Sport
-Escalade | u | 1999 | | Luxury, Premium Luxury, Sport, Platinum, V-Series
+Escalade | u | 1999-2000, 2002 | | Luxury, Premium Luxury, Sport, Platinum, V-Series
 Escalade ESV | u | 2003 | | Luxury, Premium Luxury, Sport, Platinum, V-Series
 Escalade IQ | u | 2025 | | Luxury, Sport, Premium Luxury, Sport Platinum
 Fleetwood | s | 1985 | 1996 | Base, Brougham
@@ -183,18 +183,18 @@ Aveo | s | 2004 | 2011 | LS, LT, Special Value
 Beretta | c | 1987 | 1996 | Base, GT, GTZ, Z26
 Blazer | u | 1995-2005, 2019 |  | 2LT [2019-], 3LT [2019-], RS [2019-], Premier [2019-], LS [1995-2005], LT [1995-2005], Xtreme [2001-2005], TrailBlazer [1999-2001]
 Blazer EV | u | 2024 | | LT, RS, SS
-Bolt | h | 2017 | | LT, Premier, 1LT, 2LT
+Bolt | h | 2017-2023, 2027 | | LT, Premier, 1LT, 2LT
 Bolt EUV | u | 2022 | 2023 | LT, Premier
 C/K 1500 | t | 1988 | 1999 | Cheyenne, Scottsdale, Silverado, WT
 C/K 2500 | t | 1988 | 2000 | Cheyenne, Scottsdale, Silverado
-Camaro | c | 1967 | 2024 | LS, LT, SS, ZL1 [2012-2015, 2017-2024]
+Camaro | c | 1967-2002, 2010 | 2024 | LS, LT, SS, ZL1 [2012-2015, 2017-2024]
 Caprice | s | 1965 | 1996 | Base, Classic, LS
 Captiva Sport | u | 2012 | 2015 | LS, LT, LTZ
 Cavalier | s | 1982 | 2005 | VL, RS, LS, Z24
 Cobalt | s | 2005 | 2010 | LS, LT, SS
-Colorado | t | 2004 | | WT, LT, Trail Boss [2023-], Z71, ZR2 [2017-]
+Colorado | t | 2004-2012, 2015 | | WT, LT, Trail Boss [2023-], Z71, ZR2 [2017-]
 Corsica | s | 1987 | 1996 | LT
-Corvette | c | 1953 | | Stingray, Grand Sport, Z06, E-Ray, ZR1
+Corvette | c | 1953-1982, 1984 | | Stingray, Grand Sport, Z06, E-Ray, ZR1
 Cruze | s | 2011 | 2019 | L, LS, LT, Premier, Diesel
 Equinox | u | 2005 | | LS, LT, RS [2022-], Premier [2016-], ACTIV [2025-]
 Equinox EV | u | 2024 | | LT, RS
@@ -206,7 +206,7 @@ Lumina APV | v | 1990 | 1996 | Base, CL, LS
 Malibu | s | 1997 | 2025 | LS, RS [2019-2025], LT, Premier [2016-2022], 2LT
 Malibu Maxx | h | 2004 | 2007 | LS, LT, SS
 Metro | h | 1998 | 2001 | Base, LSi
-Monte Carlo | c | 1970 | 2007 | LS, Z34, SS
+Monte Carlo | c | 1970-1988, 1995 | 2007 | LS, Z34, SS
 Prizm | s | 1998 | 2002 | Base, LSi
 S-10 | t | 1982 | 2004 | Base, LS, ZR2, Xtreme
 Silverado 1500 | t | 1999 | | WT, Custom [2016-], LT, RST [2019-], LTZ, Trail Boss [2019-], ZR2 [2022-], High Country [2014-]
@@ -222,14 +222,14 @@ Tahoe | u | 1995 | | LS, LT, RST [2019-], Z71, Premier [2016-], High Country [20
 Tracker | u | 1999 | 2004 | Base, LT, ZR2
 Trailblazer | u | 2002-2009, 2021 |  | LS, LT, ACTIV [2021-], RS [2021-], EXT [2002-2006], SS [2006-2009]
 Traverse | u | 2009 | | LS, LT, Z71 [2024-], RS [2018-], Premier [2014-], High Country [2018-]
-Trax | u | 2015 | | LS, 1RS [2024-], LT, 2RS [2024-], ACTIV [2024-]
+Trax | u | 2015-2022, 2024 | | LS, 1RS [2024-], LT, 2RS [2024-], ACTIV [2024-]
 Uplander | v | 2005 | 2008 | LS, LT
 Venture | v | 1997 | 2005 | Base, LS, LT, Warner Bros. Edition
 Volt | h | 2011 | 2019 | Base, LT, Premier`,
 
   "Chrysler": `
 200 | s | 2011 | 2017 | LX, Limited, S, C
-300 | s | 1999 | 2023 | Touring, Limited, S, C, 300C
+300 | s | 2005 | 2023 | Touring, Limited, S, C, 300C
 300M | s | 1999 | 2004 | Base, Special
 Aspen | u | 2007 | 2009 | Limited
 Cirrus | s | 1995 | 2000 | LX, LXi
@@ -244,7 +244,7 @@ Prowler | c | 2001 | 2002 | Base
 PT Cruiser | h | 2001 | 2010 | Base, Touring, Limited, GT
 Sebring | s | 1995 | 2010 | LX, Touring, Limited, JX [1996-2000], JXi [1996-2000], LXi [1995-2000]
 Town & Country | v | 1990 | 2016 | Touring, Touring-L, Limited
-Voyager | v | 2020 | | LX`,
+Voyager | v | 2001-2003, 2020 | | LX`,
 
   "Daewoo": `
 Lanos | h | 1999 | 2002 | S, SE, SX
@@ -280,7 +280,7 @@ Spirit | s | 1989 | 1995 | Base, LE, ES, R/T
 Sprinter | v | 2003 | 2009 | 2500, 3500
 Stealth | c | 1991 | 1996 | Base, ES, R/T, R/T Turbo
 Stratus | s | 1995 | 2006 | Base, SE, ES, SXT, R/T
-Viper | c | 1992 | 2017 | SRT-10, GTS, ACR`,
+Viper | c | 1992-2010, 2013 | 2017 | SRT-10, GTS, ACR`,
 
   "Eagle": `
 Premier | s | 1988 | 1992 | LX, ES
@@ -342,7 +342,7 @@ Focus | s | 2000 | 2018 | S, SE, SEL, Titanium [2012-2018], ST [2013-2018], RS [
 Freestar | v | 2004 | 2007 | S, SE, SES, SEL, Limited
 Freestyle | u | 2005 | 2007 | SE, SEL, Limited
 Fusion | s | 2006 | 2020 | S, SE, SEL, Titanium [2013-2020], Sport [2010-2012, 2017-2019], Hybrid [2010-2020], Energi [2013-2020]
-GT | c | 2005 | 2022 | Base, Carbon Series, Heritage Edition
+GT | c | 2005-2006, 2017 | 2022 | Base, Carbon Series, Heritage Edition
 Maverick | t | 2022 | | XL, XLT, Lariat, Tremor, Lobo
 Mustang | c | 1965 | | EcoBoost [2015-], GT, Dark Horse [2024-], Mach 1 [1969-1978, 2003-2004, 2021-2023], Shelby GT500 [2007-2014, 2020-2022]
 Mustang Mach-E | u | 2021 | | Select, Premium, California Route 1, GT, Rally
@@ -373,8 +373,8 @@ Tracker | u | 1989 | 1998 | Base, LSi`,
 
   "GMC": `
 Acadia | u | 2007 | | SLE, SLT, AT4, Denali
-Canyon | t | 2004 | | Elevation, AT4, AT4X, Denali
-Envoy | u | 1998 | 2009 | SLE, SLT, Denali
+Canyon | t | 2004-2012, 2015 | | Elevation, AT4, AT4X, Denali
+Envoy | u | 1998-2000, 2002 | 2009 | SLE, SLT, Denali
 Hummer EV | t | 2022 | | 2X, 3X, Edition 1
 Hummer EV SUV | u | 2024 | | 2X, 3X, Edition 1
 Jimmy | u | 1970 | 2005 | SL, SLS, SLE, SLT
@@ -398,14 +398,14 @@ Yukon XL | u | 2000 | | SLE, SLT, AT4, Denali, Denali Ultimate`,
 Accord | s | 1976 | | LX, Sport [2013-], SE, EX, EX-L, Touring, Hybrid [2005-2007, 2014-2015, 2017-]
 Civic | s | 1973 | | LX [1986-], Sport [2017-], EX [1992-], EX-L [2006-2021], Touring [2016-], Si [1985-1991, 1999-2000, 2002-2015, 2017-2020, 2022-], Hybrid [2003-2015, 2025-]
 Civic Hatchback | h | 2017 | | LX, Sport, EX-L, Sport Touring, Hybrid
-Civic Type R | h | 2017 | | Base
+Civic Type R | h | 2017-2021, 2023 | | Base
 Clarity | s | 2017 | 2021 | Plug-In Hybrid, Touring, Fuel Cell
 CR-V | u | 1997 | | LX, EX, EX-L [2005-], Sport [2023-], Sport-L [2023-], Touring, TrailSport [2026-], Hybrid [2020-]
 CR-Z | h | 2011 | 2016 | Base, EX
 Crosstour | h | 2010 | 2015 | EX, EX-L
 del Sol | c | 1993 | 1997 | S, Si, VTEC
 Element | u | 2003 | 2011 | LX, EX, SC
-Fit | h | 2007 | 2020 | LX, Sport, EX, EX-L
+Fit | h | 2007-2013, 2015 | 2020 | LX, Sport, EX, EX-L
 HR-V | u | 2016 | | LX, Sport [2019-], EX-L
 Insight | s | 2000-2006, 2010-2014, 2019 | 2022 | Base, EX, Touring
 Odyssey | v | 1995 | | LX, EX, EX-L, Sport [2021-], Touring [2005-], Elite [2018-]
@@ -413,7 +413,7 @@ Passport | u | 1994-2002, 2019 |  | EX-L [2000-2002, 2019-], TrailSport [2022-],
 Pilot | u | 2003 | | LX, Sport [2023-], EX-L, Touring, TrailSport [2022-], Elite [2016-], Black Edition [2019-]
 Prelude | c | 1990-2001, 2026 |  | Base, S [1992-1996], Si [1990-2001], SH [1997-2001], Type SH [1997-2001]
 Prologue | u | 2024 | | EX, Touring, Elite
-Ridgeline | t | 2006 | | Sport [2017-], RTL, TrailSport [2024-], Black Edition [2017-]
+Ridgeline | t | 2006-2014, 2017 | | Sport [2017-], RTL, TrailSport [2024-], Black Edition [2017-]
 S2000 | c | 2000 | 2009 | Base, CR`,
 
   "Hummer": `
@@ -426,7 +426,7 @@ H3T | t | 2009 | 2010 | Base, Adventure, Luxury, Alpha`,
 Accent | s | 1995 | 2022 | SE, SEL, Limited
 Azera | s | 2006 | 2017 | Base, Limited
 Elantra | s | 1991 | | SE, SEL [2017-], Limited [2007-], N Line [2021-], N [2022-], Hybrid [2021-]
-Elantra GT | h | 2001 | 2020 | Base, Sport, N Line
+Elantra GT | h | 2001-2008, 2013 | 2020 | Base, Sport, N Line
 Entourage | v | 2007 | 2009 | GLS, SE, Limited
 Equus | s | 2011 | 2016 | Signature, Ultimate
 Excel | h | 1986 | 1994 | Base, GL, GLS
@@ -456,7 +456,7 @@ XG350 | s | 2002 | 2005 | Base, L`,
 EX35 | u | 2008 | 2012 | Base, Journey
 FX35 | u | 2003 | 2012 | Base, Sport
 FX45 | u | 2003 | 2008 | Base, Sport
-G20 | s | 1991 | 2002 | Base, Touring
+G20 | s | 1991-1996, 1999 | 2002 | Base, Touring
 G25 | s | 2011 | 2012 | Base, Journey, x
 G35 | s | 2003 | 2008 | Base, Journey, Sport, x
 G37 | s | 2008 | 2013 | Base, Journey, Sport, x
@@ -467,7 +467,7 @@ JX35 | u | 2013 | 2013 | Base
 M30 | c | 1990 | 1992 | Base, Convertible
 M35 | s | 2006 | 2010 | Base, Sport, x
 M37 | s | 2011 | 2013 | Base, x
-M45 | s | 2003 | 2010 | Base, Sport, x
+M45 | s | 2003-2004, 2006 | 2010 | Base, Sport, x
 M56 | s | 2011 | 2013 | Base, Sport, x
 Q45 | s | 1990 | 2006 | Base, Touring
 Q50 | s | 2014 | 2024 | Pure, Luxe, Sport, Red Sport 400
@@ -483,7 +483,7 @@ QX70 | u | 2014 | 2017 | Base, Sport
 QX80 | u | 2014 | | Pure, Luxe, Sensory, Autograph`,
 
   "Isuzu": `
-Amigo | u | 1989 | 2000 | S, XS
+Amigo | u | 1989-1994, 1998 | 2000 | S, XS
 Ascender | u | 2003 | 2008 | S, LS, Limited
 Axiom | u | 2002 | 2004 | Base, XS
 Hombre | t | 1996 | 2000 | S, XS
@@ -525,7 +525,7 @@ Recon | u | 2026 | | Base, Moab
 Renegade | u | 2015 | 2023 | Sport, Latitude, Limited, Trailhawk
 Wagoneer | u | 1990, 2022 |  | Series I [2022-], Series II [2022-], Series III [2022-], Limited [1990]
 Wagoneer S | u | 2024 | | Launch Edition, Limited
-Wrangler | u | 1987 | | Sport, Willys [2012-], Sahara, Rubicon [2003-], Rubicon 392 [2021-], 4xe [2021-]`,
+Wrangler | u | 1987-1995, 1997 | | Sport, Willys [2012-], Sahara, Rubicon [2003-], Rubicon 392 [2021-], 4xe [2021-]`,
 
   "Kia": `
 Amanti | s | 2004 | 2009 | Base
@@ -542,7 +542,7 @@ Niro | u | 2017 | | LX, EX, SX, Plug-In Hybrid, EV
 Optima | s | 2001 | 2020 | LX, S, EX, SX
 Rio | s | 2001 | 2023 | LX, S, EX
 Rondo | h | 2007 | 2010 | LX, EX
-Sedona | v | 2002 | 2021 | L, LX, EX, SX
+Sedona | v | 2002-2012, 2014 | 2021 | L, LX, EX, SX
 Seltos | u | 2021 | | LX, S, EX, SX
 Sephia | s | 1994 | 2001 | Base, LS, RS
 Sorento | u | 2003 | | LX, S, EX, SX, X-Line [2021-], Hybrid [2021-], Plug-In Hybrid [2022-]
@@ -576,7 +576,7 @@ Range Rover Velar | u | 2018 | | S, Dynamic SE, Dynamic HSE`,
   "Lexus": `
 CT | h | 2011 | 2017 | 200h, F Sport
 ES | s | 1990 | | 250, 300h, 350, F Sport
-GS | s | 1993 | 2020 | 300, 350, 450h, F Sport, GS F
+GS | s | 1993-2011, 2013 | 2020 | 300, 350, 450h, F Sport, GS F
 GX | u | 2003 | | 460, 550, Premium, Overtrail, Luxury
 HS | s | 2010 | 2012 | 250h, Premium
 IS | s | 2001 | | 300, 350, 500, F Sport
@@ -593,7 +593,7 @@ TX | u | 2024 | | 350, 500h, 550h+, Premium, Luxury
 UX | u | 2019 | | 200, 250h, 300h, F Sport`,
 
   "Lincoln": `
-Aviator | u | 2003 | | Base, Reserve, Black Label, Grand Touring
+Aviator | u | 2003-2005, 2020 | | Base, Reserve, Black Label, Grand Touring
 Blackwood | t | 2002 | 2002 | Base
 Continental | s | 1990-2002, 2017 | 2020 | Premiere [2017-2020], Select [2017-2020], Reserve [2017-2020], Black Label [2017-2020], Base [1990-2002]
 Corsair | u | 2020 | | Base, Premiere, Reserve, Grand Touring
@@ -651,17 +651,17 @@ Mazda5 | v | 2006 | 2015 | Sport, Touring, Grand Touring
 Mazda6 | s | 2003 | 2021 | Sport, Touring, Grand Touring, Signature
 Mazdaspeed3 | h | 2007 | 2013 | Sport, Touring, Grand Touring
 Millenia | s | 1995 | 2002 | Base, L, S
-MPV | v | 1989 | 2006 | DX, LX, ES
+MPV | v | 1989-1998, 2000 | 2006 | DX, LX, ES
 MX-3 | c | 1992 | 1995 | Base, GS
 MX-30 | u | 2022 | 2023 | Base, Premium Plus
-MX-5 Miata | c | 1990 | | Sport, Club, Grand Touring, RF
+MX-5 Miata | c | 1990-1997, 1999 | | Base [1990-1997, 1999-2005], Sport [2006-], Club [2006-], Grand Touring [2006-], RF [2017-]
 MX-6 | c | 1988 | 1997 | Base, LS
 Navajo | u | 1991 | 1994 | DX, LX
 Protegé | s | 1990 | 2003 | DX, LX, ES, MP3
 Protegé5 | h | 2002 | 2003 | Base
 RX-7 | c | 1979 | 1995 | Base, Touring, R1, R2
 RX-8 | c | 2004 | 2011 | Base, Sport, Grand Touring, R3
-Tribute | u | 2001 | 2011 | i, s, Touring, Grand Touring`,
+Tribute | u | 2001-2006, 2008 | 2011 | i, s, Touring, Grand Touring`,
 
   "McLaren": `
 570S | c | 2016 | 2021 | Coupe, Spider, GT
@@ -703,11 +703,11 @@ S-Class | s | 1991 | | S 450, S 500, S 550, S 580, AMG S 63, Maybach
 SL | c | 1990 | | SL 55, SL 63, SL 43
 SLC | c | 2017 | 2020 | SLC 300, AMG SLC 43
 SLK | c | 1998 | 2016 | SLK 250, SLK 300, SLK 350, SLK 55 AMG
-Sprinter | v | 2003 | | Cargo, Crew, Passenger`,
+Sprinter | v | 2010 | | Cargo, Crew, Passenger`,
 
   "Mercury": `
 Capri | c | 1991 | 1994 | Base, XR2
-Cougar | c | 1967 | 2002 | XR7, LS, V6, C2, Zn
+Cougar | c | 1967-1997, 1999 | 2002 | XR7, LS, V6, C2, Zn
 Grand Marquis | s | 1983 | 2011 | GS, LS
 Marauder | s | 2003 | 2004 | Base
 Mariner | u | 2005 | 2011 | Base, Premier, Hybrid
@@ -765,13 +765,13 @@ Juke | u | 2011 | 2017 | S, SV, SL, NISMO
 Kicks | u | 2018 | | S, SV, SR
 Leaf | h | 2011 | | S, SV, SV Plus, Platinum+
 Maxima | s | 1981 | 2023 | S, SV, SR, Platinum
-Murano | u | 2003 | | SV, SL, Platinum
+Murano | u | 2003-2007, 2009 | | SV, SL, Platinum
 NV | v | 2012 | 2021 | Cargo, Passenger
 NV200 | v | 2013 | 2021 | S, SV
 NX | c | 1991 | 1993 | 1600, 2000
 Pathfinder | u | 1987 | | S, SV, SL, Platinum [2013-], Rock Creek [2022-]
 Pulsar | c | 1983 | 1990 | NX, XE, SE
-Quest | v | 1993 | 2017 | S, SV, SL, Platinum
+Quest | v | 1993-2002, 2004-2009, 2011 | 2017 | S, SV, SL, Platinum
 Rogue | u | 2008 | | S, SV, SL, Platinum [2021-], Rock Creek [2023-]
 Rogue Sport | u | 2017 | 2022 | S, SV, SL
 Sentra | s | 1982 | | S, SV, SR, SL
@@ -784,8 +784,8 @@ Z | c | 2023 | | Sport, Performance, NISMO`,
   "Oldsmobile": `
 Achieva | s | 1992 | 1998 | S, SC, SL
 Alero | s | 1999 | 2004 | GX, GL, GLS
-Aurora | s | 1995 | 2003 | Base, 4.0
-Bravada | u | 1991 | 2004 | Base
+Aurora | s | 1995-1999, 2001 | 2003 | Base, 4.0
+Bravada | u | 1991-1994, 1996 | 2004 | Base
 Cutlass | s | 1997 | 1999 | Base, GL, GLS
 Cutlass Ciera | s | 1982 | 1996 | S, SL
 Cutlass Supreme | s | 1988 | 1997 | S, SL, International
@@ -802,7 +802,7 @@ Colt | h | 1971 | 1994 | Base, GL, Vista
 Grand Voyager | v | 1987 | 2000 | Base, SE, LE
 Laser | c | 1990 | 1994 | Base, RS, RS Turbo
 Neon | s | 1995 | 2001 | Highline, Sport, Expresso, LX
-Prowler | c | 1997 | 2001 | Base
+Prowler | c | 1997, 1999 | 2001 | Base
 Sundance | h | 1987 | 1994 | America, Duster
 Voyager | v | 1974 | 2000 | Base, SE, LE, Expresso`,
 
@@ -837,7 +837,7 @@ Vibe | h | 2003 | 2010 | Base, AWD, GT`,
 928 | c | 1978 | 1995 | S4, GT, GTS
 944 | c | 1983 | 1991 | S2, Turbo
 968 | c | 1992 | 1995 | Base, Cabriolet
-Cayenne | u | 2003 | | Base, E-Hybrid, S, GTS, Turbo, Turbo GT
+Cayenne | u | 2003-2006, 2008 | | Base, E-Hybrid, S, GTS, Turbo, Turbo GT
 Cayenne Coupe | u | 2020 | | Base, E-Hybrid, S, GTS, Turbo GT
 Macan | u | 2015 | | Base, T, S, GTS
 Macan Electric | u | 2024 | | Base, 4, 4S, Turbo
@@ -869,7 +869,7 @@ Wraith | c | 2014 | 2023 | Base, Black Badge`,
   "Saab": `
 9-2X | h | 2005 | 2006 | Linear, Aero
 9-3 | s | 1999 | 2011 | Linear, Arc, Aero, 2.0T
-9-5 | s | 1999 | 2011 | Linear, Arc, Aero, Turbo4, Turbo6
+9-5 | s | 1999-2009, 2011 | 2011 | Linear, Arc, Aero, Turbo4, Turbo6
 9-7X | u | 2005 | 2009 | 4.2i, 5.3i, Aero
 900 | h | 1979 | 1998 | S, SE, Turbo
 9000 | h | 1986 | 1998 | CS, CSE, Aero`,
@@ -892,7 +892,7 @@ iM | h | 2016 | 2016 | Base
 iQ | h | 2012 | 2015 | Base
 tC | c | 2005 | 2016 | Base, Release Series
 xA | h | 2004 | 2006 | Base
-xB | h | 2004 | 2015 | Base, Release Series
+xB | h | 2004-2006, 2008 | 2015 | Base, Release Series
 xD | h | 2008 | 2014 | Base, Release Series`,
 
   "Scout": `
@@ -908,7 +908,7 @@ Fortwo | h | 2008 | 2019 | Pure, Passion, Prime, Electric Drive`,
   "Subaru": `
 Ascent | u | 2019 | | Base, Premium, Onyx Edition [2020-], Limited, Touring
 Baja | t | 2003 | 2006 | Base, Sport, Turbo
-BRZ | c | 2013 | | Premium, Limited, tS
+BRZ | c | 2013-2020, 2022 | | Premium, Limited, tS
 Crosstrek | u | 2013 | | Base, Premium, Sport [2018-], Limited, Wilderness [2024-], Hybrid [2014-2016, 2019-2023]
 Forester | u | 1998 | | Base, Premium, Sport [2019-], Limited, Touring [2014-], Wilderness [2022-], Hybrid [2025-]
 Impreza | s | 1993 | | Base, Premium, Sport, RS [2024-]
@@ -955,7 +955,7 @@ Avalon | s | 1995 | 2022 | XLE, XSE, Touring, Limited, Hybrid
 bZ | u | 2026 | | XLE, Limited, Woodland
 bZ Woodland | u | 2026 | | Premium
 bZ4X | u | 2023 | 2025 | XLE, Limited
-C-HR | u | 2018 | | LE, XLE, Limited, SE, XSE
+C-HR | u | 2018-2022, 2026 | | LE, XLE, Limited, SE, XSE
 Camry | s | 1983 | | LE, SE [2007-], XLE, XSE [2018-], TRD [2020-2024], Nightshade [2019-2024], Hybrid [2007-]
 Celica | c | 1971 | 2005 | GT, GT-S
 Corolla | s | 1968 | | L, LE, SE, XSE [2017-], XLE [2014-2022], Hybrid [2020-]
@@ -991,7 +991,7 @@ T100 | t | 1993 | 1998 | Base, DX, SR5
 Tacoma | t | 1995 | | SR [2016-], SR5, TRD Sport [2016-], TRD Off-Road [2016-], Limited [2012-], Trailhunter [2024-], TRD Pro [2015-]
 Tercel | s | 1980 | 1999 | Base, DX, CE
 Tundra | t | 2000 | | SR, SR5, Limited, Platinum [2010-], 1794 Edition [2014-], TRD Pro [2015-], Capstone [2022-]
-Venza | u | 2009 | 2024 | LE, XLE, Limited, Nightshade
+Venza | u | 2009-2015, 2021 | 2024 | LE, XLE, Limited, Nightshade
 Yaris | h | 2007 | 2020 | L, LE, XLE, SE`,
 
   "VinFast": `
@@ -1002,18 +1002,18 @@ VF 9 | u | 2024 | | Eco, Plus`,
 Arteon | s | 2019 | 2023 | SE, SEL, SEL R-Line, SEL Premium R-Line
 Atlas | u | 2018 | | SE, SE with Technology, Peak Edition [2024-], SEL, SEL Premium R-Line
 Atlas Cross Sport | u | 2020 | | SE, SE with Technology, SEL, SEL R-Line, SEL Premium R-Line
-Beetle | h | 1998 | 2019 | S, SE, SEL, Turbo, Dune, Convertible
+Beetle | h | 1998-2010, 2012 | 2019 | S, SE, SEL, Turbo, Dune, Convertible
 Cabrio | c | 1995 | 2002 | Base, GL, GLS, GLX
 Cabriolet | c | 1985 | 1993 | Base, Boutique, Carat
 CC | s | 2009 | 2017 | Sport, R-Line, Executive, VR6
 Corrado | c | 1990 | 1994 | G60, SLC
 e-Golf | h | 2015 | 2019 | SE, SEL Premium
 Eos | c | 2007 | 2016 | Komfort, Lux, Executive
-EuroVan | v | 1993 | 2003 | CL, GL, GLS, MV, Camper
+EuroVan | v | 1993, 1999 | 2003 | CL, GL, GLS, MV, Camper
 Fox | s | 1987 | 1993 | Base, GL
 Golf | h | 1985 | 2021 | S, SE, TSI, TDI, Alltrack, SportWagen
 Golf GTI | h | 1985 | | S, SE, Autobahn, 380
-Golf R | h | 2012 | | Base, 20th Anniversary
+Golf R | h | 2012-2013, 2015 | | Base, 20th Anniversary
 ID. Buzz | v | 2025 | | Pro S, Pro S Plus, 1st Edition
 ID.4 | u | 2021 | | Standard, Pro, Pro S, Pro S Plus
 Jetta | s | 1980 | | S, Sport [2019-], SE, SEL, GLI, TDI
@@ -1033,7 +1033,7 @@ Touareg | u | 2004 | 2017 | Sport, Lux, Executive, TDI, Hybrid`,
 960 | s | 1992 | 1997 | Base
 C30 | h | 2008 | 2013 | T5, R-Design
 C40 Recharge | u | 2022 | 2024 | Core, Plus, Ultimate
-C70 | c | 1998 | 2013 | T5
+C70 | c | 1998-2004, 2006 | 2013 | T5
 ES90 | s | 2026 | | Plus, Ultra
 EX30 | u | 2025 | | Core, Plus, Ultra, Cross Country
 EX40 | u | 2025 | | Core, Plus, Ultra
