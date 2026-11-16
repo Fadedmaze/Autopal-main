@@ -41,73 +41,192 @@ export default async function render(root, ctx) {
         back: { href: "#/garage", label: "Garage" },
         action: `<a class="icon-btn" href="#/vehicles/${vehicle.id}/edit" aria-label="Edit vehicle details">${icon("edit", 20, 2)}</a>`,
       })}
-      <div class="content">
-        <section class="gallery" style="${vehicleTint(vehicle.index)}">
-          <div class="gallery-main">
+      <div class="content vehicle-detail-page">
+        
+      <section class="card vehicle-photo-card">
+        <div class="vehicle-photo-overview">
+          <div class="vehicle-photo-preview"
+            style="${vehicleTint(vehicle.index)}">
+
             ${photo
-              ? `<img src="${escapeHtml(photo.url ?? "")}" alt="Photo of ${escapeHtml(vehicle.label)}">
-                 <button class="gallery-delete icon-btn" type="button" aria-label="Delete this photo">${icon("trash", 18, 2)}</button>`
-              : `<a class="gallery-empty" href="#/vehicles/${vehicle.id}/photo">${vehicleIcon(vehicle, 72)}<span>${icon("camera", 16, 2)} Add a photo</span></a>`}
+              ? `<img src="${escapeHtml(photo.url ?? "")}"
+                  alt="Photo of ${escapeHtml(vehicle.label)}">
+                <button class="gallery-delete icon-btn"
+                  type="button" aria-label="Delete this photo">
+                  ${icon("trash", 18, 2)}
+                </button>`
+              : vehicleIcon(vehicle, 48)}
           </div>
+
+          <div class="vehicle-photo-info">
+            <h3>Vehicle Photos</h3>
+            <p class="hint">
+              ${photos.length
+                ? `${photos.length} photo${photos.length === 1 ? "" : "s"} added`
+                : "Add pictures of your car"}
+            </p>
+
+            <a class="btn btn-soft btn-sm"
+              href="#/vehicles/${vehicle.id}/photo">
+              ${icon("camera", 16, 2)} Add Photo
+            </a>
+          </div>
+        </div>
+
+        ${photos.length > 1 ? `
           <div class="gallery-strip">
             ${photos.map((p, i) => `
-              <button type="button" class="thumb ${i === selectedPhoto ? "on" : ""}" data-index="${i}" aria-label="Show photo ${i + 1}">
-                <img src="${escapeHtml(p.url ?? "")}" alt="" loading="lazy">
-              </button>`).join("")}
-            <a class="thumb thumb-add" href="#/vehicles/${vehicle.id}/photo" aria-label="Add a photo">${icon("camera", 22, 1.9)}</a>
+              <button type="button"
+                class="thumb ${i === selectedPhoto ? "on" : ""}"
+                data-index="${i}"
+                aria-label="Show photo ${i + 1}">
+                <img src="${escapeHtml(p.url ?? "")}"
+                  alt="" loading="lazy">
+              </button>
+            `).join("")}
           </div>
-        </section>
+        ` : ""}
+      </section>
 
-        ${lookCard(vehicle)}
 
-        ${careCard(vehicle, care, { remindDays })}
+      ${careCard(vehicle, care, { remindDays })}
 
-        ${hasNewColumns("vehicles") ? `
-          <section class="card drive-card">
-            <div class="card-head">
-              <h3>${icon("car", 18, 2)}How Much You Drive</h3>
-              <a class="btn btn-soft btn-sm" href="#/vehicles/${vehicle.id}/edit">${icon("edit", 15, 2)}${vehicle.miles_per_year == null ? "Set" : "Change"}</a>
-            </div>
+     
+    <details class="vehicle-dropdown">
+      <summary class="vehicle-dropdown-heading">
+        <span class="vehicle-dropdown-title">
+          ${icon("history", 18, 2)}
+          Maintenance History
+        </span>
+        <span class="vehicle-dropdown-arrow"></span>
+      </summary>
+
+      <div class="vehicle-dropdown-content">
+        ${history.length ? `
+          <ul class="history-list">
+            ${history.map((t) => `
+              <li>
+                <a href="#/tasks/${t.id}">
+                  <span class="history-type">
+                    ${escapeHtml(t.task_name)}
+                    ${t.receipt_path ? `<span class="tone-muted">${icon("receipt", 13, 2)}</span>` : ""}
+                  </span>
+                  <span class="history-date">
+                    ${formatDate(t.completed_date)}
+                  </span>
+                </a>
+              </li>
+            `).join("")}
+          </ul>
+        ` : `
+          <p class="muted-box">
+            No maintenance recorded yet. Completed tasks show up here.
+          </p>
+        `}
+
+        <a class="btn btn-soft btn-sm" href="#/tasks">
+          View All Tasks
+        </a>
+      </div>
+    </details>
+
+      <details class="vehicle-dropdown">
+        <summary class="vehicle-dropdown-heading">
+          <span class="vehicle-dropdown-title">
+            ${icon("car", 18, 2)}
+            Your Car in 3D
+          </span>
+          <span class="vehicle-dropdown-arrow"></span>
+        </summary>
+      
+        <div class="vehicle-dropdown-content">
+          ${lookCard(vehicle)}
+        </div>
+      </details>
+
+
+      ${hasNewColumns("vehicles") ? `
+        <details class="vehicle-dropdown">
+          <summary class="vehicle-dropdown-heading">
+          <span class="vehicle-dropdown-title">
+            <svg width="18" height="18" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 19a10 10 0 1 1 16 0"/>
+              <path d="m12 14 4-5"/>
+              <circle cx="12" cy="14" r="1"/>
+              <path d="M4 19h16"/>
+            </svg>
+            How Much You Drive
+          </span>
+            <span class="vehicle-dropdown-arrow"></span>
+          </summary>
+      
+          <div class="vehicle-dropdown-content">
             ${vehicle.miles_per_year == null
               ? `<p>Tell AutoPal how much you drive this car so oil changes, tire rotations and filters come due when you actually need them.</p>`
               : `<p><span class="drive-level">${escapeHtml(drivingLabel(vehicle.miles_per_year))}</span></p>
-                 <p class="hint">Oil changes, tire rotations, filters and brake checks are timed by these miles or by months, whichever comes first.</p>`}
-          </section>` : ""}
-
-        <section class="card">
-          <div class="card-head">
-            <h3>Description</h3>
-            ${editingDescription ? "" : `<button type="button" class="btn btn-soft btn-sm" id="edit-desc">${icon("edit", 15, 2)}Edit</button>`}
+                 <p class="hint">Maintenance is timed by mileage or months, whichever comes first.</p>`}
+      
+            <a class="btn btn-soft btn-sm"
+              href="#/vehicles/${vehicle.id}/edit">
+              ${icon("edit", 15, 2)}
+              ${vehicle.miles_per_year == null ? "Set Driving Habits" : "Change Driving Habits"}
+            </a>
           </div>
-          ${editingDescription ? `
-            <form class="form" id="desc-form">
-              <textarea name="description" rows="4" maxlength="1000" placeholder="Color, quirks, anything worth remembering">${escapeHtml(vehicle.description ?? "")}</textarea>
-              <p class="form-error" role="alert" hidden></p>
-              <div class="form-actions compact">
-                <button type="button" class="btn btn-ghost btn-sm" id="cancel-desc">Cancel</button>
-                <button type="submit" class="btn btn-sm">Save</button>
-              </div>
-            </form>`
-            : `<p class="description">${vehicle.description ? escapeHtml(vehicle.description) : `<span class="tone-muted">No description yet. Tap Edit to add one.</span>`}</p>`}
-        </section>
+        </details>
+      ` : ""}      
+       
+        <details class="vehicle-dropdown"
+          ${editingDescription ? "open" : ""}>
 
-        <section class="card history">
-          <div class="card-head">
-            <h3>${icon("history", 18, 2)}Maintenance History</h3>
-            <a class="link-sm" href="#/tasks">All tasks</a>
+          <summary class="vehicle-dropdown-heading">
+          <span class="vehicle-dropdown-title">
+            <svg width="18" height="18" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <path d="M14 2v6h6"/>
+              <path d="M8 13h8M8 17h8"/>
+            </svg>
+            Description
+          </span>
+            <span class="vehicle-dropdown-arrow"></span>
+          </summary>
+
+          <div class="vehicle-dropdown-content">
+            ${editingDescription ? `
+              <form class="form" id="desc-form">
+                <textarea name="description" rows="4"
+                  maxlength="1000"
+                  placeholder="Color, quirks, anything worth remembering">${escapeHtml(vehicle.description ?? "")}</textarea>
+
+                <p class="form-error" role="alert" hidden></p>
+
+                <div class="form-actions compact">
+                  <button type="button"
+                    class="btn btn-ghost btn-sm"
+                    id="cancel-desc">Cancel</button>
+
+                  <button type="submit"
+                    class="btn btn-sm">Save</button>
+                </div>
+              </form>
+            ` : `
+              <p class="description">
+                ${vehicle.description
+                  ? escapeHtml(vehicle.description)
+                  : `<span class="tone-muted">No description yet.</span>`}
+              </p>
+
+              <button type="button"
+                class="btn btn-soft btn-sm" id="edit-desc">
+                ${icon("edit", 15, 2)} Edit Description
+              </button>
+            `}
           </div>
-          ${history.length ? `
-            <ul class="history-list">
-              ${history.map((t) => `
-                <li>
-                  <a href="#/tasks/${t.id}">
-                    <span class="history-type">${escapeHtml(t.task_name)}${t.receipt_path ? ` <span class="tone-muted">${icon("receipt", 13, 2)}</span>` : ""}</span>
-                    <span class="history-date">${formatDate(t.completed_date)}</span>
-                  </a>
-                </li>`).join("")}
-            </ul>`
-            : `<p class="muted-box">No maintenance recorded yet. Completed tasks show up here.</p>`}
-        </section>
+        </details>
+
       </div>`;
 
     bindCareCard(root);
