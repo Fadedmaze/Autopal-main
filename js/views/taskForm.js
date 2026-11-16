@@ -58,20 +58,22 @@ export default async function render(root, ctx) {
     <form class="form content" novalidate>
       ${vehicles.length > 1 ? `
         <label class="field">
-          <span>Vehicle</span>
+          <span>Vehicle <span class="required-star">*</span></span>
           <select name="vehicle_id">
             ${vehicles.map((v) => `<option value="${v.id}" ${v.id === t.vehicle_id ? "selected" : ""}>${escapeHtml(v.label)}</option>`).join("")}
           </select>
         </label>` : `<input type="hidden" name="vehicle_id" value="${t.vehicle_id}">`}
       <label class="field">
-        <span>Task Name</span>
+        <span>Task Name <span class="required-star">*</span></span>
         <input name="task_name" required maxlength="80" placeholder="e.g. Replace Headlight Bulb" value="${escapeHtml(t.task_name)}">
       </label>
       
       
      <div class="task-schedule-card">
         <div class="field task-date-card">
-        <label for="task-due-date">Due Date</label>
+        <label for="task-due-date">
+          Due Date <span class="required-star">*</span>
+        </label>
 
         <div class="quick-dates">
           <button type="button" class="quick-date-btn" data-days="1">
@@ -164,9 +166,7 @@ export default async function render(root, ctx) {
           ${icon("wrench", 18, 2)}
           Additional Details
         </span>
-        <span class="task-additional-chevron" aria-hidden="true">
-          ${icon("chevron-down", 18, 2)}
-        </span>
+        <span class="task-additional-chevron" aria-hidden="true"></span>
       </summary>
 
   <div class="task-additional-content">
