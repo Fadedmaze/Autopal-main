@@ -352,21 +352,71 @@ export default async function render(root, ctx) {
   const popupHtml = (s) => {
     const e = est(s);
     const cap = problemMode() ? capability(s, problem) : null;
+  
     return `
-    <div class="shop-pop">
-      <strong>${escapeHtml(s.shop_name)}</strong>
-      ${problemMode() ? (cap
-        ? `<span class="fix-badge ${cap}">${cap === "primary" ? "Can fix this" : "Can often handle this"}</span>`
-        : `<span class="shop-pop-meta">Doesn't list ${escapeHtml(problem.repair_service.toLowerCase())} work</span>`) : ""}
-      ${e ? `<span class="shop-pop-price">Est. ${rangeText(e)}</span>${e.diag ? `<span class="shop-pop-meta">+ diagnosis ${rangeText(e.diag)}</span>` : ""}` : ""}
-      ${!problemMode() ? `<span class="shop-pop-price">Avg. repair ${s.average_repair_price !== null ? formatMoney(s.average_repair_price) : "n/a"}</span>` : ""}
-      <span class="shop-pop-meta">${stars(s.average_rating)}</span>
-      <span class="shop-pop-meta">${escapeHtml(formatDistance(s.distance_miles))}</span>
-      <span class="shop-pop-links">
-        ${s.phone ? `<a href="${telHref(s.phone)}">Call</a>` : ""}
-        <a href="${directionsHref(s)}" target="_blank" rel="noopener">Directions</a>
-      </span>
-    </div>`;
+      <div class="shop-pop">
+  
+        <div class="shop-pop-header">
+          <span class="shop-pop-icon">
+            ${icon("wrench", 22, 2)}
+          </span>
+  
+          <div class="shop-pop-info">
+            <strong>${escapeHtml(s.shop_name)}</strong>
+            <span class="shop-pop-meta">
+              ${icon("locate", 13, 2)}
+              ${escapeHtml(formatDistance(s.distance_miles))}
+            </span>
+          </div>
+        </div>
+  
+        <div class="shop-pop-rating">
+          ${stars(s.average_rating)}
+        </div>
+  
+        ${problemMode() ? (cap
+          ? `<span class="fix-badge ${cap}">
+              ${cap === "primary" ? "Can fix this" : "Can often handle this"}
+            </span>`
+          : `<span class="shop-pop-meta">
+              Doesn't list ${escapeHtml(problem.repair_service.toLowerCase())} work
+            </span>`) : ""}
+  
+        ${e ? `
+          <div class="shop-pop-pricing">
+            <span>Estimated repair price</span>
+            <strong class="shop-pop-price">${rangeText(e)}</strong>
+            ${e.diag ? `<small>+ diagnosis ${rangeText(e.diag)}</small>` : ""}
+          </div>
+        ` : ""}
+  
+        ${!problemMode() ? `
+          <div class="shop-pop-pricing">
+            <span>Average repair price</span>
+            <strong class="shop-pop-price">
+              ${s.average_repair_price !== null
+                ? formatMoney(s.average_repair_price)
+                : "Not available"}
+            </strong>
+          </div>
+        ` : ""}
+  
+        <div class="shop-pop-links">
+          ${s.phone ? `
+            <a class="shop-pop-call" href="${telHref(s.phone)}">
+              ${icon("phone", 16, 2)} Call
+            </a>
+          ` : ""}
+  
+          <a class="shop-pop-directions"
+             href="${directionsHref(s)}"
+             target="_blank"
+             rel="noopener">
+            ${icon("directions", 16, 2)} Directions
+          </a>
+        </div>
+  
+      </div>`;
   };
 
   // Results panel: the shops most likely to fix the problem, best first.
@@ -609,10 +659,22 @@ export default async function render(root, ctx) {
         title: s.shop_name,
         zIndexOffset: s.id === bestId ? 500 : dim ? -100 : 0,
       }).bindPopup(popupHtml(s), { closeButton: true, offset: [0, -30] }).addTo(layer);
+      marker.on("popupopen", () => {
+        marker.getElement()?.classList.add("selected");
+      });
+      
+      marker.on("popupclose", () => {
+        marker.getElement()?.classList.remove("selected");
+      });
       markers.set(s.id, marker);
     }
     listEl.querySelectorAll("[data-shop]").forEach((b) => b.addEventListener("click", () => {
       listEl.hidden = true;
+    
+      const toggle = root.querySelector("#toggle-list");
+      toggle.querySelector(".mechanic-toggle-label").textContent = "View Shops";
+      toggle.setAttribute("aria-expanded", "false");
+    
       focusShop(Number(b.dataset.shop));
     }));
     if (fit) {
@@ -735,7 +797,6 @@ export default async function render(root, ctx) {
     drawPins(lastPoint ?? DEFAULT_POINT);
   });
 
-  // Filter tab
 // Filter tab
 tab.addEventListener("click", () => {
   panel.hidden = !panel.hidden;
