@@ -50,7 +50,9 @@ export default async function render(root, ctx) {
             <path d="m16 16 5 5"/>
           </svg>
           <input type="search" id="mechanic-search"
-            placeholder="Search mechanics or services">
+            placeholder="${window.innerWidth < 700
+          ? "Search mechanics"
+          : "Search mechanics or services"}">
         </label>
     
         <button type="button" class="map-filter-tab"
@@ -658,7 +660,15 @@ export default async function render(root, ctx) {
         keyboard: true,
         title: s.shop_name,
         zIndexOffset: s.id === bestId ? 500 : dim ? -100 : 0,
-      }).bindPopup(popupHtml(s), { closeButton: true, offset: [0, -30] }).addTo(layer);
+      }).bindPopup(popupHtml(s), {
+        closeButton: true,
+        offset: [0, -30],
+        autoPan: true,
+        autoPanPaddingTopLeft: window.innerWidth < 700
+          ? [15, 220]
+          : [15, 15],
+        autoPanPaddingBottomRight: [15, 30]
+      }).addTo(layer);
       marker.on("popupopen", () => {
         marker.getElement()?.classList.add("selected");
       });
