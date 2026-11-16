@@ -46,7 +46,7 @@ export default async function render(root, ctx) {
       sub: editing ? "" : "Pick your car from the lists. You can change this later.",
       back: { href: cancelHref, label: "Back" },
     })}
-    <form class="form content" novalidate>
+      <form class="form content vehicle-form" novalidate>
       <label class="field">
         <span>Make</span>
         <select name="brand" required></select>
@@ -55,17 +55,21 @@ export default async function render(root, ctx) {
         <span>Model</span>
         <select name="make" required></select>
       </label>
+      <div class="vehicle-year-trim-card">
       <div class="field-row">
         <label class="field">
           <span>Year</span>
           <select name="model_year" required></select>
         </label>
+    
         <label class="field grow">
           <span>Trim</span>
           <select name="model"></select>
         </label>
       </div>
+    
       <p class="hint" id="car-hint" aria-live="polite"></p>
+    </div>
       <label class="field">
         <span>Vehicle Name <em>optional</em></span>
         <input name="vehicle_nickname" maxlength="40" placeholder="e.g. Daily Driver" value="${escapeHtml(v.vehicle_nickname ?? "")}">
