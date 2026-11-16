@@ -624,6 +624,70 @@ button.task-body { border: 0; padding: 0; background: none; text-align: left; fo
   cursor: pointer;
 }
 
+/* Required field asterisks */
+
+.required-star {
+  color: #ef4444;
+  font-size: 14px;
+  font-weight: 600;
+  margin-left: 2px;
+}
+
+/* Additional Details dropdown arrow */
+
+.task-additional-heading .task-additional-chevron {
+  display: block;
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid var(--brand);
+  border-bottom: 2px solid var(--brand);
+  transform: rotate(45deg) !important;
+  transform-origin: center;
+  transition: transform 0.2s ease;
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+
+.task-additional-details[open] .task-additional-heading .task-additional-chevron {
+  transform: rotate(225deg) !important;
+}
+
+/* Bold Due Date label */
+.task-schedule-card .task-date-card > label {
+  font-weight: 700;
+}
+
+/* Consistent required field labels */
+.form.content > .field > span:first-child,
+.form.content > .field > label:first-child,
+.task-schedule-card .task-date-card > label {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+/* Keep required asterisks consistent */
+.required-star {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ef4444;
+}
+
+/* Match Reminder to other field labels */
+.task-additional-content .remind-heading {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+.task-additional-content .remind-heading em {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--ink-3);
+}
+
 /* Repeat interval dropdown */
 
 .task-repeat-interval {
