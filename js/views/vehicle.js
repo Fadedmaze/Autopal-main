@@ -1,9 +1,11 @@
 // Vehicle: name at the top, then the image, "Your Car in 3D" (customize its look), a "car care at a glance" summary (status,
-// completed tasks, total spent, next up, spending by month), the description (with Edit),
+// completed tasks, total spent, next up, spending by month), how much the car is driven
+// (which times its mileage-based tasks), the description (with Edit),
 // and a box of maintenance history (type on the left, date on the right).
-import { getVehicle, getSettings, listTasks, listPhotos, deletePhoto, updateVehicle } from "../data.js";
+import { getVehicle, getSettings, listTasks, listPhotos, deletePhoto, updateVehicle, hasNewColumns } from "../data.js";
 import { careSummary, careCard, bindCareCard } from "../carCare.js";
 import { lookCard, openCustomizer } from "../carCustomizer.js";
+import { drivingLabel } from "../driving.js";
 import {
   appBar, escapeHtml, icon, loading, formatDate, formatMileage, vehicleIcon, vehicleSpec, vehicleTint,
   toast, confirmDialog, errorMessage, withBusy,
@@ -59,6 +61,18 @@ export default async function render(root, ctx) {
         ${lookCard(vehicle)}
 
         ${careCard(vehicle, care, { remindDays })}
+
+        ${hasNewColumns("vehicles") ? `
+          <section class="card drive-card">
+            <div class="card-head">
+              <h3>${icon("car", 18, 2)}How Much You Drive</h3>
+              <a class="btn btn-soft btn-sm" href="#/vehicles/${vehicle.id}/edit">${icon("edit", 15, 2)}${vehicle.miles_per_year == null ? "Set" : "Change"}</a>
+            </div>
+            ${vehicle.miles_per_year == null
+              ? `<p>Tell AutoPal how much you drive this car so oil changes, tire rotations and filters come due when you actually need them.</p>`
+              : `<p><span class="drive-level">${escapeHtml(drivingLabel(vehicle.miles_per_year))}</span></p>
+                 <p class="hint">Oil changes, tire rotations, filters and brake checks are timed by these miles or by months, whichever comes first.</p>`}
+          </section>` : ""}
 
         <section class="card">
           <div class="card-head">

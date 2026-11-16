@@ -2338,3 +2338,28 @@ button.menu-row { width: 100%; font: inherit; font-weight: 600; text-align: left
 .wheel-chip span { flex: none; width: 18px; height: 18px; border-radius: 50%; background: var(--swatch); box-shadow: inset 0 0 0 4px rgba(0,0,0,.25); }
 .wheel-chip[aria-checked="true"] { border-color: var(--brand); background: var(--brand-soft); color: var(--brand); }
 .custom-toggles { flex-direction: row; flex-wrap: wrap; gap: 4px 20px; }
+
+/* ---------- How much a car is driven (js/driving.js) ---------- */
+.drive-field { border: 0; margin: 0; padding: 0; }
+.drive-field legend { float: left; width: 100%; padding: 0; margin: 0 0 6px; font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.drive-field legend + * { clear: both; }
+.drive-options { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.drive-option {
+  position: relative; display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+  border: 1.5px solid var(--line); border-radius: 14px; background: var(--surface); cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.drive-option::before {
+  content: ""; flex: none; width: 20px; height: 20px; border-radius: 50%;
+  border: 2px solid var(--line-strong, var(--ink-3)); background: var(--surface);
+}
+.drive-option input { position: absolute; inset: 0; width: 100%; height: 100%; min-height: 0; margin: 0; padding: 0; opacity: 0; cursor: pointer; }
+.drive-option span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.drive-option strong { font-size: 15px; color: var(--ink); }
+.drive-option small { font-size: 13px; color: var(--ink-3); }
+.drive-option:has(input:checked) { border-color: var(--brand); background: var(--brand-soft); }
+.drive-option:has(input:checked)::before { border-color: var(--brand); background: var(--brand); box-shadow: inset 0 0 0 3px var(--surface); }
+.drive-option:has(input:focus-visible) { box-shadow: 0 0 0 4px var(--brand-soft); border-color: var(--brand); }
+.drive-exact { margin-top: 10px; }
+.drive-card p { margin: 6px 0 0; color: var(--ink-2); font-size: 14.5px; }
+.drive-card .drive-level { font-weight: 700; color: var(--ink); }

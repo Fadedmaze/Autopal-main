@@ -10,7 +10,7 @@ import { titleCase } from "./ui.js";
 const taskOut = (t) => (t && t.task_name ? { ...t, task_name: titleCase(t.task_name.trim()) } : t);
 const taskIn = (f) => (f && typeof f.task_name === "string" ? { ...f, task_name: titleCase(f.task_name.trim()) } : f);
 
-const VEHICLE_COLS = "id, vehicle_nickname, brand, make, model, model_year, current_mileage, description, appearance, created_at";
+const VEHICLE_COLS = "id, vehicle_nickname, brand, make, model, model_year, current_mileage, miles_per_year, description, appearance, created_at";
 const TASK_COLS = "id, vehicle_id, shop_id, catalog_id, task_name, due_date, estimated_cost, is_completed, completed_date, notes, receipt_path, remind_days_before, generated_from_task_id, repeat_interval_days, created_at";
 const PROFILE_COLS = "id, username, display_name, avatar_path, distance_unit, active_vehicle_id";
 
@@ -26,7 +26,7 @@ function check({ data, error }) {
 // new columns yet, queries fall back to the older column list, and saving a value that
 // needs a new column fails with a clear message instead of breaking the whole screen.
 const NEW_COLS = {
-  vehicles: ["appearance"], // 2026-11-11: 3D car paint, wheels, roof, tint
+  vehicles: ["appearance", "miles_per_year"], // 2026-11-11: 3D car look; 2026-11-16: how much the car is driven
   profiles: ["display_name"],
   maintenance_tasks: ["remind_days_before"],
   warning_lights: ["repair_service", "repair_alt_services", "repair_cost_low", "repair_cost_high", "needs_diagnosis", "repair_note"],
@@ -51,11 +51,13 @@ function cols(table, list) {
 
 // Drop new columns from a write when the table doesn't have them. A real value there
 // (not null) can't be saved, so say so.
+// Values that are fine to skip until then (the car still saves, just without them).
+const SKIPPABLE = new Set(["miles_per_year"]);
 function fieldsFor(table, fields) {
   if (!notMigrated.has(table)) return fields;
   const out = { ...fields };
   for (const c of NEW_COLS[table]) {
-    if (out[c] != null) throw new Error(NEEDS_MIGRATION);
+    if (out[c] != null && !SKIPPABLE.has(c)) throw new Error(NEEDS_MIGRATION);
     delete out[c];
   }
   return out;

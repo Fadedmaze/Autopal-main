@@ -1,5 +1,6 @@
 // Add Vehicle (/vehicles/new): brand, make, model, year and name, then Save or Cancel.
-// Edit Vehicle (/vehicles/:id/edit) adds mileage and Delete.
+// Edit Vehicle (/vehicles/:id/edit) adds mileage and Delete. Both ask how much the car
+// is driven, which times its mileage-based tasks (js/driving.js).
 // Brand, Make, Model (trim) and Year are chosen from the vehicle catalog only
 // (js/vehicleCatalogData.js); each list narrows the next. The database checks the same
 // catalog when a car is saved (supabase/migrations/20261111_vehicle_catalog.sql).
@@ -8,6 +9,7 @@ import { distanceUnit } from "../prefs.js";
 import {
   appBar, escapeHtml, icon, loading, toast, confirmDialog, errorMessage, withBusy, toStoredMiles, fromStoredMiles,
 } from "../ui.js";
+import { drivingField, bindDrivingField, readDrivingField } from "../driving.js";
 import { BRANDS, LATEST_YEAR, findBrand, findModel, makesFor, catalogProblem } from "../vehicleCatalog.js";
 
 const BODY_NAMES = { sedan: "sedan", hatch: "hatchback", coupe: "coupe", suv: "SUV", truck: "pickup truck", van: "van" };
@@ -67,6 +69,7 @@ export default async function render(root, ctx) {
         <input name="vehicle_nickname" maxlength="40" placeholder="e.g. Daily Driver" value="${escapeHtml(v.vehicle_nickname ?? "")}">
         <small class="hint">Leave blank and it'll show as “Vehicle 1”, “Vehicle 2”, and so on.</small>
       </label>
+      ${drivingField(editing ? v.miles_per_year : 12000)}
       ${editing ? `
         <label class="field">
           <span>Current Mileage (${distanceUnit() === "km" ? "km" : "miles"}) <em>optional</em></span>
@@ -134,6 +137,7 @@ export default async function render(root, ctx) {
   modelSel.addEventListener("change", () => { state.model = modelSel.value; });
   yearSel.addEventListener("change", () => { state.year = Number(yearSel.value) || null; });
   draw();
+  bindDrivingField(form);
 
   const fail = (msg) => { errEl.textContent = msg; errEl.hidden = false; };
 
@@ -152,6 +156,9 @@ export default async function render(root, ctx) {
       if (raw !== "" && !(Number(raw) >= 0)) return fail("Mileage must be a positive number.");
       fields.current_mileage = raw === "" ? null : toStoredMiles(Number(raw));
     }
+    const driving = readDrivingField(form);
+    if (driving.error) return fail(driving.error);
+    fields.miles_per_year = driving.miles;
     if (!fields.brand) return fail("Choose the brand (for example, Honda).");
     if (!fields.make) return fail("Choose the make (for example, Civic).");
     if (!fields.model_year) return fail("Choose the year.");
@@ -167,7 +174,9 @@ export default async function render(root, ctx) {
       try {
         if (editing) {
           await updateVehicle(v.id, fields);
-          toast("Vehicle updated", "ok");
+          toast(fields.miles_per_year !== (v.miles_per_year ?? null)
+            ? "Vehicle updated. Its maintenance schedule now fits how much you drive."
+            : "Vehicle updated", "ok");
           ctx.navigate(`#/vehicles/${v.id}`, { replace: true });
         } else {
           const created = await createVehicle(fields);

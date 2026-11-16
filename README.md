@@ -93,6 +93,20 @@ One-time setup:
 5. Deploy `supabase/functions/send-reminders/index.ts` as a function named `send-reminders`, with **Verify JWT turned off** (the function checks callers itself).
 6. Fill in the two placeholders in `supabase/setup/schedule_reminders.sql` and run it in the SQL Editor. Don't commit the file with the secret in it.
 
+### Maintenance that fits how much you drive
+
+Each car has a "How Much Do You Drive This Car?" setting on Add/Edit Vehicle: Light (about 5,000 miles a year), Average (12,000), Heavy (20,000), Very Heavy (30,000+), or an exact number. Tasks that wear out with miles are due after their miles or their months, whichever comes first, the same way an owner's manual words it:
+
+| Task | Miles | Or months |
+|---|---|---|
+| Oil change | 7,500 | 6 |
+| Tire rotation | 6,000 | 6 |
+| Engine air filter | 15,000 | 12 |
+| Cabin air filter | 15,000 | 12 |
+| Brake inspection | 12,000 | 12 |
+
+So an average driver's oil change stays every 6 months, a heavy driver's comes about every 4½ months, and a very heavy driver's every 3 months. Tire pressure, wipers, emissions and battery checks stay time-based. Changing a car's setting moves its open tasks right away; due dates someone set by hand stay put. Setup: run `supabase/migrations/20261116_driving_schedule.sql` in the SQL Editor.
+
 ## Verifying the Vertical Slice
 
 The working button is **Save Vehicle** on the Add Vehicle screen. It writes a new row to the `vehicles` table in Supabase, and a database trigger also creates that car's maintenance schedule in `maintenance_tasks`.
