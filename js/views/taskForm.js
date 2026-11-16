@@ -29,6 +29,16 @@ export default async function render(root, ctx) {
   const backLink = !editing && fromGuide
     ? { href: `#/library/${fromGuide}`, label: "Guide" }
     : { href: "#/tasks", label: "Tasks" };
+    if (ctx.query.get("from") === "vehicle") {
+      const sourceVehicle = vehicles.find(
+        (v) => String(v.id) === ctx.query.get("vehicle")
+      );
+    
+      if (sourceVehicle) {
+        backLink.href = `#/vehicles/${sourceVehicle.id}`;
+        backLink.label = sourceVehicle.label;
+      }
+    }
   // From a mechanic shop (Find a Mechanic → "Add to my tasks"): the shop and the estimate.
   const presetShop = Number(ctx.query.get("shop")) || null;
   const costParam = ctx.query.get("cost");
@@ -417,7 +427,10 @@ export default async function render(root, ctx) {
           const failed = photos.hasStaged() ? await photos.uploadStaged(created) : 0;
           toast(failed ? `Task added, but ${failed} photo${failed === 1 ? "" : "s"} couldn't be saved. Open the task to try again.` : "Task added", failed ? "error" : "ok");
         }
-        ctx.navigate("#/tasks", { replace: true });
+        ctx.navigate(
+          ctx.query.get("from") === "vehicle" ? backLink.href : "#/tasks",
+          { replace: true }
+        );
       } catch (err) {
         fail(errorMessage(err));
       }
@@ -430,7 +443,10 @@ export default async function render(root, ctx) {
     try {
       await deleteTaskWithReceipt(task);
       toast("Task deleted", "ok");
-      ctx.navigate("#/tasks", { replace: true });
+      ctx.navigate(
+        ctx.query.get("from") === "vehicle" ? backLink.href : "#/tasks",
+        { replace: true }
+      );
     } catch (err) {
       toast(errorMessage(err), "error");
     }
