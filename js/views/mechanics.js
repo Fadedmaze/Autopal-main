@@ -34,44 +34,139 @@ export default async function render(root, ctx) {
     <div class="map-screen">
       <div class="map-full" id="map" role="application" aria-label="Map of mechanic shops"></div>
 
-      <div class="map-top">
-        <a class="map-fab" href="#/home" aria-label="Back to Home">${icon("back", 22, 2.4)}</a>
-        <button type="button" class="map-filter-tab" id="filter-tab" aria-expanded="false" aria-controls="filter-panel">
-          ${icon("filter", 18, 2.2)}<span>Filter</span><span class="filter-count" hidden></span>
-        </button>
-        <button type="button" class="map-fab" id="toggle-list" aria-label="Show list">${icon("tasks", 20, 2)}</button>
+
+      <div class="map-top mechanic-toolbar">
+      <div class="mechanic-heading">
+        <h1>Find a Mechanic</h1>
+        <p>Find the right shop for your car.</p>
       </div>
+    
+      <div class="mechanic-controls">
+        <label class="mechanic-search">
+          <svg width="18" height="18" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="7"/>
+            <path d="m16 16 5 5"/>
+          </svg>
+          <input type="search" id="mechanic-search"
+            placeholder="Search mechanics or services">
+        </label>
+    
+        <button type="button" class="map-filter-tab"
+          id="filter-tab" aria-expanded="false"
+          aria-controls="filter-panel">
+          ${icon("filter", 18, 2)}
+          <span>Filters</span>
+          <span class="filter-count" hidden></span>
+        </button>
+      </div>
+    
+      <button type="button" class="mechanic-view-toggle"
+        id="toggle-list" aria-expanded="false"
+        aria-controls="map-list">
+        ${icon("tasks", 18, 2)}
+        <span class="mechanic-toggle-label">View Shops</span>
+        <span class="mechanic-toggle-arrow"></span>
+      </button>
+      
+      <div class="filter-panel" id="filter-panel" hidden>
+
+        <div class="mechanic-filter-heading">
+          <h3>Filters</h3>
+          <button type="button" class="btn-text" id="clear-filters">
+            Clear All
+          </button>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label" for="filter-problem">
+            ${icon("shield", 18, 2)}
+            Warning Light
+          </label>
+          <select class="filter-select" id="filter-problem">
+            <option value="">Any problem</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <div class="filter-label-row">
+            <label class="filter-label" for="filter-price">
+              ${icon("dollar", 18, 2)}
+              Average Repair Price
+            </label>
+            <output id="price-out"></output>
+          </div>
+
+          <input type="range" class="filter-range"
+            id="filter-price"
+            min="${PRICE_SLIDER.min}"
+            max="${PRICE_SLIDER.max}"
+            step="${PRICE_SLIDER.step}">
+
+          <div class="range-ends">
+            <span>$${PRICE_SLIDER.min}</span>
+            <span>Any</span>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <div class="filter-label-row">
+            <label class="filter-label" for="filter-rating">
+              ${icon("star", 18, 2)}
+              Minimum Rating
+            </label>
+            <output id="rating-out"></output>
+          </div>
+
+          <input type="range" class="filter-range"
+            id="filter-rating"
+            min="${RATING_SLIDER.min}"
+            max="${RATING_SLIDER.max}"
+            step="${RATING_SLIDER.step}">
+
+          <div class="range-ends">
+            <span>Any</span>
+            <span>5 ★</span>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <span class="filter-label">
+            ${icon("wrench", 18, 2)}
+            Services
+          </span>
+
+          <div class="service-grid">
+            ${SERVICES.map((s) => `
+              <button type="button"
+                class="service-toggle"
+                data-service="${escapeHtml(s)}"
+                aria-pressed="false">
+                <span class="service-check" aria-hidden="true">
+                  ${icon("check", 14, 3)}
+                </span>
+                ${escapeHtml(titleCase(s))}
+              </button>
+            `).join("")}
+          </div>
+        </div>
+
+        <div class="filter-actions">
+          <button type="button" class="btn" id="apply-filters">
+            Show Shops
+          </button>
+        </div>
+
+      </div>
+
+        <div class="map-list" id="map-list" hidden></div>
+    </div>    
 
       <div class="problem-banner" id="problem-banner" hidden></div>
 
-      <div class="filter-panel" id="filter-panel" hidden>
-        <div class="filter-group">
-          <label class="filter-label" for="filter-problem">Fix a Warning Light</label>
-          <select class="filter-select" id="filter-problem"><option value="">Any problem</option></select>
-        </div>
-        <div class="filter-group">
-          <div class="filter-label-row"><label class="filter-label" for="filter-price">Average Repair Price</label><output id="price-out"></output></div>
-          <input type="range" class="filter-range" id="filter-price" min="${PRICE_SLIDER.min}" max="${PRICE_SLIDER.max}" step="${PRICE_SLIDER.step}">
-          <div class="range-ends"><span>$${PRICE_SLIDER.min}</span><span>Any</span></div>
-        </div>
-        <div class="filter-group">
-          <div class="filter-label-row"><label class="filter-label" for="filter-rating">Rating</label><output id="rating-out"></output></div>
-          <input type="range" class="filter-range" id="filter-rating" min="${RATING_SLIDER.min}" max="${RATING_SLIDER.max}" step="${RATING_SLIDER.step}">
-          <div class="range-ends"><span>Any</span><span>5 ★</span></div>
-        </div>
-        <div class="filter-group">
-          <span class="filter-label">Services</span>
-          <div class="service-grid">${SERVICES.map((s) => `<button type="button" class="service-toggle" data-service="${escapeHtml(s)}" aria-pressed="false"><span class="service-check" aria-hidden="true">${icon("check", 14, 3)}</span>${escapeHtml(titleCase(s))}</button>`).join("")}</div>
-        </div>
-        <div class="filter-actions">
-          <button type="button" class="btn btn-ghost btn-sm" id="clear-filters">Clear</button>
-          <button type="button" class="btn btn-sm" id="apply-filters">Show Shops</button>
-        </div>
-      </div>
-
       <button type="button" class="map-fab map-locate" id="locate" aria-label="Follow my location" aria-pressed="false">${icon("locate", 22, 2)}</button>
 
-      <div class="map-list" id="map-list" hidden></div>
       <section class="problem-results" id="problem-results" hidden aria-label="Shops for this problem"></section>
       <p class="map-note">Sample shop data for demonstration</p>
     </div>`;
@@ -88,6 +183,7 @@ export default async function render(root, ctx) {
   };
   const listEl = root.querySelector("#map-list");
   let shops = [];
+  let searchTerm = "";
   let map = null;
   let layer = null;
   let L = null;
@@ -116,6 +212,16 @@ export default async function render(root, ctx) {
   let ranked = [];          // rankShops() output for the shops in view
 
   const matches = (s) => {
+    const searchable = [
+      s.shop_name,
+      s.street_address,
+      s.city,
+      ...(s.services ?? [])
+    ].join(" ").toLowerCase();
+    
+    if (searchTerm && !searchable.includes(searchTerm)) {
+      return false;
+    }
     if (filters.maxPrice != null && !(s.average_repair_price !== null && Number(s.average_repair_price) <= filters.maxPrice)) return false;
     if (filters.rating && !(Number(s.average_rating) >= filters.rating)) return false;
     for (const svc of filters.services) if (!s.services?.includes(svc)) return false;
@@ -427,13 +533,65 @@ export default async function render(root, ctx) {
     const canFix = (s) => problemMode() && Boolean(capability(s, problem));
     drawResults();
     // The plain list (normal mode only; problem mode has the results panel).
-    listEl.innerHTML = visible.length
-      ? `<ul>${visible.map((s) => `
-          <li><button type="button" data-shop="${s.id}">
-            <span><strong>${escapeHtml(s.shop_name)}</strong><small>${escapeHtml(s.street_address)}, ${escapeHtml(s.city)} · ${escapeHtml(formatDistance(s.distance_miles))}</small></span>
-            <span class="map-list-price">${s.average_repair_price !== null ? formatMoney(s.average_repair_price) : ""}</span>
-          </button></li>`).join("")}</ul>`
-      : `<p class="muted-box">No shops match these filters.</p>`;
+
+    listEl.innerHTML = `
+    <div class="mechanic-results-heading">
+      <strong>Nearby Mechanics</strong>
+      <span>${visible.length} shops</span>
+    </div>
+  
+    ${visible.length ? `
+      <ul class="mechanic-shop-list">
+        ${visible.map((s) => `
+          <li>
+            <button type="button" class="mechanic-shop-card"
+              data-shop="${s.id}">
+  
+              <span class="mechanic-shop-top">
+                <span class="mechanic-shop-icon">
+                  ${icon("wrench", 22, 2)}
+                </span>
+  
+                <span class="mechanic-shop-info">
+                  <strong>${escapeHtml(s.shop_name)}</strong>
+  
+                  <small>
+                    ${escapeHtml(s.street_address)},
+                    ${escapeHtml(s.city)}
+                  </small>
+  
+                  <small class="mechanic-shop-distance">
+                    ${icon("locate", 13, 2)}
+                    ${escapeHtml(formatDistance(s.distance_miles))}
+                  </small>
+                </span>
+              </span>
+  
+              <span class="mechanic-shop-bottom">
+                <span class="mechanic-shop-cost">
+                  <small>Average repair price</small>
+                  <strong>
+                    ${s.average_repair_price != null
+                      ? formatMoney(s.average_repair_price)
+                      : "Not available"}
+                  </strong>
+                </span>
+  
+                <span class="mechanic-shop-details">
+                  View Details
+                  ${icon("chevron", 15, 2)}
+                </span>
+              </span>
+  
+            </button>
+          </li>
+        `).join("")}
+      </ul>
+    ` : `
+      <p class="muted-box">No shops match these filters.</p>
+    `}
+  `;
+  
     if (!map) return;
     layer?.remove();
     layer = L.layerGroup().addTo(map);
@@ -570,12 +728,24 @@ export default async function render(root, ctx) {
     watchId = null;
   };
 
-  // Filter tab
-  tab.addEventListener("click", () => {
-    panel.hidden = !panel.hidden;
-    tab.setAttribute("aria-expanded", String(!panel.hidden));
-    listEl.hidden = true;
+  root.querySelector("#mechanic-search")
+  .addEventListener("input", (e) => {
+    searchTerm = e.target.value.trim().toLowerCase();
+    syncFilterUi();
+    drawPins(lastPoint ?? DEFAULT_POINT);
   });
+
+  // Filter tab
+// Filter tab
+tab.addEventListener("click", () => {
+  panel.hidden = !panel.hidden;
+  tab.setAttribute("aria-expanded", String(!panel.hidden));
+  listEl.hidden = true;
+
+  const toggle = root.querySelector("#toggle-list");
+  toggle.querySelector(".mechanic-toggle-label").textContent = "View Shops";
+  toggle.setAttribute("aria-expanded", "false");
+});
   panel.addEventListener("click", (e) => {
     const b = e.target.closest("button");
     if (!b) return;
@@ -608,6 +778,13 @@ export default async function render(root, ctx) {
     tab.setAttribute("aria-expanded", "false");
     if (problemMode()) return setSheet(sheetSnap === "peek" ? "half" : "peek");
     listEl.hidden = !listEl.hidden;
+  
+    const toggle = root.querySelector("#toggle-list");
+  
+    toggle.querySelector(".mechanic-toggle-label").textContent =
+      listEl.hidden ? "View Shops" : "Hide Shops";
+  
+    toggle.setAttribute("aria-expanded", String(!listEl.hidden));
   });
 
   // Target button: re-center and follow again (and start tracking if it isn't running).
