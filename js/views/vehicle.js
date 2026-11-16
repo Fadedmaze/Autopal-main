@@ -39,7 +39,7 @@ export default async function render(root, ctx) {
         title: vehicle.label,
         sub: [vehicleSpec(vehicle), formatMileage(vehicle.current_mileage)].filter(Boolean).join(" · "),
         back: { href: "#/garage", label: "Garage" },
-        action: `<a class="icon-btn" href="#/vehicles/${vehicle.id}/edit" aria-label="Edit vehicle details">${icon("edit", 20, 2)}</a>`,
+        action: `<a class="icon-btn vehicle-edit-btn" href="#/vehicles/${vehicle.id}/edit" aria-label="Edit vehicle details">${icon("edit", 20, 2)}</a>`,
       })}
       <div class="content vehicle-detail-page">
         
