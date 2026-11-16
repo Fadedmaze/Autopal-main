@@ -30,7 +30,12 @@ export default async function render(root, ctx) {
 
   const draw = () => {
     root.innerHTML = `
-      ${appBar({ title: "Garage", sub: vehicles.length ? "Select a vehicle to see it on Home" : "", back: { href: "#/home", label: "Home" } })}
+      ${appBar({
+        title: "Garage",
+        sub: vehicles.length ? "Select a vehicle to see it on Home" : "",
+        back: { href: "#/home", label: "Home" },
+        action: `<a class="btn btn-sm" href="#/vehicles/new">${icon("plus", 18, 2.4)}<span>Add Vehicle</span></a>`,
+      })}
       ${vehicles.length ? `
         <div class="content">
           <div class="count">${vehicles.length} vehicle${vehicles.length === 1 ? "" : "s"}</div>
@@ -40,9 +45,8 @@ export default async function render(root, ctx) {
         </div>` : emptyState({
           iconName: "car",
           title: "Your Garage Is Empty",
-          body: "You haven't added any vehicles yet. Tap <strong>Add New Vehicle</strong> below to add your first car and start tracking its maintenance.",
-        })}
-      <div class="footer-cta"><a class="btn" href="#/vehicles/new">${icon("plus", 18, 2.4)}Add New Vehicle</a></div>`;
+          body: "You haven't added any vehicles yet. Tap <strong>Add Vehicle</strong> above to add your first car and start tracking its maintenance.",
+        })}`;
 
     root.querySelectorAll(".car[data-vehicle-id]").forEach((card) => {
       card.addEventListener("click", async (e) => {
