@@ -37,8 +37,7 @@ export function careSummary({ open, done, remindDays = 7, today = todayISO() }) 
     : soon.length
       ? dueLabel(soon[0].due_date) + "."
       : dated.length
-        ? `Next task is ${dueLabel(dated[0].due_date).replace(/^Due /, "").replace(/^in /, "in ").toLowerCase()}.`
-        : open.length
+      ? `Next task is ${dueLabel(dated[0].due_date).replace(/^Due /i, "").replace(/^In /, "in ")}.`        : open.length
           ? `${open.length} task${open.length === 1 ? "" : "s"} planned, no due dates yet.`
         : "Add a task so you don't miss the next service.";
 
@@ -156,29 +155,26 @@ function whereItWent(s) {
     </div>`;
 }
 
-// The summary card for the vehicle page.
+
 export function careCard(vehicle, s, { remindDays = 7 } = {}) {
-  const tile = ({ iconName, label, value, sub, href }) => {
-    const tag = href ? "a" : "div";
-    return `
-      <${tag} class="care-tile"${href ? ` href="${href}"` : ""}>
-        <span class="care-tile-label">${icon(iconName, 15, 2.2)}${label}</span>
-        <strong class="care-tile-value">${value}</strong>
-        ${sub ? `<span class="care-tile-sub">${sub}</span>` : ""}
-      </${tag}>`;
-  };
   const newTask = `#/tasks/new?vehicle=${vehicle.id}`;
+  const budget = `#/budget?vehicle=${vehicle.id}`;
   const nothingYet = !s.completedCount && !s.upcomingCount;
 
   return `
-    <section class="card care" aria-labelledby="care-title">
+    <section class="card care care-compact" aria-labelledby="care-title">
+
       <div class="card-head">
-        <h3 id="care-title">${icon("shield", 18, 2)}Car Care at a Glance</h3>
-        <a class="link-sm" href="#/budget?vehicle=${vehicle.id}">Costs</a>
+        <h3 id="care-title">
+          ${icon("shield", 18, 2)}
+          Car Care at a Glance
+        </h3>
       </div>
 
       <div class="care-status tone-${s.status.tone}">
-        <span class="care-status-icon">${icon(s.status.iconName, 20, 2.4)}</span>
+        <span class="care-status-icon">
+          ${icon(s.status.iconName, 20, 2.4)}
+        </span>
         <span class="care-status-text">
           <strong>${escapeHtml(s.status.title)}</strong>
           <span>${escapeHtml(s.status.sub)}</span>
@@ -186,35 +182,157 @@ export function careCard(vehicle, s, { remindDays = 7 } = {}) {
       </div>
 
       ${nothingYet ? `
-        <p class="muted-box">No tasks for this car yet. <a href="${newTask}">Add the first one</a> and this summary fills in as you go.</p>` : `
-      <div class="care-tiles">
-        ${tile({ iconName: "check", label: "Completed", value: s.completedCount.toLocaleString(), sub: s.completedCount ? `${s.completedThisYear} in ${s.year}` : "None yet" })}
-        ${tile({ iconName: "dollar", label: "Total Spent", value: shortMoney(s.spent), sub: s.spent ? `${shortMoney(s.spentThisYear)} in ${s.year}` : "No costs recorded" })}
-        ${tile({ iconName: "history", label: "Last Service", value: s.last ? escapeHtml(ago(s.daysSinceLast).replace(/^./, (c) => c.toUpperCase())) : "None yet", sub: s.last ? `${escapeHtml(s.last.task_name)} · ${formatDate(s.last.completed_date, { month: "short", day: "numeric" })}` : "" })}
-        ${tile({ iconName: "calendar", label: "Upcoming", value: s.upcomingCount.toLocaleString(), sub: s.upcomingCount ? `${shortMoney(s.upcomingTotal)} estimated` : "Nothing planned", href: `#/budget?vehicle=${vehicle.id}` })}
-      </div>
+        <p class="muted-box">
+          No tasks for this car yet.
+          <a href="${newTask}">Add the first one</a>
+          and this summary fills in as you go.
+        </p>
+      ` : `
 
-      ${s.next ? `
-        <a class="care-next" href="#/tasks/${s.next.id}">
-          <span class="care-next-label">Next Up</span>
-          <span class="care-next-main">
-            <strong>${escapeHtml(s.next.task_name)}</strong>
-            <span class="tone-${dueTone(s.next.due_date, s.next.remind_days_before ?? remindDays)}">${escapeHtml(dueLabel(s.next.due_date))}${cost(s.next) ? ` · ~${shortMoney(cost(s.next))}` : ""}</span>
-          </span>
-          ${icon("chevron", 18, 2)}
-        </a>` : `<a class="care-next care-next-add" href="${newTask}">${icon("plus", 18, 2.4)}<span>Plan the Next Service</span></a>`}
+        ${s.next ? `
+          <a class="care-next" href="#/tasks/${s.next.id}?from=vehicle&vehicle=${vehicle.id}">
+            <span class="care-next-main">
+              <span class="care-compact-label">Next Service</span>
+              <strong>${escapeHtml(s.next.task_name)}</strong>
+              <span class="tone-${dueTone(s.next.due_date, s.next.remind_days_before ?? remindDays)}">
+                ${escapeHtml(dueLabel(s.next.due_date))}
+                ${cost(s.next) ? ` · ~${shortMoney(cost(s.next))}` : ""}
+              </span>
+            </span>
+            ${icon("chevron", 18, 2)}
+          </a>
+        ` : `
+          <a class="care-next care-next-add" href="${newTask}">
+            ${icon("plus", 18, 2.4)}
+            <span>Plan the Next Service</span>
+          </a>
+        `}
 
-      ${spendChart(s)}
-      ${whereItWent(s)}
+        <div class="care-quick-stats">
 
-      ${s.completedCount ? `
-        <ul class="care-facts">
-          ${s.first ? `<li>${icon("clock", 15, 2)}Tracking since ${formatDate(s.first.completed_date, { month: "short", year: "numeric" })}${s.perMonth ? ` · about ${shortMoney(Math.round(s.perMonth))} a month` : ""}</li>` : ""}
-          <li>${icon("receipt", 15, 2)}${s.receipts} of ${s.completedCount} completed task${s.completedCount === 1 ? " has a" : "s have"} receipt${s.completedCount === 1 ? "" : "s"}</li>
-          ${s.missingCost ? `<li>${icon("dollar", 15, 2)}${s.missingCost} completed task${s.missingCost === 1 ? " has" : "s have"} no cost, so the total may be low</li>` : ""}
-        </ul>` : ""}`}
-    </section>`;
+          <div class="care-quick-stat">
+            <span class="care-quick-label">
+              ${icon("check", 16, 2)}
+              Completed Tasks
+            </span>
+            <strong>${s.completedCount.toLocaleString()}</strong>
+          </div>
+
+          <div class="care-quick-stat">
+            <span class="care-quick-label">
+              ${icon("dollar", 16, 2)}
+              Total Spent
+            </span>
+            <strong>${shortMoney(s.spent)}</strong>
+          </div>
+
+        </div>
+
+        <details class="care-statistics">
+          <summary class="care-statistics-heading">
+            <span>View Detailed Statistics</span>
+            <span class="care-statistics-arrow"></span>
+          </summary>
+
+          <div class="care-statistics-content">
+
+            <div class="care-detail-grid">
+
+              <div class="care-detail-stat">
+                <span class="care-quick-label">
+                  ${icon("history", 16, 2)}
+                  Last Service
+                </span>
+                <strong>
+                  ${s.last
+                    ? escapeHtml(ago(s.daysSinceLast))
+                    : "None yet"}
+                </strong>
+                ${s.last ? `
+                  <small>
+                    ${escapeHtml(s.last.task_name)} ·
+                    ${formatDate(s.last.completed_date, {
+                      month: "short",
+                      day: "numeric"
+                    })}
+                  </small>
+                ` : ""}
+              </div>
+
+              <div class="care-detail-stat">
+                <span class="care-quick-label">
+                  ${icon("calendar", 16, 2)}
+                  Upcoming Tasks
+                </span>
+                <strong>${s.upcomingCount.toLocaleString()}</strong>
+                <small>${shortMoney(s.upcomingTotal)} estimated</small>
+              </div>
+
+              <div class="care-detail-stat">
+                <span class="care-quick-label">
+                  Completed in ${s.year}
+                </span>
+                <strong>${s.completedThisYear}</strong>
+              </div>
+
+              <div class="care-detail-stat">
+                <span class="care-quick-label">
+                  Spent in ${s.year}
+                </span>
+                <strong>${shortMoney(s.spentThisYear)}</strong>
+              </div>
+
+            </div>
+
+            ${spendChart(s)}
+            ${whereItWent(s)}
+
+            ${s.completedCount ? `
+              <ul class="care-facts">
+                ${s.first ? `
+                  <li>
+                    ${icon("clock", 15, 2)}
+                    Tracking since
+                    ${formatDate(s.first.completed_date, {
+                      month: "short",
+                      year: "numeric"
+                    })}
+                    ${s.perMonth
+                      ? ` · about ${shortMoney(Math.round(s.perMonth))} a month`
+                      : ""}
+                  </li>
+                ` : ""}
+
+                <li>
+                  ${icon("receipt", 15, 2)}
+                  ${s.receipts} of ${s.completedCount}
+                  completed tasks have receipts
+                </li>
+
+                ${s.missingCost ? `
+                  <li>
+                    ${icon("dollar", 15, 2)}
+                    ${s.missingCost} completed tasks have no cost,
+                    so the total may be low
+                  </li>
+                ` : ""}
+              </ul>
+            ` : ""}
+
+            <a class="btn btn-soft btn-sm care-cost-link"
+              href="${budget}">
+              ${icon("dollar", 16, 2)}
+              View All Costs
+            </a>
+
+          </div>
+        </details>
+
+      `}
+    </section>
+  `;
 }
+
 
 // Tooltip for the spending bars (hover, tap or keyboard focus).
 export function bindCareCard(root) {
