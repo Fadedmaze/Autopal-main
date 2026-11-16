@@ -3516,3 +3516,159 @@ button.menu-row { width: 100%; font: inherit; font-weight: 600; text-align: left
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
+
+  /* =========================================
+   MECHANIC MAP POPUP
+   ========================================= */
+
+.map-screen .leaflet-popup-content-wrapper {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, .12);
+}
+
+.map-screen .leaflet-popup-tip {
+  background: var(--surface);
+}
+
+.map-screen .leaflet-popup-content {
+  margin: 20px 16px 16px;
+  font-family: inherit;
+}
+
+.shop-pop {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 270px;
+  max-width: calc(100vw - 100px);
+}
+
+.shop-pop-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-right: 8px;
+}
+
+.shop-pop-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: 11px;
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.shop-pop-info {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.shop-pop-info strong {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.4;
+}
+
+.shop-pop-meta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.shop-pop-meta svg {
+  color: var(--brand);
+}
+
+.shop-pop-rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.shop-pop-pricing {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.shop-pop-pricing > span,
+.shop-pop-pricing > small {
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.shop-pop .shop-pop-price {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--brand);
+}
+
+.shop-pop-links {
+  display: flex;
+  gap: 8px;
+  margin: 0;
+}
+
+.shop-pop-links a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: 1;
+  min-height: 40px;
+  padding: 8px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.shop-pop-links .shop-pop-call {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.shop-pop-links .shop-pop-directions {
+  background: var(--brand);
+  color: white;
+}
+
+.map-screen .leaflet-popup-close-button {
+  color: var(--ink-3);
+}
+
+/* Selected mechanic map pin */
+
+.price-pin.selected span {
+  background: #1859ba;
+  border-color: #1859ba;
+  color: #ffffff;
+  opacity: 1;
+  box-shadow: 0 4px 12px rgba(24, 89, 186, 0.3);
+}
+
+.price-pin.selected span::after {
+  border-top-color: #1859ba;
+}
+
+.price-pin span {
+  transition: background-color 0.2s ease,
+              color 0.2s ease,
+              box-shadow 0.2s ease;
+}
