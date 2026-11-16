@@ -2886,3 +2886,633 @@ button.menu-row { width: 100%; font: inherit; font-weight: 600; text-align: left
 .drive-exact { margin-top: 10px; }
 .drive-card p { margin: 6px 0 0; color: var(--ink-2); font-size: 14.5px; }
 .drive-card .drive-level { font-weight: 700; color: var(--ink); }
+
+
+/* Find Mechanic redesign */
+
+.map-top.mechanic-toolbar {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  max-width: 480px;
+  right: auto;
+  width: calc(100% - 32px);
+  box-sizing: border-box;
+}
+
+.mechanic-heading h1 {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--ink);
+  margin: 0 0 4px;
+}
+
+.mechanic-heading p {
+  font-size: 13px;
+  color: var(--ink-3);
+  margin: 0;
+}
+
+.mechanic-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mechanic-search {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--brand);
+}
+
+.mechanic-search input {
+  width: 100%;
+  min-width: 0;
+  border: none;
+  outline: none;
+  padding: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.mechanic-toolbar .map-filter-tab {
+  flex: 0 0 auto;
+  width: auto;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--brand-soft);
+  color: var(--brand);
+  box-shadow: none;
+  font-size: 13px;
+}
+
+.mechanic-view-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  background: var(--brand-soft);
+  color: var(--brand);
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+/* Mechanic toolbar refinements */
+
+.map-top.mechanic-toolbar {
+  padding: 16px;
+  gap: 12px;
+  max-width: 440px;
+}
+
+.mechanic-heading {
+  padding-right: 48px;
+}
+
+.mechanic-heading h1 {
+  font-size: 22px;
+}
+
+.mechanic-search {
+  height: 44px;
+  padding: 0 12px;
+  box-sizing: border-box;
+}
+
+.mechanic-search svg {
+  flex-shrink: 0;
+  color: var(--brand);
+}
+
+.mechanic-search input {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  border-radius: 0;
+  padding: 0 !important;
+  min-height: 0;
+  height: auto;
+  font-size: 14px;
+}
+
+.mechanic-toolbar .map-filter-tab {
+  height: 44px;
+  min-height: 44px;
+  box-sizing: border-box;
+}
+
+.mechanic-view-toggle {
+  min-height: 40px;
+  padding: 10px;
+}
+
+/* Move settings to the top right */
+.mechanic-toolbar > :last-child:not(#toggle-list) {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  margin: 0;
+}
+
+
+/* =========================================
+   MECHANIC RESULTS PANEL
+   ========================================= */
+
+   .map-top.mechanic-toolbar {
+    max-height: calc(100% - 32px);
+  }
+
+  /* Results appear below the header */
+  
+  .mechanic-toolbar .map-list {
+    position: static;
+    width: 100%;
+    max-height: none;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 14px 0 0;
+    margin: 0;
+    border-radius: 0;
+    border-top: 1px solid var(--line);
+    background: transparent;
+    box-shadow: none;
+    box-sizing: border-box;
+  }
+  
+  .mechanic-toolbar .map-list[hidden] {
+    display: none;
+  }
+  
+  .mechanic-results-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  
+  .mechanic-results-heading strong {
+    font-size: 14px;
+    color: var(--ink);
+  }
+  
+  .mechanic-results-heading > span {
+    font-size: 12px;
+    color: var(--ink-3);
+  }
+  
+  /* Individual shop cards */
+  
+  .map-list .mechanic-shop-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+  
+  .map-list .mechanic-shop-card {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    width: 100%;
+    padding: 14px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    text-align: left;
+    cursor: pointer;
+    box-sizing: border-box;
+  }
+  
+  .map-list .mechanic-shop-card:hover {
+    border-color: var(--brand);
+    background: var(--surface);
+  }
+  
+  .mechanic-shop-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .mechanic-shop-icon {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--brand-soft);
+    color: var(--brand);
+    flex-shrink: 0;
+  }
+  
+  .mechanic-shop-info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .mechanic-shop-info strong {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  
+  .mechanic-shop-info small {
+    font-size: 12px;
+    color: var(--ink-3);
+    white-space: normal;
+  }
+  
+  .mechanic-shop-distance {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  
+  .mechanic-shop-distance svg {
+    color: var(--brand);
+  }
+  
+  /* Price and details */
+  
+  .mechanic-shop-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+  }
+  
+  .mechanic-shop-cost {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .mechanic-shop-cost small {
+    font-size: 11px;
+    color: var(--ink-3);
+  }
+  
+  .mechanic-shop-cost strong {
+    font-size: 18px;
+    color: var(--brand);
+  }
+  
+  .mechanic-shop-details {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: var(--brand-soft);
+    color: var(--brand);
+    font-size: 12px;
+    font-weight: 600;
+  }
+  
+  /* Mobile layout */
+  
+  @media (max-width: 699px) {
+    .map-top.mechanic-toolbar {
+      left: 12px;
+      right: 12px;
+      width: auto;
+      max-width: none;
+      max-height: calc(100% - 28px);
+      padding: 14px;
+    }
+  
+    .mechanic-toolbar .map-list {
+      max-height: 55dvh;
+    }
+  
+    .map-list .mechanic-shop-card {
+      padding: 12px;
+    }
+  
+    .mechanic-shop-info strong {
+      font-size: 14px;
+    }
+  }
+  
+  .mechanic-toolbar {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  
+  .mechanic-toolbar > :not(.map-list):not(.filter-panel) {
+    flex-shrink: 0;
+  }
+  
+  .mechanic-toolbar .map-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+
+/* Compact mechanic cards */
+
+.map-list .mechanic-shop-card .mechanic-shop-top {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.map-list .mechanic-shop-card .mechanic-shop-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+}
+
+.map-list .mechanic-shop-card .mechanic-shop-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  flex: 1;
+}
+
+.map-list .mechanic-shop-card {
+  padding: 12px;
+  gap: 10px;
+}
+
+.map-list .mechanic-shop-bottom {
+  padding-top: 10px;
+}
+
+/* Mechanic list dropdown arrow */
+
+.mechanic-view-toggle {
+  position: relative;
+  padding-right: 36px;
+  padding-left: 36px;
+}
+
+.mechanic-toggle-arrow {
+  position: absolute;
+  right: 18px;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 0.2s ease;
+}
+
+.mechanic-view-toggle[aria-expanded="true"]
+.mechanic-toggle-arrow {
+  transform: rotate(225deg);
+}
+
+
+/* =========================================
+   MECHANIC FILTER REDESIGN
+   ========================================= */
+/* =========================================
+   MECHANIC FILTERS
+   ========================================= */
+
+   .mechanic-toolbar > .filter-panel {
+    position: static;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    width: 100%;
+    max-height: none;
+    min-height: 0;
+    flex: 1 1 auto;
+    gap: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0;
+    margin: 0;
+    background: transparent;
+    border: none;
+    border-top: 1px solid var(--line);
+    border-radius: 0;
+    box-shadow: none;
+    box-sizing: border-box;
+  }
+  
+  .mechanic-toolbar > .filter-panel[hidden] {
+    display: none;
+  }
+  
+  /* Filters heading */
+  
+  .mechanic-toolbar .mechanic-filter-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 0 4px;
+    margin: 0;
+    flex-shrink: 0;
+  }
+  
+  .mechanic-filter-heading h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  
+  .mechanic-filter-heading .btn-text {
+    color: var(--brand);
+    font-size: 13px;
+    font-weight: 600;
+  }
+  
+  /* Filter sections */
+  
+  .mechanic-toolbar .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 0;
+    margin: 0;
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  
+  .mechanic-toolbar .filter-group:first-of-type {
+    padding-top: 6px;
+  }
+  
+  .mechanic-toolbar .mechanic-filter-heading + .filter-group {
+    padding-top: 6px;
+    padding-bottom: 16px;
+    gap: 8px;
+  }
+  
+  .mechanic-toolbar .filter-group > * {
+    margin: 0;
+  }
+  
+  .mechanic-toolbar .filter-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  
+  .mechanic-toolbar .filter-label svg {
+    color: var(--brand);
+    flex-shrink: 0;
+  }
+  
+  .mechanic-toolbar .filter-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 0;
+  }
+  
+  .mechanic-toolbar .filter-label-row output {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--brand);
+  }
+  
+  /* Warning light dropdown */
+  
+  .mechanic-toolbar .filter-select {
+    min-height: 40px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    margin: 0;
+  }
+  
+  .mechanic-toolbar #filter-problem {
+    margin: 0;
+  }
+  
+  /* Price and rating sliders */
+  
+  .mechanic-toolbar .filter-range {
+    height: 24px;
+    margin: 4px 0;
+  }
+  
+  .mechanic-toolbar .range-ends {
+    display: flex;
+    justify-content: space-between;
+    margin: 0;
+    font-size: 11px;
+    line-height: 1.2;
+  }
+  
+  /* Service selection buttons */
+  
+  .mechanic-toolbar .service-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin: 2px 0 0;
+  }
+  
+  .mechanic-toolbar .service-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    min-height: 34px;
+    padding: 6px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: var(--surface);
+    color: var(--ink-2);
+    font-size: 12px;
+    font-weight: 600;
+  }
+  
+  .mechanic-toolbar .service-check {
+    display: none;
+  }
+  
+  .mechanic-toolbar .service-toggle[aria-pressed="true"] {
+    background: var(--brand-soft);
+    border-color: var(--brand);
+    color: var(--brand);
+  }
+  
+  .mechanic-toolbar
+  .service-toggle[aria-pressed="true"] .service-check {
+    display: inline-flex;
+    width: 14px;
+    height: 14px;
+    border: none;
+    background: transparent;
+    color: var(--brand);
+  }
+  
+  /* Apply filters button */
+  
+  .mechanic-toolbar .filter-actions {
+    position: static;
+    bottom: 0;
+    z-index: 2;
+    flex-shrink: 0;
+    background: var(--surface);
+    padding: 16px 0 8px;
+    margin: 0;
+    border-top: none;
+  }
+  
+  .mechanic-toolbar #apply-filters {
+    width: 100%;
+    min-height: 44px;
+  }
+  
+  /* Mobile layout */
+  
+  @media (max-width: 699px) {
+    .mechanic-toolbar > .filter-panel {
+      max-height: 55dvh;
+    }
+  
+    .mechanic-toolbar .service-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
