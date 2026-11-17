@@ -1811,6 +1811,7 @@ button.task-body { border: 0; padding: 0; background: none; text-align: left; fo
 .setting { display: flex; flex-direction: column; gap: 8px; padding: 10px 0; border-top: 1px solid var(--line); }
 .setting-label { display: flex; align-items: center; gap: 8px; font-weight: 700; }
 .setting-label .icon { color: var(--brand); }
+.support-email { margin-left: 26px; }
 .segmented button[aria-checked="true"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
 .sheet .segmented button[aria-checked="true"] { background: var(--brand); color: #fff; }
 .privacy summary { display: flex; justify-content: space-between; align-items: center; cursor: pointer; list-style: none; }
