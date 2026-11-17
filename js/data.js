@@ -234,12 +234,6 @@ export async function createTask(fields) {
     .insert(fieldsFor("maintenance_tasks", taskIn(fields))).select(cols("maintenance_tasks", TASK_COLS)).single()).then(taskOut);
 }
 
-export async function listMaintenanceCatalog() {
-  return check(await supabase.from("maintenance_catalog")
-    .select("id, task_name, typical_cost, interval_days, first_due_days, sort_order")
-    .order("sort_order").order("id"));
-}
-
 export async function updateTask(id, fields) {
   return run("maintenance_tasks", () => supabase.from("maintenance_tasks")
     .update(fieldsFor("maintenance_tasks", taskIn(fields))).eq("id", id).select(cols("maintenance_tasks", TASK_COLS)).single()).then(taskOut);
