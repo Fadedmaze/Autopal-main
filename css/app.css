@@ -3699,6 +3699,71 @@ button.menu-row { width: 100%; font: inherit; font-weight: 600; text-align: left
   }
 }
 
+/* Mechanic shop rating layout */
+
+.map-list .mechanic-shop-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.map-list .mechanic-shop-cost {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+}
+
+.map-list .mechanic-shop-rating {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.map-list .mechanic-shop-rating .stars {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 2px;
+  width: auto;
+  white-space: nowrap;
+}
+
+.map-list .mechanic-shop-rating .stars svg {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.map-list .mechanic-shop-rating .stars-num {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-left: 4px;
+}
+
+.map-list .shop-reviews {
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.map-list .open-now {
+  font-size: 12px;
+  margin: 0;
+}
+
+.map-list .mechanic-shop-details {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 
 /* ---------- Google map mode (js/mapKit.js) and real shops (js/places.js) ---------- */
 .gm-you-dot { width: 22px; height: 22px; transform: translate(-11px, -11px); }
