@@ -181,7 +181,7 @@ export default async function render(root, ctx) {
 
   <div class="task-additional-content">
       <label class="field">
-        <span>Notes <em>(Optional)</em></span>
+        <span>Notes <em>(optional)</em></span>
         <textarea name="notes" rows="3" maxlength="1000" placeholder="Part numbers, which shop, anything to remember">${escapeHtml(t.notes ?? "")}</textarea>
       </label>
       <div class="field task-photos-field" id="task-photos"></div>
@@ -189,7 +189,7 @@ export default async function render(root, ctx) {
         <label for="remind-select">
         <span class="remind-heading">
           ${icon("bell", 18, 2)}
-          Reminder <em>(Optional)</em>
+          Reminder <em>(optional)</em>
         </span>
         </label>
 
@@ -240,7 +240,7 @@ export default async function render(root, ctx) {
         ` : ""}
       </div>
       <label class="field">
-        <span>Estimated Cost <em>(Optional)</em></span>
+        <span>Estimated Cost <em>(optional)</em></span>
         <span class="input-prefix"><span>$</span><input name="estimated_cost" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00" value="${t.estimated_cost ?? ""}"></span>
         </div>
       </details>
