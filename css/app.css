@@ -3715,10 +3715,9 @@ button.menu-row { width: 100%; font: inherit; font-weight: 600; text-align: left
 .open-now.no { color: #b42318; }
 .shop-pop-details { width: 100%; justify-content: center; margin-top: 2px; }
 .mechanic-shop-rating { display: inline-flex; align-items: center; gap: 4px; }
-/* Google's info window around the same popup content */
-.gm-style .gm-style-iw-c { border-radius: 16px; padding: 14px 14px 12px !important; }
-.gm-style .gm-style-iw-d { overflow: auto !important; }
-.gm-style .shop-pop { font-family: Inter, sans-serif; color: #121826; }
+/* Google's info window around the same popup content (keep Google's own close button) */
+.gm-style .gm-style-iw-c { border-radius: 16px; }
+.gm-style .shop-pop { font-family: Inter, sans-serif; color: #121826; padding: 0 4px 6px; }
 
 /* ---------- Shop page (#/shops/:id) ---------- */
 .shop-page { display: flex; flex-direction: column; gap: 14px; }

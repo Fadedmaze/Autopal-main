@@ -51,6 +51,11 @@ async function googleMap(el, { center, zoom }) {
   const info = new InfoWindow({ pixelOffset: new g.Size(0, -34) });
   let openPin = null;
   info.addListener("closeclick", () => { openPin?.onClose?.(); openPin = null; });
+  // Like the Leaflet map: tapping the map or pressing Escape closes the shop popup.
+  const closeOpen = () => { if (openPin) { info.close(); openPin.onClose?.(); openPin = null; } };
+  map.addListener("click", closeOpen);
+  const onKey = (e) => { if (e.key === "Escape") closeOpen(); };
+  document.addEventListener("keydown", onKey);
 
   // An HTML marker (same look as the Leaflet pins), kept in the clickable pane.
   class HtmlPin extends OverlayView {
@@ -125,7 +130,7 @@ async function googleMap(el, { center, zoom }) {
       pins = [];
     },
     popupOpen: () => Boolean(openPin),
-    closePopup: () => { if (openPin) { info.close(); openPin.onClose?.(); openPin = null; } },
+    closePopup: closeOpen,
     setMe: ({ lat, lng, accuracy }) => {
       const p = { lat, lng };
       const radius = Math.min(accuracy || 0, 1500);
@@ -145,7 +150,7 @@ async function googleMap(el, { center, zoom }) {
     onUserMove: (fn) => map.addListener("dragstart", fn),
     onIdle: (fn) => map.addListener("idle", fn),
     invalidate: () => {},
-    remove: () => { api.clearPins(); me?.circle.setMap(null); me?.dot.setMap(null); g.event.clearInstanceListeners(map); el.innerHTML = ""; },
+    remove: () => { document.removeEventListener("keydown", onKey); api.clearPins(); me?.circle.setMap(null); me?.dot.setMap(null); g.event.clearInstanceListeners(map); el.innerHTML = ""; },
   };
   return api;
 }
