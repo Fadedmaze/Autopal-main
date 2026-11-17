@@ -972,6 +972,18 @@ button.task-body { border: 0; padding: 0; background: none; text-align: left; fo
   border-color: var(--danger, #e57373);
 }
 
+.page-tasks .task-suggestions { margin: 28px 0 12px; }
+.page-tasks .task-suggestions h2 { margin: 0; font-size: 18px; }
+.page-tasks .task-suggestions > .hint { margin: 5px 0 12px; }
+.page-tasks .suggestion-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.page-tasks .task-suggestion {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  padding: 14px 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface);
+}
+.page-tasks .task-suggestion > span { display: grid; gap: 3px; min-width: 0; }
+.page-tasks .task-suggestion strong { overflow-wrap: anywhere; }
+.page-tasks .task-suggestion small { color: var(--ink-3); }
+
 
 /* =========================================
    TASK FORM — CLEAN LAYOUT
