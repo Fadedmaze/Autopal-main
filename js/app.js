@@ -30,14 +30,13 @@ const ROUTES = [
   { path: "/discover", view: () => import("./views/discover.js"), tab: "library" }, // redirects to the Dashboard Lights tab
   { path: "/library", view: () => import("./views/library.js"), tab: "library", settings: true },
   { path: "/library/:slug", view: () => import("./views/library.js"), tab: "library" },
-  // Profile is part of Home now; these keep old links working (see views/profile.js).
-  { path: "/profile", view: () => import("./views/profile.js"), tab: "home" },
+  { path: "/profile", view: () => import("./views/profile.js"), tab: "home", settings: true },
   { path: "/profile/password", view: () => import("./views/profile.js"), tab: "home", mode: "password", nav: false },
   { path: "/profile/notifications", view: () => import("./views/profile.js"), tab: "home", mode: "notifications", nav: false },
   { path: "/profile/insurance", view: () => import("./views/profile.js"), tab: "home", mode: "insurance" },
 ];
 
-// Bottom bar, left to right. Home also holds the account details that used to be Profile.
+// Bottom bar, left to right. Profile is accessed from the Home header.
 const TABS = [
   { id: "home", label: "Home", icon: "home", href: "#/home" },
   { id: "garage", label: "Garage", icon: "garage", href: "#/garage" },
