@@ -78,7 +78,7 @@ export default async function render(root, ctx) {
       <label class="field">
         <span>Current Mileage (${distanceUnit() === "km" ? "km" : "miles"}) <em>optional</em></span>
         <input name="current_mileage" type="number" inputmode="numeric" min="0" max="3000000" step="1" value="${fromStoredMiles(v.current_mileage)}">
-        <small class="hint">You can add or update this anytime.</small>
+        <small class="hint">You can add or update this anytime</small>
       </label>
       ${drivingField(editing ? v.miles_per_year : 12000)}
       <p class="form-error" role="alert" hidden></p>
