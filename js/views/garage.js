@@ -55,7 +55,6 @@ export default async function render(root, ctx) {
           if (await select(id)) toast("Now showing on Home", "ok");
           return;
         }
-        select(id);
         ctx.navigate(`#/vehicles/${id}`);
       });
     });
