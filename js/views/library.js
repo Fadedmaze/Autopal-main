@@ -181,7 +181,7 @@ export default async function render(root, ctx) {
   } catch {
     if (!ctx.isCurrent()) return;
     root.innerHTML = `
-      ${appBar({ title: "Discover", back: { href: "#/home", label: "Home" } })}
+      ${appBar({ title: "Discover" })}
       <div class="error-state">
         ${icon("book", 40, 1.6)}
         <h2>Couldn't Load the Guides</h2>
@@ -258,7 +258,7 @@ export default async function render(root, ctx) {
     : guidesCache.filter((g) => g.category === "diy");
 
     root.innerHTML = `
-      ${appBar({ title: "Discover", sub: "Learn the basics of keeping your car healthy", back: { href: "#/home", label: "Home" } })}
+      ${appBar({ title: "Discover", sub: "Learn the basics of keeping your car healthy" })}
       <div class="content">
       <div class="segmented" role="tablist" aria-label="Guide categories">
         ${CATEGORIES.map((c) => `<button role="tab" type="button" data-cat="${c.id}" aria-selected="${c.id === category}">${c.label}</button>`).join("")}

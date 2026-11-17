@@ -53,6 +53,7 @@ let renderSeq = 0;
 let recovering = false;
 let prefsLoaded = false;
 let currentHash = null;
+let lastMainHash = "#/home";
 let previousHash = null; // last in-app screen, for "save and go back"
 
 function match(pathname) {
@@ -106,12 +107,23 @@ function mountSettingsButton(page) {
     btn.setAttribute("aria-label", "Settings");
     btn.innerHTML = icon("tire", 24, 1.7);
     btn.addEventListener("click", () => openSettings());
+    // Profile sits just left of Settings.
+    const prof = document.createElement("a");
+    prof.href = "#/profile";
+    prof.className = "profile-btn";
+    prof.setAttribute("aria-label", "Profile");
+    prof.innerHTML = icon("user", 22, 2);
     if (host.classList.contains("map-top")) {
       btn.classList.add("map-settings");
+      prof.classList.add("map-fab");
+      host.append(prof, btn);
     } else {
       host.classList.add("has-settings");
+      const tools = document.createElement("div");
+      tools.className = "appbar-tools";
+      tools.append(prof, btn);
+      host.append(tools);
     }
-    host.append(btn);
   };
   place();
   const watcher = new MutationObserver(place);
@@ -162,6 +174,8 @@ async function render() {
     previousHash = currentHash;
     currentHash = location.hash;
   }
+  // Last main tab (Home, Garage...), so Profile's Back returns there even after a sub-page.
+  if (found.route.settings) lastMainHash = location.hash;
 
   // A fresh element per route, so listeners from the previous screen can't linger.
   const page = document.createElement("div");
@@ -177,6 +191,7 @@ async function render() {
     mode: found.route.mode,
     navigate,
     goBack: (fallback) => navigate(previousHash && previousHash !== location.hash ? previousHash : fallback, { replace: true }),
+    lastMainHash: () => lastMainHash,
     isCurrent: () => seq === renderSeq,
   };
   try {

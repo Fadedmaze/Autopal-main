@@ -19,6 +19,7 @@ const PRICE_SLIDER = { min: 50, max: 500, step: 25 };
 const RATING_SLIDER = { min: 0, max: 5, step: 0.5 };
 const REFETCH_MILES = 0.5; // refresh shop distances after moving this far
 const FOLLOW_ZOOM = 14;
+const PAN_REFETCH_MILES = 3; // panning the map this far loads the new area's shops
 const SEVERITY = {
   stop: { label: "Stop Now", text: "Don't drive far. Call the shop first and ask about towing." },
   soon: { label: "Check Soon", text: "" },
@@ -35,7 +36,6 @@ export default async function render(root, ctx) {
       <div class="map-full" id="map" role="application" aria-label="Map of mechanic shops"></div>
 
       <div class="map-top">
-        <a class="map-fab" href="#/home" aria-label="Back to Home">${icon("back", 22, 2.4)}</a>
         <button type="button" class="map-filter-tab" id="filter-tab" aria-expanded="false" aria-controls="filter-panel">
           ${icon("filter", 18, 2.2)}<span>Filter</span><span class="filter-count" hidden></span>
         </button>
@@ -73,7 +73,7 @@ export default async function render(root, ctx) {
 
       <div class="map-list" id="map-list" hidden></div>
       <section class="problem-results" id="problem-results" hidden aria-label="Shops for this problem"></section>
-      <p class="map-note">Sample shop data for demonstration</p>
+      <p class="map-note">Shops from AutoPal and OpenStreetMap</p>
     </div>`;
 
   const mapEl = root.querySelector("#map");
@@ -116,7 +116,7 @@ export default async function render(root, ctx) {
   let ranked = [];          // rankShops() output for the shops in view
 
   const matches = (s) => {
-    if (filters.maxPrice != null && !(s.average_repair_price !== null && Number(s.average_repair_price) <= filters.maxPrice)) return false;
+    if (filters.maxPrice != null && !(s.average_repair_price != null && Number(s.average_repair_price) <= filters.maxPrice)) return false;
     if (filters.rating && !(Number(s.average_rating) >= filters.rating)) return false;
     for (const svc of filters.services) if (!s.services?.includes(svc)) return false;
     return true;
@@ -231,10 +231,19 @@ export default async function render(root, ctx) {
   });
 
   const telHref = (phone) => `tel:${String(phone).replace(/[^\d+]/g, "")}`;
-  const directionsHref = (s) => `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${s.street_address}, ${s.city}`)}`;
+  // Address line, or "" for an OpenStreetMap shop with no address listed.
+  const placeText = (s) => [s.street_address, s.city].filter(Boolean).join(", ");
+  // Directions by address when we have one, else by the pin's coordinates.
+  const directionsHref = (s) => `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+    s.street_address ? `${s.shop_name}, ${placeText(s)}` : `${s.latitude},${s.longitude}`)}`;
+  // A note under OpenStreetMap shops: no ratings or prices, and maybe guessed services.
+  const sourceNote = (s) => (s.source === "osm"
+    ? `<span class="shop-source">${s.services_estimated ? "General repair shop. Call to confirm services. " : ""}No ratings or prices yet · OpenStreetMap</span>`
+    : "");
   // "Add to my tasks" carries the repair, the car, the shop and the estimate into a new task.
   const taskHref = (s, e) => {
-    const q = new URLSearchParams({ name: `${problem.name} repair`.slice(0, 80), from: "mechanics", shop: s.id });
+    const q = new URLSearchParams({ name: `${problem.name} repair`.slice(0, 80), from: "mechanics" });
+    if (s.id > 0) q.set("shop", s.id); // only the app's own shops have a database id
     if (vehicle) q.set("vehicle", vehicle.id);
     if (e) {
       q.set("cost", midpoint(e));
@@ -253,9 +262,10 @@ export default async function render(root, ctx) {
         ? `<span class="fix-badge ${cap}">${cap === "primary" ? "Can fix this" : "Can often handle this"}</span>`
         : `<span class="shop-pop-meta">Doesn't list ${escapeHtml(problem.repair_service.toLowerCase())} work</span>`) : ""}
       ${e ? `<span class="shop-pop-price">Est. ${rangeText(e)}</span>${e.diag ? `<span class="shop-pop-meta">+ diagnosis ${rangeText(e.diag)}</span>` : ""}` : ""}
-      ${!problemMode() ? `<span class="shop-pop-price">Avg. repair ${s.average_repair_price !== null ? formatMoney(s.average_repair_price) : "n/a"}</span>` : ""}
-      <span class="shop-pop-meta">${stars(s.average_rating)}</span>
-      <span class="shop-pop-meta">${escapeHtml(formatDistance(s.distance_miles))}</span>
+      ${!problemMode() && s.average_repair_price != null ? `<span class="shop-pop-price">Avg. repair ${formatMoney(s.average_repair_price)}</span>` : ""}
+      ${s.average_rating != null ? `<span class="shop-pop-meta">${stars(s.average_rating)}</span>` : ""}
+      <span class="shop-pop-meta">${escapeHtml([placeText(s), formatDistance(s.distance_miles)].filter(Boolean).join(" · "))}</span>
+      ${sourceNote(s)}
       <span class="shop-pop-links">
         ${s.phone ? `<a href="${telHref(s.phone)}">Call</a>` : ""}
         <a href="${directionsHref(s)}" target="_blank" rel="noopener">Directions</a>
@@ -390,7 +400,8 @@ export default async function render(root, ctx) {
           </button>
           ${e ? `<span class="shop-result-price">${rangeText(e)}</span>` : ""}
         </div>
-        <span class="shop-result-meta">${stars(s.average_rating)} <span>· ${escapeHtml(formatDistance(s.distance_miles))}</span></span>
+        <span class="shop-result-meta">${stars(s.average_rating)} <span>${s.average_rating != null ? "· " : ""}${escapeHtml(formatDistance(s.distance_miles))}</span></span>
+        ${sourceNote(s)}
         ${reasons.length ? `<span class="reason-chips">${reasons.map((x, i) => `<span class="reason ${i === 0 ? "lead" : ""}">${escapeHtml(x)}</span>`).join("")}</span>` : ""}
         ${!cap ? `<span class="shop-result-why">Doesn't list ${escapeHtml(problem.repair_service.toLowerCase())} work</span>` : ""}
         ${e ? `<span class="shop-result-why">${e.diag ? `Plus diagnosis ${rangeText(e.diag)}, often credited toward the repair. ` : ""}${escapeHtml(estimateWhy(e, vehicle))}.</span>` : ""}
@@ -430,8 +441,8 @@ export default async function render(root, ctx) {
     listEl.innerHTML = visible.length
       ? `<ul>${visible.map((s) => `
           <li><button type="button" data-shop="${s.id}">
-            <span><strong>${escapeHtml(s.shop_name)}</strong><small>${escapeHtml(s.street_address)}, ${escapeHtml(s.city)} · ${escapeHtml(formatDistance(s.distance_miles))}</small></span>
-            <span class="map-list-price">${s.average_repair_price !== null ? formatMoney(s.average_repair_price) : ""}</span>
+            <span><strong>${escapeHtml(s.shop_name)}</strong><small>${escapeHtml([placeText(s), formatDistance(s.distance_miles)].filter(Boolean).join(" · "))}</small></span>
+            <span class="map-list-price">${s.average_repair_price != null ? formatMoney(s.average_repair_price) : ""}</span>
           </button></li>`).join("")}</ul>`
       : `<p class="muted-box">No shops match these filters.</p>`;
     if (!map) return;
@@ -443,7 +454,7 @@ export default async function render(root, ctx) {
       const e = est(s);
       const dim = problemMode() && !canFix(s);
       // In problem mode a shop that can't do the repair shows no price: its average would read like an estimate.
-      const price = e ? rangeText(e) : dim ? "—" : (s.average_repair_price !== null ? `$${Math.round(Number(s.average_repair_price))}` : "—");
+      const price = e ? rangeText(e) : dim ? "—" : (s.average_repair_price != null ? `$${Math.round(Number(s.average_repair_price))}` : icon("wrench", 13, 2.2));
       const cls = ["price-pin", dim && "dim", problemMode() && !dim && "fix", s.id === bestId && "best"].filter(Boolean).join(" ");
       const marker = L.marker([Number(s.latitude), Number(s.longitude)], {
         icon: L.divIcon({ className: cls, html: `<span>${s.id === bestId ? "★ " : ""}${price}</span>`, iconSize: null, iconAnchor: [0, 0] }),
@@ -472,7 +483,7 @@ export default async function render(root, ctx) {
     const seq = ++fetchSeq;
     lastPoint = point;
     lastFetchPoint = point;
-    const found = await nearbyShops(point.lat, point.lng, 100);
+    const found = await nearbyShops(point.lat, point.lng, 100, { from: me ? { lat: me.lat, lng: me.lng } : null });
     if (!ctx.isCurrent() || seq !== fetchSeq) return;
     shops = found;
     medianPrice = median(shops.map((s) => s.average_repair_price));
@@ -550,8 +561,8 @@ export default async function render(root, ctx) {
     if (deniedNotice) return;
     deniedNotice = true;
     toast(err?.code === 1
-      ? "Location is off, so we're showing shops near Provo. Tap the target button to try again."
-      : "We couldn't find your location. Showing shops near Provo.", "error");
+      ? "Location is off, so we're showing shops near Provo. Move the map anywhere to see that area's shops, or tap the target button to try again."
+      : "We couldn't find your location. Move the map anywhere to see that area's shops.", "error");
   };
 
   const startTracking = () => {
@@ -631,6 +642,19 @@ export default async function render(root, ctx) {
     }).addTo(map);
     // Panning by hand stops following; the target button turns it back on.
     map.on("dragstart", () => setFollowing(false));
+    // Moving the map to a new area (another city or state) loads that area's shops.
+    let panTimer = null;
+    map.on("moveend", () => {
+      clearTimeout(panTimer);
+      if (following) return;
+      panTimer = setTimeout(() => {
+        if (!ctx.isCurrent() || following || root.querySelector(".leaflet-popup")) return;
+        const c = map.getCenter();
+        const center = { lat: c.lat, lng: c.lng };
+        if (lastFetchPoint && milesBetween(lastFetchPoint, center) < PAN_REFETCH_MILES) return;
+        show(center, { fit: false }).catch(() => {});
+      }, 600);
+    });
     // The map can be created before the screen finishes laying out; re-measure on any
     // size change so "center" (and following) means the visible center.
     resizeObserver = new ResizeObserver(() => {

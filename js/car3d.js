@@ -187,10 +187,13 @@ function buildCar(THREE, style, look) {
   car.add(cabin);
   const cab = new THREE.Shape();
   const CB = 0.1, roofIn = s.roofY - CB * 0.85;     // glass bevel and its growth
+  // Bend of the rear glass: never past the roof's back edge (a short truck cab window would
+  // otherwise bulge forward and leave a fin on the frame).
+  const rgCtl = s.rg + (s.tail === "hatch" ? 0.02 : Math.min(0.22, (s.rr - s.rg) * 0.4));
   cab.moveTo(s.ws - 0.06, s.belt - 0.12);
   cab.quadraticCurveTo(s.rf + 0.1, roofIn - 0.05, s.rf, roofIn);
   cab.lineTo(s.rr, roofIn);
-  cab.quadraticCurveTo(s.rg + (s.tail === "hatch" ? 0.02 : 0.22), roofIn - 0.04, s.rg + 0.04, s.deck - 0.12);
+  cab.quadraticCurveTo(rgCtl, roofIn - 0.04, s.rg + 0.04, s.deck - 0.12);
   cab.closePath();
   add(extrudeAcross(cab, CABIN_W, CB), glass, 0, 0, 0, cabin);
 
@@ -204,25 +207,79 @@ function buildCar(THREE, style, look) {
   roof.closePath();
   add(extrudeAcross(roof, CABIN_W + 0.04, 0.05), roofPaint, 0, 0, 0, cabin);
 
-  // Pillars: thin painted bars along the edges of the glass (A at the front, C at the back, B in between).
-  // They sit on the flat side of the glass, inside its rounded edges, and stop just
-  // short of the roof so nothing pokes out.
-  const PX = CABIN_W / 2 + 0.004;
-  const pillar = (z0, y0, z1, y1, w) => {
-    const len = Math.hypot(z1 - z0, y1 - y0);
-    for (const x of [-PX, PX]) {
-      const m = add(new THREE.BoxGeometry(0.035, len, w), roofPaint, x, (y0 + y1) / 2, (z0 + z1) / 2, cabin);
-      m.rotation.x = Math.atan2(z1 - z0, y1 - y0);
-    }
+  // Side frames: one painted panel per side that follows the glass's outer edge, with
+  // the side windows cut out of it. The A, B (and D) and C pillars and the roof rail are
+  // a single piece, so there are no gaps at the corners where glass could show through.
+  const glassEdge = cab.getPoints(24);                 // the glass outline before its rounded edge
+  const grow = CB * 0.85;                              // how far the rounded edge sticks out
+  const outline = (() => {                             // the glass's true outer edge
+    if (glassEdge[0].equals(glassEdge.at(-1))) glassEdge.pop();
+    const n = glassEdge.length;
+    const area = glassEdge.reduce((a, p, i) => a + p.x * glassEdge[(i + 1) % n].y - glassEdge[(i + 1) % n].x * p.y, 0);
+    const sign = area > 0 ? 1 : -1;                   // which side of each edge is "outside"
+    const normal = (a, b) => {
+      const dx = b.x - a.x, dy = b.y - a.y, l = Math.hypot(dx, dy) || 1;
+      return new THREE.Vector2((dy / l) * sign, (-dx / l) * sign);
+    };
+    return glassEdge.map((p, i) => {
+      const n1 = normal(glassEdge[(i - 1 + n) % n], p), n2 = normal(p, glassEdge[(i + 1) % n]);
+      const m = n1.clone().add(n2).normalize();
+      const k = Math.min(2.5, 1 / Math.max(0.4, m.dot(n1)));
+      return p.clone().add(m.multiplyScalar(grow * k));
+    });
+  })();
+  // z of the windshield and rear-glass edges at a given height (same curves as the glass).
+  const sampleZ = (curve) => {
+    const pts = curve.getPoints(48).sort((a, b) => a.y - b.y);
+    return (y) => {
+      if (y <= pts[0].y) return pts[0].x;
+      for (let i = 1; i < pts.length; i++) {
+        if (y <= pts[i].y) {
+          const a = pts[i - 1], b = pts[i], t = (y - a.y) / ((b.y - a.y) || 1);
+          return a.x + (b.x - a.x) * t;
+        }
+      }
+      return pts.at(-1).x;
+    };
   };
-  const top = s.roofY - 0.1;
-  // Along the windshield / rear glass edge, using the same curves as the glass.
-  const slope = (zA, zB, t) => zA + (zB - zA) * t;
-  pillar(slope(s.ws - 0.06, s.rf, 0.12), s.belt + 0.04, slope(s.ws - 0.06, s.rf, 0.92), top, 0.1);
-  pillar(slope(s.rg + 0.04, s.rr, 0.12), s.deck + 0.04, slope(s.rg + 0.04, s.rr, 0.92), top, style === "suv" || style === "van" ? 0.18 : 0.13);
+  const frontZ = sampleZ(new THREE.QuadraticBezierCurve(
+    new THREE.Vector2(s.ws - 0.06, s.belt - 0.12), new THREE.Vector2(s.rf + 0.1, roofIn - 0.05), new THREE.Vector2(s.rf, roofIn)));
+  const rearZ = sampleZ(new THREE.QuadraticBezierCurve(
+    new THREE.Vector2(s.rr, roofIn), new THREE.Vector2(rgCtl, roofIn - 0.04), new THREE.Vector2(s.rg + 0.04, s.deck - 0.12)));
+
+  const bigRear = style === "suv" || style === "van";
+  const A_IN = 0.05, C_IN = bigRear ? 0.14 : 0.08;     // pillar widths inside the glass edge
+  const yBot = Math.max(s.belt, s.deck) + 0.03;       // just above the window line
+  const yTop = roofIn - 0.03;                         // leaves a roof rail above the windows
   const bZ = style === "truck" ? (s.rf + s.rr) / 2 - 0.15 : (s.ws + s.rg) / 2 + 0.25;
-  pillar(bZ, s.belt + 0.02, bZ - 0.03, top, 0.1);
-  if (s.tail === "hatch" && style !== "hatch") pillar((bZ + s.rr) / 2 - 0.2, s.belt + 0.02, (bZ + s.rr) / 2 - 0.22, top, 0.08);
+  // Pillar centers between the windows (B, plus a D pillar on long hatches) and their widths.
+  const splits = [[bZ, 0.1]];
+  if (s.tail === "hatch" && style !== "hatch") splits.push([(bZ + s.rr) / 2 - 0.21, 0.08]);
+  // Window openings: between the A pillar, each split and the C pillar, at every height.
+  const edges = [(y) => frontZ(y) - A_IN, ...splits.map(([z, w]) => [() => z + w / 2, () => z - w / 2]).flat(), (y) => rearZ(y) + C_IN];
+  const frame = new THREE.Shape(outline);
+  for (let i = 0; i < edges.length; i += 2) {
+    const front = edges[i], back = edges[i + 1];
+    const STEPS = 10, fwd = [], aft = [];
+    for (let k = 0; k <= STEPS; k++) {
+      const y = yBot + ((yTop - yBot) * k) / STEPS;
+      const zf = front(y), zb = back(y);
+      if (zf - zb < 0.06) continue;                   // too narrow at this height
+      fwd.push(new THREE.Vector2(zf, y));
+      aft.push(new THREE.Vector2(zb, y));
+    }
+    if (fwd.length < 2) continue;
+    frame.holes.push(new THREE.Path([...fwd, ...aft.reverse()]));
+  }
+  const FT = 0.03;                                     // frame thickness
+  const frameGeo = new THREE.ExtrudeGeometry(frame, { depth: FT, bevelEnabled: false, curveSegments: 12 });
+  frameGeo.translate(0, 0, -FT / 2);
+  frameGeo.rotateY(-Math.PI / 2);
+  for (const side of [-1, 1]) {
+    const g = frameGeo.clone();
+    g.translate(side * (CABIN_W / 2 + FT / 2 - 0.004), 0, 0);
+    add(g, roofPaint, 0, 0, 0, cabin);
+  }
 
   // Chrome-free window line along the bottom of the glass.
   for (const x of [-CABIN_W / 2 - 0.01, CABIN_W / 2 + 0.01]) {

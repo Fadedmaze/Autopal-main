@@ -100,7 +100,6 @@ export default async function render(root, ctx) {
     root.innerHTML = `
       ${appBar({
         title: "Tasks",
-        back: { href: "#/home", label: "Home" },
         action: vehicles.length ? `<a class="btn btn-sm" href="${addHref}">${icon("plus", 18, 2.4)}<span>Add Task</span></a>` : "",
       })}
     <div class="content">

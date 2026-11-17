@@ -1,7 +1,7 @@
-// Account: picture, name, Change Password, Notification Settings, Insurance Card
-// (a pop-up sheet) and Log Out, shown at the bottom of Home (renderAccount). Sub-screens:
-// /profile/password and /profile/notifications (ctx.mode). /profile and
-// /profile/insurance redirect to Home (the latter with the insurance sheet open).
+// Profile: picture, name, Change Password, Notification Settings, Insurance Card
+// (a pop-up sheet) and Log Out. Opened from the profile button beside Settings on the
+// main pages. Sub-screens: /profile/password and /profile/notifications (ctx.mode).
+// /profile/insurance (and ?insurance=1) opens the insurance card right away.
 import { getProfile, getSettings, updateSettings, uploadAvatar, avatarUrl, saveDisplayName, listTasks, listVehicles, getInsuranceCard, uploadInsuranceCard, removeInsuranceCard, insuranceCardUrl } from "../data.js";
 import {
   REMIND_CHOICES, remindLabel, deviceNotificationsOn, enableDeviceNotifications, disableDeviceNotifications, buildIcs, downloadIcs,
@@ -14,19 +14,30 @@ import { appBar, escapeHtml, icon, loading, toast, confirmDialog, errorMessage, 
 export default async function render(root, ctx) {
   if (ctx.mode === "password") return renderPassword(root, ctx);
   if (ctx.mode === "notifications") return renderNotifications(root, ctx);
-  // Profile now lives at the bottom of Home. Old links (and /profile/insurance) land there.
-  return ctx.navigate(ctx.mode === "insurance" ? "#/home?insurance=1" : "#/home?section=account", { replace: true });
+
+  root.innerHTML = loading();
+  const profile = await getProfile();
+  if (!ctx.isCurrent()) return;
+  root.innerHTML = `
+    ${appBar({ title: "Profile", back: { href: "#/home", label: "Back" } })}
+    <div class="content"><section class="profile-page" id="account"></section></div>`;
+  // Back returns to whichever page opened Profile (Home if opened directly).
+  root.querySelector(".appbar .back").addEventListener("click", (e) => {
+    e.preventDefault();
+    ctx.navigate(ctx.lastMainHash());
+  });
+  return renderAccount(root.querySelector("#account"), ctx, profile, {
+    openInsuranceNow: ctx.mode === "insurance" || ctx.query.get("insurance") === "1",
+  });
 }
 
-// The account section at the bottom of Home: picture, name, Change Password,
-// Notification Settings, Insurance Card (a pop-up sheet) and Log Out.
-// Returns a cleanup function that closes the insurance pop-up.
+// Picture, name, Change Password, Notification Settings, Insurance Card (a pop-up
+// sheet) and Log Out. Returns a cleanup function that closes the insurance pop-up.
 export async function renderAccount(root, ctx, profile, { openInsuranceNow = false } = {}) {
   const picture = await avatarUrl(profile.avatar_path).catch(() => null);
   if (!ctx.isCurrent()) return () => {};
 
   root.innerHTML = `
-    <h2 class="section-title" id="account-title">Your Account</h2>
     <div class="profile">
       
     <div class="profile-avatar-section">
@@ -236,7 +247,7 @@ galleryInput.addEventListener("change", () => {
 
 function renderPassword(root, ctx) {
   root.innerHTML = `
-    ${appBar({ title: "Change Password", back: { href: "#/home?section=account", label: "Home" } })}
+    ${appBar({ title: "Change Password", back: { href: "#/profile", label: "Profile" } })}
     <form class="form content" novalidate>
       <label class="field">
         <span>Current Password</span>
@@ -253,7 +264,7 @@ function renderPassword(root, ctx) {
       </label>
       <p class="form-error" role="alert" hidden></p>
       <div class="form-actions">
-        <a class="btn btn-ghost" href="#/home?section=account">Cancel</a>
+        <a class="btn btn-ghost" href="#/profile">Cancel</a>
         <button class="btn" type="submit">Update Password</button>
       </div>
     </form>`;
@@ -273,7 +284,7 @@ function renderPassword(root, ctx) {
         if (!(await verifyPassword(current))) return fail("Your current password is incorrect.");
         await updatePassword(password);
         toast("Password updated", "ok");
-        ctx.navigate("#/home?section=account", { replace: true });
+        ctx.navigate("#/profile", { replace: true });
       } catch (err) {
         fail(errorMessage(err));
       }
@@ -302,7 +313,7 @@ async function renderNotifications(root, ctx) {
     "not-configured": "Get a notification on this device when a reminder is due. Right now they only arrive while AutoPal is open.",
   }[status] ?? "";
   root.innerHTML = `
-    ${appBar({ title: "Notifications", back: { href: "#/home?section=account", label: "Home" } })}
+    ${appBar({ title: "Notifications", back: { href: "#/profile", label: "Profile" } })}
     <div class="content">
       <section class="card">
         <label class="toggle">

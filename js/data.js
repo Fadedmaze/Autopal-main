@@ -4,6 +4,7 @@ import { supabase } from "./supabaseClient.js";
 import { currentUserId } from "./auth.js";
 import { PHOTO_BUCKET, RECEIPT_BUCKET, AVATAR_BUCKET, INSURANCE_BUCKET } from "./config.js";
 import { titleCase } from "./ui.js";
+import { osmShopsNear, milesBetween } from "./osmShops.js";
 
 // Names are shown in Title Case everywhere (see titleCase in ui.js). Doing it here, as
 // rows arrive, keeps every screen consistent and lets views print names as-is.
@@ -462,8 +463,30 @@ function contentTypeFor(blob, ext) {
 
 // ---- Mechanic shops ------------------------------------------------------
 
-export async function nearbyShops(lat, lng, limit = 50) {
-  return check(await supabase.rpc("nearby_shops", { p_lat: lat, p_lng: lng, p_limit: limit }));
+// Shops near a point: the app's own shops (with ratings and prices) plus real shops
+// from OpenStreetMap, so the map works anywhere, not just where we've added shops.
+// Sorted by distance from the search point; distance_miles is measured from `from`
+// (the user's location when known) so panning the map doesn't change "how far".
+export async function nearbyShops(lat, lng, limit = 50, { from = null } = {}) {
+  const [own, osm] = await Promise.allSettled([
+    supabase.rpc("nearby_shops", { p_lat: lat, p_lng: lng, p_limit: limit }).then(check),
+    osmShopsNear(lat, lng),
+  ]);
+  if (own.status === "rejected" && !osm.value?.length) throw own.reason;
+  const ours = own.status === "fulfilled" ? own.value : [];
+  // Skip an OpenStreetMap shop that is one of ours (same name, within ~150 m).
+  const squash = (t) => String(t).toLowerCase().replace(/[^a-z0-9]/g, "");
+  const pt = (s) => ({ lat: Number(s.latitude), lng: Number(s.longitude) });
+  const extra = (osm.value ?? []).filter((o) => !ours.some((s) =>
+    squash(s.shop_name) === squash(o.shop_name) && milesBetween(pt(s), pt(o)) < 0.1));
+  const center = { lat, lng };
+  const origin = from ?? center;
+  return [...ours, ...extra]
+    .map((s) => ({ s, d: milesBetween(center, pt(s)) }))
+    .filter(({ d }) => d <= 50) // no shops from another state
+    .sort((a, b) => a.d - b.d)
+    .slice(0, limit)
+    .map(({ s }) => ({ ...s, distance_miles: milesBetween(origin, pt(s)) }));
 }
 
 // ---- Library -----------------------------------------------------------

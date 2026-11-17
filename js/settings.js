@@ -57,8 +57,9 @@ export function openSettings(profile = null) {
   document.body.appendChild(dlg);
   dlg.addEventListener("close", () => {
     dlg.remove();
-    // Re-render so mileage etc. reflect a units change.
-    window.dispatchEvent(new HashChangeEvent("hashchange"));
+    // Only a units change needs the screen redrawn (mileage, distances). Appearance
+    // applies instantly, and closing without changes leaves the page as it was.
+    if (distanceUnit() !== unit) window.dispatchEvent(new HashChangeEvent("hashchange"));
   });
   dlg.addEventListener("click", (e) => { if (e.target === dlg) dlg.close(); });
   dlg.querySelector("[data-close]").addEventListener("click", () => dlg.close());
