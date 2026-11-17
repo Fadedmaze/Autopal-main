@@ -71,12 +71,12 @@ export default async function render(root, ctx) {
       <p class="hint" id="car-hint" aria-live="polite"></p>
     </div>
       <label class="field">
-        <span>Vehicle Name <em>(Optional)</em></span>
+        <span>Vehicle Name <em>(optional)</em></span>
         <input name="vehicle_nickname" maxlength="40" placeholder="e.g. Daily Driver" value="${escapeHtml(v.vehicle_nickname ?? "")}">
         <small class="hint">Leave blank and it'll show as “Vehicle 1”, “Vehicle 2”, and so on.</small>
       </label>
       <label class="field">
-        <span>Current Mileage (${distanceUnit() === "km" ? "km" : "miles"}) <em>(Optional)</em></span>
+        <span>Current Mileage (${distanceUnit() === "km" ? "km" : "miles"}) <em>(optional)</em></span>
         <input name="current_mileage" type="number" inputmode="numeric" min="0" max="3000000" step="1" value="${fromStoredMiles(v.current_mileage)}">
         <small class="hint">You can add or update this anytime</small>
       </label>
