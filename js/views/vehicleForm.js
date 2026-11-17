@@ -17,65 +17,6 @@ import { BRANDS, LATEST_YEAR, findBrand, findModel, makesFor, trimInYear, soldIn
 const BODY_NAMES = { sedan: "sedan", hatch: "hatchback", coupe: "coupe", suv: "SUV", truck: "pickup truck", van: "van" };
 const NOT_SURE = ""; // the "Not Sure" model choice is saved as no model
 
-function searchablePicker(input, listbox, onInput, onSelect) {
-  let items = [];
-  const close = () => {
-    listbox.hidden = true;
-    input.setAttribute("aria-expanded", "false");
-    input.removeAttribute("aria-activedescendant");
-  };
-  const show = () => {
-    const query = input.value.trim().toLocaleLowerCase();
-    const matches = items.filter((item) => item.label.toLocaleLowerCase().includes(query));
-    listbox.innerHTML = matches.map((item, index) => {
-      const id = `${input.name}-option-${index}`;
-      return `<button type="button" role="option" aria-selected="false" id="${id}" data-picker-value="${escapeHtml(item.value)}">${escapeHtml(item.label)}</button>`;
-    }).join("");
-    listbox.hidden = !matches.length;
-    input.setAttribute("aria-expanded", String(matches.length > 0));
-  };
-  input.addEventListener("focus", show);
-  input.addEventListener("blur", () => setTimeout(close, 120));
-  input.addEventListener("input", () => { onInput(input.value); show(); });
-  input.addEventListener("keydown", (event) => {
-    const options = [...listbox.querySelectorAll("[data-picker-value]")];
-    const active = input.getAttribute("aria-activedescendant");
-    const activeIndex = options.findIndex((option) => option.id === active);
-    if ((event.key === "ArrowDown" || event.key === "ArrowUp") && options.length) {
-      event.preventDefault();
-      const direction = event.key === "ArrowDown" ? 1 : -1;
-      const nextIndex = (activeIndex + direction + options.length) % options.length;
-      const next = options[nextIndex];
-      options.forEach((option) => option.setAttribute("aria-selected", String(option === next)));
-      input.setAttribute("aria-activedescendant", next.id);
-    } else if (event.key === "Enter" && activeIndex >= 0) {
-      event.preventDefault();
-      const option = options[activeIndex];
-      const item = items.find((entry) => String(entry.value) === option.dataset.pickerValue);
-      if (item) {
-        input.value = item.label;
-        close();
-        onSelect(item.value);
-      }
-    } else if (event.key === "Escape") close();
-  });
-  listbox.addEventListener("mousedown", (event) => event.preventDefault());
-  listbox.addEventListener("click", (event) => {
-    const option = event.target.closest("[data-picker-value]");
-    if (!option) return;
-    const item = items.find((entry) => String(entry.value) === option.dataset.pickerValue);
-    if (!item) return;
-    input.value = item.label;
-    close();
-    onSelect(item.value);
-  });
-  return {
-    close,
-    setItems(next) { items = next; if (input.getAttribute("aria-expanded") === "true") show(); else close(); },
-    setValue(value) { input.value = value ?? ""; },
-  };
-}
-
 export default async function render(root, ctx) {
   const editing = Boolean(ctx.params.id);
   let v = {};
@@ -108,26 +49,22 @@ export default async function render(root, ctx) {
       <form class="form content vehicle-form" novalidate>
       <label class="field">
         <span>Make</span>
-        <input name="brand" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="brand-options" autocomplete="off" required>
-        <div class="vehicle-make-options" id="brand-options" role="listbox" hidden></div>
+        <select name="brand" required></select>
       </label>
       <label class="field">
         <span>Model</span>
-        <input name="make" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="model-options" autocomplete="off" required>
-        <div class="vehicle-make-options" id="model-options" role="listbox" hidden></div>
+        <select name="make" required></select>
       </label>
       <div class="vehicle-year-trim-card">
       <div class="field-row">
         <label class="field">
           <span>Year</span>
-          <input name="model_year" type="text" inputmode="numeric" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="year-options" autocomplete="off" required>
-          <div class="vehicle-make-options" id="year-options" role="listbox" hidden></div>
+          <select name="model_year" required></select>
         </label>
     
         <label class="field grow">
           <span>Trim</span>
-          <input name="model" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="trim-options" autocomplete="off">
-          <div class="vehicle-make-options" id="trim-options" role="listbox" hidden></div>
+          <select name="model"></select>
         </label>
       </div>
     
@@ -156,67 +93,30 @@ export default async function render(root, ctx) {
   const errEl = root.querySelector(".form-error");
   const hintEl = root.querySelector("#car-hint");
   const { brand: brandSel, make: makeSel, model: modelSel, model_year: yearSel } = form.elements;
-  const brandOptions = form.querySelector("#brand-options");
-  const makePicker = searchablePicker(makeSel, form.querySelector("#model-options"), (value) => {
-    state.make = "";
-    state.model = NOT_SURE;
-    state.year = null;
-    draw("make");
-  }, (value) => {
-    state.make = String(value);
-    state.model = NOT_SURE;
-    state.year = null;
-    draw();
-  });
-  const yearPicker = searchablePicker(yearSel, form.querySelector("#year-options"), () => {
-    state.year = null;
-    draw("model_year");
-  }, (value) => {
-    state.year = Number(value) || null;
-    draw();
-  });
-  const trimPicker = searchablePicker(modelSel, form.querySelector("#trim-options"), (value) => {
-    state.model = value;
-    draw("model");
-  }, (value) => {
-    state.model = String(value);
-    draw();
-  });
+  const opt = (value, label, selected) => `<option value="${escapeHtml(value)}" ${selected ? "selected" : ""}>${escapeHtml(label)}</option>`;
+  // Preserve an existing catalog value that is no longer listed while editing.
+  const legacy = (field, list) => editing && saved[field] && !list.includes(saved[field])
+    ? opt(saved[field], `${saved[field]} (current, not in list)`, state[field] === saved[field]) : "";
 
-  const closeBrandOptions = () => {
-    brandOptions.hidden = true;
-    brandSel.setAttribute("aria-expanded", "false");
-    brandSel.removeAttribute("aria-activedescendant");
-  };
-  const showBrandOptions = () => {
-    const query = brandSel.value.trim().toLocaleLowerCase();
-    const matches = BRANDS.filter((brand) => brand.toLocaleLowerCase().includes(query));
-    brandOptions.innerHTML = matches.map((brand, index) =>
-      `<button type="button" role="option" aria-selected="false" id="brand-option-${index}" data-brand-option="${escapeHtml(brand)}">${escapeHtml(brand)}</button>`
-    ).join("");
-    brandOptions.hidden = !matches.length;
-    brandSel.setAttribute("aria-expanded", String(matches.length > 0));
-  };
   const chooseBrand = (brand) => {
-    if (!BRANDS.includes(brand)) return;
     state.brand = brand;
     state.make = "";
     state.model = NOT_SURE;
     state.year = null;
-    brandSel.value = brand;
-    closeBrandOptions();
     draw();
   };
 
   const make = () => findModel(state.brand, state.make, { exact: true });
-  const draw = (preserveInput = null) => {
+  const draw = () => {
+    brandSel.innerHTML = opt("", "Choose a make", !state.brand)
+      + (editing && saved.brand && !BRANDS.includes(saved.brand) ? opt(saved.brand, `${saved.brand} (current, not in list)`, state.brand === saved.brand) : "")
+      + BRANDS.map((brand) => opt(brand, brand, brand === state.brand)).join("");
+
     const makes = makesFor(state.brand).map((m) => m.name);
     makeSel.disabled = !state.brand;
-    makePicker.setItems([
-      ...(state.brand === saved.brand && saved.make && !makes.includes(saved.make) ? [{ value: saved.make, label: `${saved.make} (current, not in list)` }] : []),
-      ...makes.map((m) => ({ value: m, label: m })),
-    ]);
-    if (preserveInput !== "make") makePicker.setValue(state.make);
+    makeSel.innerHTML = opt("", state.brand ? `Choose a ${state.brand} model` : "Choose a make first", !state.make)
+      + (state.brand === saved.brand ? legacy("make", makes) : "")
+      + makes.map((m) => opt(m, m, m === state.make)).join("");
 
     const m = make();
 
@@ -226,60 +126,31 @@ export default async function render(root, ctx) {
     else if (state.make) for (let y = new Date().getFullYear() + 1; y >= 1960; y--) years.push(y);
     yearSel.disabled = !state.make;
     if (state.year && !years.includes(state.year)) state.year = null;
-    yearPicker.setItems(years.map((y) => ({ value: String(y), label: String(y) })));
-    if (preserveInput !== "model_year") yearPicker.setValue(state.year ? String(state.year) : "");
+    yearSel.innerHTML = opt("", state.make ? "Select" : "—", !state.year)
+      + years.map((y) => opt(String(y), String(y), y === state.year)).join("");
 
     // Trims offered that year (all of the model's trims until a year is picked).
     const trims = (m?.trims ?? []).filter((t) => trimInYear(m, t, state.year));
     const keepSaved = state.make === saved.make && state.model === saved.model && state.model !== NOT_SURE;
-    if (preserveInput !== "model" && state.model !== NOT_SURE && !trims.includes(state.model) && !keepSaved) state.model = NOT_SURE;
+    if (state.model !== NOT_SURE && !trims.includes(state.model) && !keepSaved) state.model = NOT_SURE;
     modelSel.disabled = !state.make;
-    trimPicker.setItems([
-      { value: NOT_SURE, label: "Not Sure" },
-      ...(state.make === saved.make && saved.model && !trims.includes(saved.model) ? [{ value: saved.model, label: `${saved.model} (current, not in list)` }] : []),
-      ...trims.map((t) => ({ value: t, label: t })),
-    ]);
-    if (preserveInput !== "model") trimPicker.setValue(state.model === NOT_SURE ? "Not Sure" : state.model);
+    modelSel.innerHTML = (state.make ? opt(NOT_SURE, "Not Sure", state.model === NOT_SURE) : opt("", "Choose a model first", true))
+      + (state.make === saved.make ? legacy("model", [NOT_SURE, ...trims]) : "")
+      + trims.map((t) => opt(t, t, t === state.model)).join("");
 
     hintEl.textContent = m ? `${state.brand} ${m.name} · ${BODY_NAMES[m.body]} · ${m.to >= LATEST_YEAR ? `sold since ${m.years.at(-1)[0]}${m.years.length > 1 ? ` (also ${yearsText({ years: m.years.slice(0, -1) })})` : ""}` : `sold ${yearsText(m)}`}` : "";
   };
 
-  brandSel.value = state.brand;
-  brandSel.addEventListener("focus", showBrandOptions);
-  brandSel.addEventListener("blur", () => setTimeout(closeBrandOptions, 120));
-  brandSel.addEventListener("input", () => {
-    state.brand = "";
-    state.make = "";
+  brandSel.addEventListener("change", () => chooseBrand(brandSel.value));
+  makeSel.addEventListener("change", () => {
+    state.make = makeSel.value;
     state.model = NOT_SURE;
-    state.year = null;
-    showBrandOptions();
     draw();
   });
-  brandSel.addEventListener("keydown", (event) => {
-    const options = [...brandOptions.querySelectorAll("[data-brand-option]")];
-    const active = brandSel.getAttribute("aria-activedescendant");
-    const activeIndex = options.findIndex((option) => option.id === active);
-    if (event.key === "ArrowDown" && options.length) {
-      event.preventDefault();
-      const next = options[(activeIndex + 1) % options.length];
-      options.forEach((option) => option.setAttribute("aria-selected", String(option === next)));
-      brandSel.setAttribute("aria-activedescendant", next.id);
-    } else if (event.key === "ArrowUp" && options.length) {
-      event.preventDefault();
-      const next = options[(activeIndex <= 0 ? options.length : activeIndex) - 1];
-      options.forEach((option) => option.setAttribute("aria-selected", String(option === next)));
-      brandSel.setAttribute("aria-activedescendant", next.id);
-    } else if (event.key === "Enter" && activeIndex >= 0) {
-      event.preventDefault();
-      chooseBrand(options[activeIndex].dataset.brandOption);
-    } else if (event.key === "Escape") {
-      closeBrandOptions();
-    }
-  });
-  brandOptions.addEventListener("mousedown", (event) => event.preventDefault());
-  brandOptions.addEventListener("click", (event) => {
-    const option = event.target.closest("[data-brand-option]");
-    if (option) chooseBrand(option.dataset.brandOption);
+  modelSel.addEventListener("change", () => { state.model = modelSel.value; });
+  yearSel.addEventListener("change", () => {
+    state.year = Number(yearSel.value) || null;
+    draw();
   });
   draw();
   bindDrivingField(form);
