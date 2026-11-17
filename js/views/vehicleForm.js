@@ -43,7 +43,7 @@ export default async function render(root, ctx) {
   root.innerHTML = `
     ${appBar({
       title: editing ? "Edit Vehicle" : "Add Vehicle",
-      sub: editing ? "" : "Pick your car from the lists. You can change this later.",
+      sub: editing ? "" : "Pick your vehicle from the lists - You can change this later",
       back: { href: cancelHref, label: "Back" },
     })}
       <form class="form content vehicle-form" novalidate>
