@@ -1,6 +1,6 @@
 // Tasks: Upcoming and Completed tabs. Tap an upcoming task to complete it (then
 // optionally attach a receipt, or undo). The + in the top right adds a custom task.
-import { getProfile, getSettings, listVehicles, listTasks, listMaintenanceCatalog, createTask, receiptUrl } from "../data.js";
+import { getProfile, getSettings, listVehicles, listTasks, receiptUrl } from "../data.js";
 import { taskRow, bindTaskRows, completedSheet } from "../components.js";
 import { appBar, escapeHtml, icon, loading, toast, errorMessage, todayISO } from "../ui.js";
 
@@ -35,12 +35,9 @@ export default async function render(root, ctx) {
 
   const load = async () => {
     const vehicleId = state.vehicle === "all" ? null : state.vehicle;
-    const suggestionVehicleId = typeof state.vehicle === "number" ? state.vehicle : profile.active_vehicle_id ?? vehicles[0]?.id;
-    const [upcoming, completed, catalog, suggestionTasks] = await Promise.all([
+    const [upcoming, completed] = await Promise.all([
       listTasks({ vehicleId, completed: false }),
       listTasks({ vehicleId, completed: true }),
-      listMaintenanceCatalog(),
-      suggestionVehicleId ? listTasks({ vehicleId: suggestionVehicleId }) : Promise.resolve([]),
     ]);
     if (!ctx.isCurrent()) return;
     console.table(
@@ -52,10 +49,10 @@ export default async function render(root, ctx) {
         due: task.due_date
       }))
     );    
-    draw(upcoming, completed, catalog, suggestionTasks);
+    draw(upcoming, completed);
   };
 
-  const draw = (upcoming, completed, catalog, suggestionTasks) => {
+  const draw = (upcoming, completed) => {
     const today = todayISO();
   
     // Only incomplete tasks belong in Overdue or Upcoming
@@ -98,11 +95,6 @@ export default async function render(root, ctx) {
         state.tab === "upcoming" ? upcomingOnly :
         completed;
     const showVehicle = state.vehicle === "all" && vehicles.length > 1;
-    const suggestionVehicleId = typeof state.vehicle === "number" ? state.vehicle : profile.active_vehicle_id ?? vehicles[0]?.id;
-    const usedCatalogIds = new Set(suggestionTasks.map((t) => t.catalog_id).filter(Boolean));
-    const suggestions = state.tab === "upcoming" && suggestionVehicleId
-      ? catalog.filter((item) => !usedCatalogIds.has(item.id))
-      : [];
     const addHref = `#/tasks/new${typeof state.vehicle === "number" ? `?vehicle=${state.vehicle}` : ""}`;
 
     root.innerHTML = `
@@ -125,7 +117,7 @@ export default async function render(root, ctx) {
           </div>` : ""}
 
         ${!vehicles.length
-          ? `<p class="muted-box">No tasks yet. <a href="#/vehicles/new">Add a vehicle</a>, then choose suggested maintenance to track.</p>`
+          ? `<p class="muted-box">No tasks yet. <a href="#/vehicles/new">Add a vehicle</a> and we'll set up its maintenance schedule.</p>`
           : list.length
             ? `<ul class="task-list">${list.map((t) => taskRow(t, {
                 vehicle: showVehicle ? byId.get(t.vehicle_id) : null,
@@ -159,49 +151,15 @@ export default async function render(root, ctx) {
                           : "You have no upcoming maintenance tasks."
                     }</p>
                   </div>`}
-        ${suggestions.length ? `
-          <section class="task-suggestions" aria-labelledby="suggested-tasks-title">
-            <h2 id="suggested-tasks-title">Suggested maintenance</h2>
-            <p class="hint">Add the recurring maintenance tasks you want to track for ${escapeHtml(byId.get(suggestionVehicleId)?.label ?? "this vehicle")}.</p>
-            <ul class="suggestion-list">
-              ${suggestions.map((item) => `<li class="task-suggestion">
-                <span><strong>${escapeHtml(item.task_name)}</strong><small>Every ${Math.round(item.interval_days / 30)} months${Number(item.typical_cost) > 0 ? ` · ~${escapeHtml(String(item.typical_cost))}` : ""}</small></span>
-                <button type="button" class="btn btn-sm" data-add-suggestion="${item.id}">Add</button>
-              </li>`).join("")}
-            </ul>
-          </section>` : ""}
       </div>`;
 
     root.querySelectorAll("[data-tab]").forEach((b) => b.addEventListener("click", () => {
       state.tab = b.dataset.tab;
-      draw(upcoming, completed, catalog, suggestionTasks);
+      draw(upcoming, completed);
     }));
     root.querySelectorAll("[data-vehicle]").forEach((b) => b.addEventListener("click", () => {
       state.vehicle = b.dataset.vehicle === "all" ? "all" : Number(b.dataset.vehicle);
       load();
-    }));
-
-    root.querySelectorAll("[data-add-suggestion]").forEach((button) => button.addEventListener("click", async () => {
-      const item = catalog.find((entry) => entry.id === Number(button.dataset.addSuggestion));
-      if (!item || !suggestionVehicleId) return;
-      button.disabled = true;
-      try {
-        const due = new Date(`${todayISO()}T12:00:00`);
-        due.setDate(due.getDate() + item.first_due_days);
-        const dueDate = [due.getFullYear(), String(due.getMonth() + 1).padStart(2, "0"), String(due.getDate()).padStart(2, "0")].join("-");
-        await createTask({
-          vehicle_id: suggestionVehicleId,
-          catalog_id: item.id,
-          task_name: item.task_name,
-          due_date: dueDate,
-          estimated_cost: item.typical_cost,
-        });
-        toast(`${item.task_name} added`, "ok");
-        await load();
-      } catch (err) {
-        button.disabled = false;
-        toast(errorMessage(err), "error");
-      }
     }));
 
     const all = new Map([...upcoming, ...completed].map((t) => [t.id, t]));
