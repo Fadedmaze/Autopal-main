@@ -75,12 +75,12 @@ export default async function render(root, ctx) {
         <input name="vehicle_nickname" maxlength="40" placeholder="e.g. Daily Driver" value="${escapeHtml(v.vehicle_nickname ?? "")}">
         <small class="hint">Leave blank and it'll show as “Vehicle 1”, “Vehicle 2”, and so on.</small>
       </label>
-      ${drivingField(editing ? v.miles_per_year : 12000)}
       <label class="field">
         <span>Current Mileage (${distanceUnit() === "km" ? "km" : "miles"}) <em>optional</em></span>
         <input name="current_mileage" type="number" inputmode="numeric" min="0" max="3000000" step="1" value="${fromStoredMiles(v.current_mileage)}">
         <small class="hint">You can add or update this anytime.</small>
       </label>
+      ${drivingField(editing ? v.miles_per_year : 12000)}
       <p class="form-error" role="alert" hidden></p>
       <div class="form-actions">
         <a class="btn btn-ghost" href="${cancelHref}">Cancel</a>
