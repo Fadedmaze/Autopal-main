@@ -9,7 +9,7 @@ import { escapeHtml, icon, todayISO, addDays, daysBetween, formatDate, dueLabel 
 
 export const MAX_REMIND_DAYS = 60; // matches the database check on maintenance_tasks
 
-// Choices shown in the task form and in Profile → Notifications (days before the due date).
+// Choices shown in the task form and in Profile → Notification Settings (days before the due date).
 export const REMIND_CHOICES = [
   [0, "On the due date"],
   [1, "1 day before"],
@@ -47,7 +47,7 @@ export function reminderDate(task, defaultDays) {
 // One sentence for the task form, e.g. "We'll remind you on Fri, Nov 7."
 export function reminderPreview(dueISO, days, { enabled = true } = {}) {
   if (!dueISO) return "Pick a due date to see when you'll be reminded";
-  if (!enabled) return "Reminders are turned off. Turn them on in Home → Your Account → Notification Settings.";
+  if (!enabled) return "Reminders are turned off. Turn them on in Profile → Notification Settings.";
   const on = addDays(dueISO, -days);
   const today = todayISO();
   if (daysBetween(today, dueISO) < 0) return "This task is already overdue, so it will show as overdue right away.";
