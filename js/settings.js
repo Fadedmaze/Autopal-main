@@ -85,7 +85,7 @@ export function openSettings(profile = null) {
       </details>
 
       <details class="setting privacy">
-        <summary><span class="setting-label">${icon("phone", 18, 2)}Support</span>${icon("chevron", 16, 2)}</summary>
+        <summary><span class="setting-label">${icon("help", 18, 2)}Support</span>${icon("chevron", 16, 2)}</summary>
         <ul>
           <li><a href="mailto:autopalsupport@gmail.com">autopalsupport@gmail.com</a></li>
         </ul>
