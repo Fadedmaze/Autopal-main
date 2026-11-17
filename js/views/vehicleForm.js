@@ -1,6 +1,6 @@
 // Add Vehicle (/vehicles/new): make, model, year, trim and name, then Save or Cancel.
-// Edit Vehicle (/vehicles/:id/edit) adds mileage and Delete. Both ask how much the car
-// is driven, which times its mileage-based tasks (js/driving.js).
+// Edit Vehicle (/vehicles/:id/edit) adds Delete. Both forms accept current mileage and
+// ask how much the car is driven, which times its mileage-based tasks (js/driving.js).
 // Make (Honda), Model (Civic), Year and Trim (EX) are chosen from the vehicle catalog only
 // (js/vehicleCatalogData.js); each list narrows the next, and Trim shows only the trims
 // sold that year. The database checks the same catalog when a car is saved
@@ -76,11 +76,11 @@ export default async function render(root, ctx) {
         <small class="hint">Leave blank and it'll show as “Vehicle 1”, “Vehicle 2”, and so on.</small>
       </label>
       ${drivingField(editing ? v.miles_per_year : 12000)}
-      ${editing ? `
-        <label class="field">
-          <span>Current Mileage (${distanceUnit() === "km" ? "km" : "miles"}) <em>optional</em></span>
-          <input name="current_mileage" type="number" inputmode="numeric" min="0" max="3000000" step="1" value="${fromStoredMiles(v.current_mileage)}">
-        </label>` : ""}
+      <label class="field">
+        <span>Current Mileage (${distanceUnit() === "km" ? "km" : "miles"}) <em>optional</em></span>
+        <input name="current_mileage" type="number" inputmode="numeric" min="0" max="3000000" step="1" value="${fromStoredMiles(v.current_mileage)}">
+        <small class="hint">You can add or update this anytime.</small>
+      </label>
       <p class="form-error" role="alert" hidden></p>
       <div class="form-actions">
         <a class="btn btn-ghost" href="${cancelHref}">Cancel</a>
@@ -164,11 +164,11 @@ export default async function render(root, ctx) {
       model_year: state.year,
       vehicle_nickname: form.elements.vehicle_nickname.value.trim() || null,
     };
-    if (editing) {
-      const raw = form.elements.current_mileage.value;
-      if (raw !== "" && !(Number(raw) >= 0)) return fail("Mileage must be a positive number.");
-      fields.current_mileage = raw === "" ? null : toStoredMiles(Number(raw));
+    const rawMileage = form.elements.current_mileage.value;
+    if (rawMileage !== "" && !(Number(rawMileage) >= 0 && Number(rawMileage) <= 3000000)) {
+      return fail("Mileage must be between 0 and 3,000,000.");
     }
+    fields.current_mileage = rawMileage === "" ? null : toStoredMiles(Number(rawMileage));
     const driving = readDrivingField(form);
     if (driving.error) return fail(driving.error);
     fields.miles_per_year = driving.miles;
