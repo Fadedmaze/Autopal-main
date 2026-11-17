@@ -50,7 +50,7 @@ alter table public.profiles
   add constraint profiles_active_vehicle_fk
   foreign key (active_vehicle_id) references public.vehicles (id) on delete set null;
 
--- Standard tasks every new car gets (see seed data at the bottom).
+-- Suggested maintenance tasks users can add to a vehicle (see seed data at the bottom).
 create table public.maintenance_catalog (
   id             bigint generated always as identity primary key,
   task_name      text not null,
@@ -143,25 +143,6 @@ create trigger on_auth_user_created
 
 -- Only the trigger should run this, not the API (see migrations/20261103_security_advisor_fixes.sql).
 revoke execute on function public.handle_new_user() from public, anon, authenticated;
-
--- New vehicle -> copy the standard schedule from maintenance_catalog.
-create or replace function public.seed_vehicle_tasks()
-returns trigger
-language plpgsql
-set search_path = ''
-as $$
-begin
-  insert into public.maintenance_tasks (vehicle_id, catalog_id, task_name, due_date, estimated_cost)
-  select new.id, c.id, c.task_name, current_date + c.first_due_days, c.typical_cost
-  from public.maintenance_catalog c
-  order by c.sort_order;
-  return new;
-end;
-$$;
-
-create trigger on_vehicle_created
-  after insert on public.vehicles
-  for each row execute function public.seed_vehicle_tasks();
 
 -- Completing a catalog task schedules the next one; un-completing removes it.
 create or replace function public.schedule_next_task()
