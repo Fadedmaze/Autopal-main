@@ -151,7 +151,7 @@ export default async function render(root, ctx) {
   yearSel.addEventListener("change", () => {
     state.year = Number(yearSel.value) || null;
     draw();
-su  });
+ });
   draw();
   bindDrivingField(form);
 
