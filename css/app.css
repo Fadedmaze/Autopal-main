@@ -3699,3 +3699,64 @@ button.menu-row { width: 100%; font: inherit; font-weight: 600; text-align: left
   }
 }
 
+
+/* ---------- Google map mode (js/mapKit.js) and real shops (js/places.js) ---------- */
+.gm-you-dot { width: 22px; height: 22px; transform: translate(-11px, -11px); }
+.price-pin { cursor: pointer; }
+.map-search-area {
+  position: absolute; z-index: 450; left: 50%; transform: translateX(-50%);
+  top: calc(env(safe-area-inset-top, 0px) + 150px); width: auto;
+  box-shadow: 0 4px 14px rgba(0,0,0,.2); border-radius: 999px;
+}
+@media (min-width: 700px) { .map-search-area { top: 96px; } }
+.shop-reviews { font-size: 12.5px; color: var(--ink-3); font-weight: 600; }
+.open-now { font-size: 12.5px; font-weight: 700; }
+.open-now.yes { color: #15803d; }
+.open-now.no { color: #b42318; }
+.shop-pop-details { width: 100%; justify-content: center; margin-top: 2px; }
+.mechanic-shop-rating { display: inline-flex; align-items: center; gap: 4px; }
+/* Google's info window around the same popup content */
+.gm-style .gm-style-iw-c { border-radius: 16px; padding: 14px 14px 12px !important; }
+.gm-style .gm-style-iw-d { overflow: auto !important; }
+.gm-style .shop-pop { font-family: Inter, sans-serif; color: #121826; }
+
+/* ---------- Shop page (#/shops/:id) ---------- */
+.shop-page { display: flex; flex-direction: column; gap: 14px; }
+.shop-photo { margin: 0; border-radius: 16px; overflow: hidden; background: var(--surface-2, #eef1f6); }
+.shop-photo img { display: block; width: 100%; max-height: 260px; object-fit: cover; }
+.shop-photo figcaption { font-size: 11.5px; color: var(--ink-3); padding: 6px 10px; }
+.shop-photo figcaption a { color: inherit; }
+.shop-head { display: flex; flex-direction: column; gap: 8px; }
+.shop-head-rating { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.shop-head-rating strong { font-size: 16px; }
+.shop-head-rating span { color: var(--ink-3); font-size: 14px; }
+.shop-head-meta { display: flex; gap: 10px; flex-wrap: wrap; margin: 0; color: var(--ink-2); font-size: 14px; }
+.shop-address { display: flex; gap: 6px; align-items: flex-start; margin: 0; color: var(--ink-2); }
+.shop-address .icon { flex: none; margin-top: 2px; }
+.shop-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
+.shop-buttons .btn:first-child:nth-last-child(odd) { grid-column: 1 / -1; }
+.spec-list { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.spec-list li { display: flex; flex-direction: column; gap: 1px; padding: 10px 12px; border-radius: 12px; background: var(--brand-soft); }
+.spec-list strong { color: var(--ink); font-size: 15px; }
+.spec-list small { color: var(--ink-3); font-size: 12.5px; }
+.spec-brands { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 12px 0 0; font-size: 13.5px; color: var(--ink-2); }
+.chip { display: inline-block; padding: 3px 10px; border-radius: 999px; background: var(--surface-2, #eef1f6); border: 1px solid var(--line); font-size: 13px; color: var(--ink); }
+.shop-jobs { list-style: none; margin: 6px 0 0; padding: 0; }
+.shop-jobs li { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 14.5px; }
+.shop-jobs li:last-child { border-bottom: 0; }
+.shop-jobs strong { white-space: nowrap; color: var(--brand); }
+.shop-hours { list-style: none; margin: 6px 0 0; padding: 0; font-size: 14.5px; }
+.shop-hours li { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; color: var(--ink-2); }
+.shop-hours li.today { font-weight: 800; color: var(--ink); }
+.shop-reviews-list { list-style: none; margin: 6px 0 10px; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.shop-reviews-list li { display: flex; flex-direction: column; gap: 4px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.shop-reviews-list li:last-child { border-bottom: 0; }
+.shop-reviews-list p { margin: 2px 0 0; color: var(--ink-2); font-size: 14.5px; line-height: 1.5; }
+.review-head { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; }
+.review-head img { border-radius: 50%; }
+.review-head a { color: var(--ink); text-decoration: none; }
+.review-head small { color: var(--ink-3); font-weight: 500; margin-left: auto; }
+.google-attrib { text-align: center; font-size: 12.5px; color: var(--ink-3); margin: 4px 0 18px; }
+.google-attrib-mark { font-family: Roboto, Arial, sans-serif; font-weight: 500; color: var(--ink-2); }
+.shop-car { width: 100%; margin: 8px 0 2px; }
+.shop-head-rating .stars-num { font-weight: 800; color: var(--ink); }
