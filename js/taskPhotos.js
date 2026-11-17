@@ -25,7 +25,7 @@ export function mountTaskPhotos(el, { task = null } = {}) {
     }
     const full = count() >= MAX_TASK_PHOTOS;
     el.innerHTML = `
-      <span class="field-label">Photos <em>(Optional, up to ${MAX_TASK_PHOTOS})</em></span>
+      <span class="field-label">Photos <em>(optional, up to ${MAX_TASK_PHOTOS})</em></span>
       <div class="task-photos">
         ${items().map(({ i, url }) => `
           <button type="button" class="thumb task-photo" data-photo="${i}" aria-label="View photo ${i + 1}">
