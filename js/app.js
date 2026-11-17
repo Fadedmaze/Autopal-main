@@ -26,6 +26,7 @@ const ROUTES = [
   { path: "/tasks/:id", view: () => import("./views/taskForm.js"), nav: false },
   { path: "/budget", view: () => import("./views/budget.js") },
   { path: "/mechanics", view: () => import("./views/mechanics.js"), tab: "mechanics", settings: true },
+  { path: "/shops/:id", view: () => import("./views/shop.js"), tab: "mechanics" },
   { path: "/discover", view: () => import("./views/discover.js"), tab: "library" }, // redirects to the Dashboard Lights tab
   { path: "/library", view: () => import("./views/library.js"), tab: "library", settings: true },
   { path: "/library/:slug", view: () => import("./views/library.js"), tab: "library" },

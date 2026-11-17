@@ -284,6 +284,43 @@ const FAKE_IDS = ["check-engine", "oil-pressure", "tpms", "unknown", "service-wr
 const functions = {
   async invoke(name, { body }) {
     calls.push({ fn: name, body });
+    // Real-shop search (supabase/functions/google-shops): made-up shops near Provo,
+    // 20 per page, 3 pages, in the function's response shape.
+    if (name === "google-shops") {
+      const fake = window.__fakeGoogleShops ??= Array.from({ length: 55 }, (_, i) => {
+        const names = ["Brake Masters", "Valley Auto Repair", "Discount Tire & Alignment", "Quick Lube Express", "Euro Car Specialists",
+          "Diesel Doctor", "Transmission Pros", "Mountain View Garage", "Collision Center", "Hometown Mechanic"];
+        return {
+          id: `ChIJfake${String(i).padStart(4, "0")}AutoPal`, source: "google",
+          shop_name: `${names[i % names.length]}${i >= names.length ? ` #${Math.floor(i / names.length) + 1}` : ""}`,
+          address: `${100 + i * 37} N Main St, Provo, UT 84604, USA`, short_address: `${100 + i * 37} N Main St, Provo`,
+          latitude: 40.2338 + Math.sin(i * 1.7) * 0.003 * (1 + i / 4), longitude: -111.6585 + Math.cos(i * 1.7) * 0.004 * (1 + i / 4),
+          average_rating: i % 7 === 6 ? null : Math.round((3.4 + (i * 37 % 16) / 10) * 10) / 10, review_count: i % 7 === 6 ? 0 : 12 + i * 9,
+          primary_type: "car_repair", primary_type_label: "Auto repair shop", types: ["car_repair", "point_of_interest"],
+          business_status: "OPERATIONAL", open_now: i % 3 !== 0, phone: `(801) 555-${String(2000 + i)}`,
+          google_maps_uri: "https://maps.google.com/?cid=1",
+        };
+      });
+      if (body.action === "details") {
+        const s = fake.find((x) => x.id === body.id);
+        if (!s) return { data: null, error: { context: { json: async () => ({ error: "Google couldn't find shops right now." }) } } };
+        return { data: { shop: {
+          ...s, website: "https://example.com", summary: s.shop_name.includes("Euro") ? "Specialists in BMW, Audi and Mercedes repair and diagnostics." : null,
+          weekday_hours: ["Monday: 8:00 AM – 6:00 PM", "Tuesday: 8:00 AM – 6:00 PM", "Wednesday: 8:00 AM – 6:00 PM", "Thursday: 8:00 AM – 6:00 PM", "Friday: 8:00 AM – 5:00 PM", "Saturday: 9:00 AM – 1:00 PM", "Sunday: Closed"],
+          hours_periods: [], price_level: null,
+          reviews: [
+            { rating: 5, text: "Fixed my brakes fast and fair price. They also did an alignment on my Honda Civic.", when: "2 weeks ago", author: "Sam P.", author_uri: null, author_photo: null },
+            { rating: 4, text: "Great with my Toyota Tacoma, honest diagnosis on the check engine light.", when: "a month ago", author: "Jo K.", author_uri: null, author_photo: null },
+            { rating: 5, text: "New brake pads and rotors, explained everything. Will be back for my oil change.", when: "3 months ago", author: "Lee R.", author_uri: null, author_photo: null },
+          ],
+          photo: null,
+        } }, error: null };
+      }
+      const page = Number(body.pageToken ?? 0);
+      const near = [...fake].sort((a, b) => Math.hypot(a.latitude - body.lat, a.longitude - body.lng) - Math.hypot(b.latitude - body.lat, b.longitude - body.lng));
+      const slice = near.slice(page * 20, page * 20 + 20);
+      return { data: { shops: slice, nextPageToken: (page + 1) * 20 < near.length ? String(page + 1) : null }, error: null };
+    }
     if (name === "identify-warning-lights") {
       await new Promise((r) => setTimeout(r, 400));
       if (window.__failIdentify) {

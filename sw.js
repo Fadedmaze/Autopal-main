@@ -1,6 +1,6 @@
 // AutoPal service worker. Bump CACHE on every release; it doubles as the
 // "is the new version live yet" probe after a deploy.
-const CACHE = "autopal-shell-v22";
+const CACHE = "autopal-shell-v23";
 
 const SHELL = [
   "./",
@@ -37,6 +37,11 @@ const SHELL = [
   "./js/views/home.js",
   "./js/views/library.js",
   "./js/views/mechanics.js",
+  "./js/views/shop.js",
+  "./js/mapKit.js",
+  "./js/places.js",
+  "./js/shopSpecialties.js",
+  "./js/shopJobs.js",
   "./js/views/photo.js",
   "./js/views/profile.js",
   "./js/views/resetPassword.js",

@@ -107,6 +107,18 @@ Each car has a "How Much Do You Drive This Car?" setting on Add/Edit Vehicle: Li
 
 So an average driver's oil change stays every 6 months, a heavy driver's comes about every 4½ months, and a very heavy driver's every 3 months. Tire pressure, wipers, emissions and battery checks stay time-based. Changing a car's setting moves its open tasks right away; due dates someone set by hand stay put. Setup: run `supabase/migrations/20261116_driving_schedule.sql` in the SQL Editor.
 
+### Real repair shops (Google Places)
+
+Find a Mechanic shows real shops from Google, the same ones as Google Maps, on a Google map (Google's rules require their shop data to be shown on a Google map). Each search finds up to 60 shops around you, nearest first. Tapping a shop opens its full page (`#/shops/:id`): photo, rating, open now and weekly hours, call / website / directions, what it specializes in (from its name, Google's description and recent reviews), typical prices for your car, and recent reviews.
+
+How it fits together:
+
+- `supabase/functions/google-shops` talks to Google with a **server-side key** (`GOOGLE_PLACES_KEY`), so the key never reaches the browser. Daily limits (`migrations/20261117_google_shops.sql`): 15 searches and 15 shop pages per person, and 30 of each for the whole app, which keeps usage inside Google's free monthly allowance.
+- `js/config.js` → `GOOGLE_MAPS_KEY` is the **browser key** that draws the map. Leave it empty and the app falls back to the original OpenStreetMap map with the demo shops.
+- `js/places.js` (fetching), `js/mapKit.js` (Google or Leaflet map), `js/shopSpecialties.js` (specialties), `js/shopJobs.js` (typical prices), `js/views/shop.js` (shop page).
+
+Cost: Google gives a free monthly allowance per product. Set daily quotas in Google Cloud (below) so the bill stays at $0.
+
 ## Verifying the Vertical Slice
 
 The working button is **Save Vehicle** on the Add Vehicle screen. It writes a new row to the `vehicles` table in Supabase, and a database trigger also creates that car's maintenance schedule in `maintenance_tasks`.

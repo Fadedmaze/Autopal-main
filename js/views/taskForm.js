@@ -242,7 +242,7 @@ export default async function render(root, ctx) {
       <label class="field">
         <span>Estimated Cost <em>(optional)</em></span>
         <span class="input-prefix"><span>$</span><input name="estimated_cost" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00" value="${t.estimated_cost ?? ""}"></span>
-        </div>
+        <p class="hint">This amount will be included in your Maintenance Estimator to help you budget for upcoming expenses.</p>        </div>
       </details>
         </label>
       <p class="form-error" role="alert" hidden></p>
