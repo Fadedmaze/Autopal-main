@@ -9,8 +9,8 @@
 //       One shop's full page: hours, phone, website, summary, reviews, a photo.
 //       -> { shop: {...} }
 //
-// Each signed-in person gets a daily allowance (see migrations/20261117_google_shops.sql)
-// so no one can run up the Google bill. Set Google Cloud quotas too (README).
+// Daily allowances, per person and for the whole app (migrations/20261117_google_shops.sql),
+// keep usage inside Google's free monthly amount. Google Cloud quotas are a second guard.
 // Google's terms: results may only be shown on a Google map, with Google attribution,
 // and not stored (except the place id). The app follows that.
 
@@ -25,7 +25,11 @@ const env = (name: string) => (typeof Deno !== "undefined" ? Deno.env.get(name) 
 
 const PLACES = "https://places.googleapis.com/v1";
 const SEARCH_RADIUS_M = 25000; // bias toward ~15 miles around the point; nearest first
-export const DAILY_LIMIT = { search: 60, details: 60 };
+// Per person per day, and for the whole app per day (all users together). The app-wide
+// numbers keep usage inside Google's free monthly allowance (~1,000 of each a month).
+// A map visit uses up to 3 searches (60 shops); coming back within 15 minutes uses none.
+export const DAILY_LIMIT = { search: 15, details: 15 };
+export const APP_DAILY_LIMIT = { search: 30, details: 30 };
 
 // Only the fields the app shows (Google bills by the fields asked for).
 export const SEARCH_FIELDS = [
@@ -115,10 +119,11 @@ async function handle(req: Request) {
   const action = body.action === "details" ? "details" : "search";
 
   const { data: allowed, error: limitErr } = await admin.rpc("use_google_places", {
-    p_user: who.user.id, p_kind: action, p_limit: DAILY_LIMIT[action],
+    p_user: who.user.id, p_kind: action, p_limit: DAILY_LIMIT[action], p_app_limit: APP_DAILY_LIMIT[action],
   });
   if (limitErr) console.error("usage", limitErr.message);
-  if (allowed === false) return json({ error: "You've reached today's shop lookups. Try again tomorrow." }, 429);
+  if (limitErr) return json({ error: "Shop search isn't set up yet (run the google_shops migration)." }, 503);
+  if (allowed === false) return json({ error: "AutoPal has reached today's shop lookups. Shops you've already seen still work; new searches reset tomorrow." }, 429);
 
   try {
     if (action === "search") {

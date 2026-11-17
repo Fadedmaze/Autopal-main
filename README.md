@@ -113,7 +113,7 @@ Find a Mechanic shows real shops from Google, the same ones as Google Maps, on a
 
 How it fits together:
 
-- `supabase/functions/google-shops` talks to Google with a **server-side key** (`GOOGLE_PLACES_KEY`), so the key never reaches the browser. Each signed-in person gets 60 searches and 60 shop pages a day (`migrations/20261117_google_shops.sql`).
+- `supabase/functions/google-shops` talks to Google with a **server-side key** (`GOOGLE_PLACES_KEY`), so the key never reaches the browser. Daily limits (`migrations/20261117_google_shops.sql`): 15 searches and 15 shop pages per person, and 30 of each for the whole app, which keeps usage inside Google's free monthly allowance.
 - `js/config.js` → `GOOGLE_MAPS_KEY` is the **browser key** that draws the map. Leave it empty and the app falls back to the original OpenStreetMap map with the demo shops.
 - `js/places.js` (fetching), `js/mapKit.js` (Google or Leaflet map), `js/shopSpecialties.js` (specialties), `js/shopJobs.js` (typical prices), `js/views/shop.js` (shop page).
 
