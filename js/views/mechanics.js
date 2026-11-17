@@ -23,7 +23,6 @@ const SEARCH_AREA_MILES = 2;  // offer "Search This Area" after moving the map t
 const SERVICES = ["Oil change", "Brakes", "Tires", "Engine", "Transmission", "Electrical", "Alignment", "Inspection"];
 // Filter sliders. The price slider's top stop means "any price"; the rating slider's
 // bottom stop means "any rating".
-const PRICE_SLIDER = { min: 50, max: 500, step: 25 };
 const RATING_SLIDER = { min: 0, max: 5, step: 0.5 };
 const REFETCH_MILES = 0.5; // refresh shop distances after moving this far
 const FOLLOW_ZOOM = 14;
@@ -34,8 +33,7 @@ const SEVERITY = {
 };
 
 // Filters persist while moving around the app; location is kept in memory only.
-const filters = { maxPrice: null, rating: 0, services: new Set() };
-let lastPoint = null;
+const filters = { rating: 0, services: new Set() };let lastPoint = null;
 // The last Google search, reused for a few minutes (e.g. coming back from a shop page)
 // so the same area isn't looked up again. Memory only: Google doesn't allow storing it.
 let googleCache = null; // { point, shops, at }
@@ -104,27 +102,6 @@ export default async function render(root, ctx) {
           </select>
         </div>
 
-        <div class="filter-group" ${google ? "hidden" : ""}>
-          <div class="filter-label-row">
-            <label class="filter-label" for="filter-price">
-              ${icon("dollar", 18, 2)}
-              Average Repair Price
-            </label>
-            <output id="price-out"></output>
-          </div>
-
-          <input type="range" class="filter-range"
-            id="filter-price"
-            min="${PRICE_SLIDER.min}"
-            max="${PRICE_SLIDER.max}"
-            step="${PRICE_SLIDER.step}">
-
-          <div class="range-ends">
-            <span>$${PRICE_SLIDER.min}</span>
-            <span>Any</span>
-          </div>
-        </div>
-
         <div class="filter-group">
           <div class="filter-label-row">
             <label class="filter-label" for="filter-rating">
@@ -190,7 +167,6 @@ export default async function render(root, ctx) {
   const mapEl = root.querySelector("#map");
   const panel = root.querySelector("#filter-panel");
   const tab = root.querySelector("#filter-tab");
-  const priceInput = root.querySelector("#filter-price");
   const ratingInput = root.querySelector("#filter-rating");
   // Fill the slider track up to the thumb (the native track can't do this everywhere).
   const paintRange = (el) => {
@@ -237,26 +213,21 @@ export default async function render(root, ctx) {
     if (searchTerm && !searchable.includes(searchTerm)) {
       return false;
     }
-    if (filters.maxPrice != null && !(s.average_repair_price !== null && Number(s.average_repair_price) <= filters.maxPrice)) return false;
     if (filters.rating && !(Number(s.average_rating) >= filters.rating)) return false;
     for (const svc of filters.services) if (!s.services?.includes(svc)) return false;
     return true;
   };
 
   const syncFilterUi = () => {
-    priceInput.value = filters.maxPrice ?? PRICE_SLIDER.max;
     ratingInput.value = filters.rating;
-    paintRange(priceInput);
     paintRange(ratingInput);
-    root.querySelector("#price-out").textContent = filters.maxPrice == null ? "Any price" : `Up to $${filters.maxPrice}`;
     root.querySelector("#rating-out").textContent = filters.rating ? `${filters.rating.toFixed(1)}+ ★` : "Any rating";
     panel.querySelectorAll("[data-service]").forEach((b) => {
       const on = filters.services.has(b.dataset.service);
       b.classList.toggle("on", on);
       b.setAttribute("aria-pressed", String(on));
     });
-    const active = (filters.maxPrice != null) + (filters.rating > 0) + filters.services.size;
-    const count = tab.querySelector(".filter-count");
+    const active = (filters.rating > 0) + filters.services.size;    const count = tab.querySelector(".filter-count");
     count.textContent = active;
     count.hidden = !active;
     const fp = panel.querySelector("#filter-problem");
@@ -412,17 +383,6 @@ export default async function render(root, ctx) {
             <span>Estimated repair price</span>
             <strong class="shop-pop-price">${rangeText(e)}</strong>
             ${e.diag ? `<small>+ diagnosis ${rangeText(e.diag)}</small>` : ""}
-          </div>
-        ` : ""}
-  
-        ${!problemMode() && s.source !== "google" ? `
-          <div class="shop-pop-pricing">
-            <span>Average repair price</span>
-            <strong class="shop-pop-price">
-              ${s.average_repair_price !== null
-                ? formatMoney(s.average_repair_price)
-                : "Not available"}
-            </strong>
           </div>
         ` : ""}
   
@@ -643,20 +603,12 @@ export default async function render(root, ctx) {
                 </span>
               </span>
   
-              <span class="mechanic-shop-bottom">
-                ${s.source === "google" ? `
-                <span class="mechanic-shop-cost">
-                  <small class="mechanic-shop-rating">${ratingLine(s)}</small>
-                  ${openLine(s)}
-                </span>` : `
-                <span class="mechanic-shop-cost">
-                  <small>Average repair price</small>
-                  <strong>
-                    ${s.average_repair_price != null
-                      ? formatMoney(s.average_repair_price)
-                      : "Not available"}
-                  </strong>
-                </span>`}
+              <span class="mechanic-shop-cost">
+                <small class="mechanic-shop-rating">
+                  ${s.average_rating != null ? ratingLine(s) : "No rating available"}
+                </small>
+                ${openLine(s)}
+              </span>
   
                 <span class="mechanic-shop-details">
                   View Details
@@ -683,10 +635,10 @@ export default async function render(root, ctx) {
       // In problem mode a shop that can't do the repair shows no price: its average would read like an estimate.
       // Google shops have no prices, so their pins show the rating instead.
       const label = e ? rangeText(e)
-        : dim ? "—"
-        : s.source === "google" ? (s.average_rating != null ? `★ ${Number(s.average_rating).toFixed(1)}` : "New")
-        : s.source === "osm" ? "Shop"
-        : (s.average_repair_price != null ? `$${Math.round(Number(s.average_repair_price))}` : "—");
+      : dim ? "—"
+      : s.average_rating != null
+        ? `★ ${Number(s.average_rating).toFixed(1)}`
+        : "Shop";
       const cls = ["price-pin", dim && "dim", problemMode() && !dim && "fix", s.id === bestId && "best"].filter(Boolean).join(" ");
       const pin = map.addPin({ lat: Number(s.latitude), lng: Number(s.longitude) }, {
         html: `<span>${s.id === bestId ? "★ " : ""}${escapeHtml(label)}</span>`,
@@ -882,8 +834,7 @@ tab.addEventListener("click", () => {
     if (b.dataset.service) {
       filters.services.has(b.dataset.service) ? filters.services.delete(b.dataset.service) : filters.services.add(b.dataset.service);
     } else if (b.id === "clear-filters") {
-      filters.maxPrice = null; filters.rating = 0; filters.services.clear();
-    } else if (b.id === "apply-filters") {
+      filters.rating = 0; filters.services.clear();    } else if (b.id === "apply-filters") {
       panel.hidden = true;
       tab.setAttribute("aria-expanded", "false");
     }
@@ -891,12 +842,6 @@ tab.addEventListener("click", () => {
     drawPins(lastPoint ?? DEFAULT_POINT);
   });
 
-  priceInput.addEventListener("input", () => {
-    const v = Number(priceInput.value);
-    filters.maxPrice = v >= PRICE_SLIDER.max ? null : v;
-    syncFilterUi();
-    drawPins(lastPoint ?? DEFAULT_POINT, { fit: false });
-  });
   ratingInput.addEventListener("input", () => {
     filters.rating = Number(ratingInput.value);
     syncFilterUi();
