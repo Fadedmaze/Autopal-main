@@ -46,11 +46,48 @@ export function openSettings(profile = null) {
       </details>
 
       <details class="setting privacy">
+        <summary><span class="setting-label">${icon("info", 18, 2)}Terms of Use</span>${icon("chevron", 16, 2)}</summary>
+        <div class="terms-copy">
+          <p><strong>Effective date:</strong> November 17, 2026 · <strong>Operated by:</strong> Team 04 · <strong>Contact:</strong> autopalsupport@gmail.com</p>
+          <p>By creating an account or using AutoPal, you agree to these terms. If you don’t agree, don’t use the service.</p>
+
+          <h3>What AutoPal does</h3>
+          <p>AutoPal helps you organize vehicle information, maintenance tasks, reminders, warning-light information, and mechanic listings. You’re responsible for the accuracy of the information you enter and for deciding what maintenance your vehicle needs.</p>
+
+          <h3>Automotive information and safety</h3>
+          <p>Maintenance schedules, cost estimates, guides, and warning-light scan results are for general information only. They are not a diagnosis, repair instruction, or guarantee of safety. Follow your owner’s manual and consult a qualified mechanic. Don’t rely on AutoPal for emergencies or continue driving if your vehicle may be unsafe.</p>
+
+          <h3>Mechanic listings</h3>
+          <p>Shop information, ratings, and prices may be incomplete or out of date. AutoPal does not guarantee a shop’s services, availability, prices, or work.</p>
+
+          <h3>Your account and uploads</h3>
+          <p>Keep your login information secure. You retain ownership of photos and other content you upload, and allow AutoPal to store and use that content to provide the service.</p>
+
+          <h3>Reminders and availability</h3>
+          <p>Reminders may be delayed or may not arrive. AutoPal may change, suspend, or discontinue features.</p>
+
+          <h3>Acceptable use</h3>
+          <p>Don’t misuse AutoPal, interfere with its operation, access another person’s account or data, or use it unlawfully.</p>
+
+          <h3>Disclaimers and liability</h3>
+          <p>To the extent permitted by law, AutoPal is provided “as is.” To the extent permitted by law, Team 04 is not responsible for indirect or consequential losses arising from use of the service. These terms don’t limit rights that can’t legally be limited.</p>
+
+          <h3>Changes and contact</h3>
+          <p>We may update these terms by posting a new version with an updated effective date. Questions? Contact autopalsupport@gmail.com.</p>
+        </div>
+      </details>
+
+      <details class="setting privacy">
         <summary><span class="setting-label">${icon("info", 18, 2)}About AutoPal</span>${icon("chevron", 16, 2)}</summary>
         <ul>
           <li>Version 17</li>
-          <li>Terms</li>
-          <li>Support</li>
+        </ul>
+      </details>
+
+      <details class="setting privacy">
+        <summary><span class="setting-label">${icon("help", 18, 2)}Support</span>${icon("chevron", 16, 2)}</summary>
+        <ul>
+          <li><a href="mailto:autopalsupport@gmail.com">autopalsupport@gmail.com</a></li>
         </ul>
       </details>
     </div>`;

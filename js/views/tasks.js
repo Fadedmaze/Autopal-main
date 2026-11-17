@@ -126,7 +126,7 @@ export default async function render(root, ctx) {
               <p class="hint center">${state.tab === "completed"
                   ? "Uncheck a task to undo. Tap a task without a receipt to attach one."
                   : "Tap a task to mark it completed."}</p>`
-                  : `
+                    : `
                   <div class="tasks-empty">
                     <div class="tasks-empty-icon">
                       ${icon(

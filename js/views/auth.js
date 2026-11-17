@@ -25,7 +25,7 @@ export default async function render(root, ctx) {
   root.innerHTML = `
     <div class="auth">
       <div class="auth-brand">
-        <span class="auth-logo">${icon("wrench", 30, 2)}</span>
+        <img class="auth-logo" src="icons/icon.svg" alt="" width="48" height="48">
         <span class="auth-name">AutoPal</span>
       </div>
       <h1>${title}</h1>

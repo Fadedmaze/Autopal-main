@@ -123,7 +123,7 @@ body.has-nav #nav {
     display: flex; align-items: center; gap: 10px; padding: 4px 12px 22px;
     font-size: 19px; font-weight: 800; letter-spacing: -.02em; color: var(--ink); text-decoration: none;
   }
-  #nav .brand .icon { color: var(--brand); }
+  #nav .brand .brand-logo { width: 30px; height: 30px; border-radius: 8px; flex: none; }
   #nav .tab {
     flex: none; flex-direction: row; justify-content: flex-start; gap: 12px;
     padding: 11px 12px; border-radius: 12px; font-size: 15px; font-weight: 600; color: var(--ink-2);
@@ -182,6 +182,7 @@ body.has-nav #nav {
   display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 12px;
   border: 0; background: var(--surface-2); color: var(--ink-2); cursor: pointer;
 }
+.vehicle-edit-btn { background: color-mix(in srgb, var(--ink) 12%, var(--surface-2)); }
 .icon-btn:hover { color: var(--brand); text-decoration: none; }
 .icon-btn.flip .icon { transform: scaleX(-1); }
 .link-sm { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; font-weight: 600; }
@@ -264,7 +265,7 @@ input[type=date] { min-height: 48px; }
 
 .auth { max-width: 420px; margin: 0 auto; padding: 48px 4px 24px; display: flex; flex-direction: column; gap: 6px; }
 .auth-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
-.auth-logo { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 14px; background: var(--brand); color: #fff; }
+.auth-logo { display: block; width: 48px; height: 48px; border-radius: 12px; }
 .auth-name { font-size: 22px; font-weight: 800; letter-spacing: -.02em; }
 .auth h1 { margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -.03em; }
 .auth .sub { margin: 0 0 18px; color: var(--ink-2); }
@@ -327,7 +328,7 @@ input[type=date] { min-height: 48px; }
 .car-meta { font-size: 13.5px; color: var(--ink-2); margin: 2px 0 0; }
 .car-stats { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 8px; font-size: 12.5px; color: var(--ink-3); }
 .radio {
-  width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--line-strong);
+  width: 24px; height: 24px; border-radius: 8px; border: 2px solid var(--line-strong);
   display: grid; place-items: center; color: transparent;
 }
 .car.selected .radio { background: var(--brand); border-color: var(--brand); color: #fff; }
@@ -341,6 +342,465 @@ input[type=date] { min-height: 48px; }
 .section-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 2px; }
 .section-head h3 { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: -.01em; }
 
+/* ---------- Car at a Glance ---------- */
+
+/* =========================================
+   VEHICLE DETAILS REDESIGN
+   ========================================= */
+
+   .vehicle-detail-page {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  
+  /* Compact photo card */
+  
+  .vehicle-photo-card {
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--surface);
+  }
+  
+  .vehicle-photo-overview {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  
+  .vehicle-photo-preview {
+    position: relative;
+    width: 112px;
+    height: 112px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: var(--brand-soft);
+    color: var(--brand);
+    overflow: hidden;
+  }
+  
+  .vehicle-photo-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .vehicle-photo-preview .gallery-delete {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+  }
+  
+  .vehicle-photo-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    min-width: 0;
+  }
+  
+  .vehicle-photo-info h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0;
+  }
+  
+  .vehicle-photo-info p {
+    margin: 0;
+  }
+  
+  .vehicle-photo-card .gallery-strip {
+    margin-top: 14px;
+  }
+  
+  /* Vehicle dropdown cards */
+  
+  .vehicle-dropdown {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  
+  .vehicle-dropdown-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 18px 16px;
+    cursor: pointer;
+    list-style: none;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  
+  .vehicle-dropdown-heading::-webkit-details-marker {
+    display: none;
+  }
+  
+  .vehicle-dropdown-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .vehicle-dropdown-title svg {
+    color: var(--brand);
+    flex-shrink: 0;
+  }
+  
+  /* Dropdown arrows */
+  
+  .vehicle-dropdown-arrow {
+    display: block;
+    width: 9px;
+    height: 9px;
+    border-right: 2px solid var(--brand);
+    border-bottom: 2px solid var(--brand);
+    transform: rotate(45deg);
+    transition: transform 0.2s ease;
+    margin-right: 4px;
+    flex-shrink: 0;
+  }
+  
+  .vehicle-dropdown[open] .vehicle-dropdown-arrow {
+    transform: rotate(225deg);
+  }
+  
+  /* Expanded dropdown content */
+  
+  .vehicle-dropdown-content {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 16px;
+    border-top: 1px solid var(--line);
+  }
+  
+  .vehicle-dropdown-content p {
+    margin: 0;
+  }
+  
+  .vehicle-dropdown-content > .btn {
+    align-self: flex-start;
+  }
+  
+  /* Avoid nested card outlines */
+  
+  .vehicle-dropdown-content > .card {
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    background: transparent;
+    margin: 0;
+  }
+  
+  /* Consistent card headings */
+  
+  .vehicle-detail-page .card-head h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  
+  .vehicle-detail-page .card-head h3 svg {
+    color: var(--brand);
+  }
+  
+  /* Remove duplicate 3D car heading */
+.vehicle-dropdown-content .card-head h3 {
+  display: none;
+}
+
+.vehicle-dropdown-content .card-head {
+  justify-content: flex-end;
+}
+
+/* Compact 3D customization layout */
+
+.vehicle-dropdown-content .card:has(#customize-look) {
+  position: relative;
+  padding-top: 0;
+}
+
+.vehicle-dropdown-content .card-head:has(#customize-look) {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 0;
+}
+
+.vehicle-dropdown-content .card:has(#customize-look) {
+  min-height: 44px;
+}
+
+.vehicle-dropdown-content .card:has(#customize-look) > :nth-child(2) {
+  padding-right: 140px;
+  margin-top: 0;
+}
+
+
+/* =========================================
+   SIMPLIFIED CAR CARE OVERVIEW
+   ========================================= */
+
+   .care-compact {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  
+  /* Compact status banner */
+  
+  .care-compact .care-status {
+    padding: 12px;
+    gap: 12px;
+  }
+  
+  .care-compact .care-status-icon {
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+  }
+  
+  .care-compact .care-status-text strong {
+    font-size: 14px;
+  }
+  
+  .care-compact .care-status-text > span {
+    font-size: 12px;
+  }
+  
+  /* Next service */
+  
+  .care-compact .care-next {
+    padding: 12px 0;
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    border-bottom: 1px solid var(--line);
+  }
+  
+  .care-compact .care-next-main {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex: 1;
+  }
+  
+  .care-compact-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--ink-3);
+  }
+  
+  .care-compact .care-next-main strong {
+    font-size: 15px;
+    color: var(--ink);
+  }
+  
+  /* Two simple statistics */
+  
+  .care-quick-stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    padding: 2px 0 8px;
+  }
+  
+  .care-quick-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .care-quick-stat + .care-quick-stat {
+    border-left: 1px solid var(--line);
+    padding-left: 16px;
+  }
+  
+  .care-quick-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-2);
+  }
+  
+  .care-quick-label svg {
+    color: var(--brand);
+    flex-shrink: 0;
+  }
+  
+  .care-quick-stat > strong {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+  
+  /* Detailed statistics dropdown */
+  
+  .care-statistics {
+    border-top: 1px solid var(--line);
+  }
+  
+  .care-statistics-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 0 2px;
+    cursor: pointer;
+    list-style: none;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--brand);
+  }
+  
+  .care-statistics-heading::-webkit-details-marker {
+    display: none;
+  }
+  
+  .care-statistics-arrow {
+    display: block;
+    width: 9px;
+    height: 9px;
+    border-right: 2px solid var(--brand);
+    border-bottom: 2px solid var(--brand);
+    transform: rotate(45deg);
+    transition: transform 0.2s ease;
+    margin-right: 4px;
+    flex-shrink: 0;
+  }
+  
+  .care-statistics[open] .care-statistics-arrow {
+    transform: rotate(225deg);
+  }
+  
+  .care-statistics-content {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding-top: 18px;
+  }
+  
+  /* Expanded statistics */
+  
+  .care-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  
+  .care-detail-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px;
+    background: var(--surface-2, var(--surface));
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+  
+  .care-detail-stat strong {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  
+  .care-detail-stat small {
+    font-size: 12px;
+    color: var(--ink-2);
+    overflow-wrap: anywhere;
+  }
+  
+  .care-cost-link {
+    align-self: flex-start;
+  }
+
+  /* Remove clickable divider from Next Service */
+.care-compact .care-next {
+  border: none;
+  text-decoration: none;
+}
+
+/* Add a separate, non-clickable gray divider */
+.care-compact .care-quick-stats {
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+
+
+/* Vehicle form: Year and Trim card */
+
+.vehicle-year-trim-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.vehicle-year-trim-card .field-row {
+  margin: 0;
+  gap: 12px;
+}
+
+.vehicle-year-trim-card .field {
+  gap: 10px;
+  min-width: 0;
+}
+
+.vehicle-year-trim-card .field > span:first-child {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+.vehicle-year-trim-card #car-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.vehicle-year-trim-card #car-hint:empty {
+  display: none;
+}
+
+/* Fix vehicle description alignment */
+.vehicle-dropdown-content .description {
+  display: block;
+  text-align: left !important;
+  text-indent: 0 !important;
+  white-space: normal;
+  padding: 14px 16px !important;
+  min-height: 0 !important;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.vehicle-dropdown-content .description .tone-muted {
+  display: block;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+}
 /* ---------- Tasks ---------- */
 
 .task-list { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--radius); overflow: hidden; }
@@ -513,6 +973,7 @@ button.task-body { border: 0; padding: 0; background: none; text-align: left; fo
 }
 
 
+
 /* =========================================
    TASK FORM — CLEAN LAYOUT
    ========================================= */
@@ -622,6 +1083,70 @@ button.task-body { border: 0; padding: 0; background: none; text-align: left; fo
 
   accent-color: var(--brand);
   cursor: pointer;
+}
+
+/* Required field asterisks */
+
+.required-star {
+  color: #ef4444;
+  font-size: 14px;
+  font-weight: 600;
+  margin-left: 2px;
+}
+
+/* Additional Details dropdown arrow */
+
+.task-additional-heading .task-additional-chevron {
+  display: block;
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid var(--brand);
+  border-bottom: 2px solid var(--brand);
+  transform: rotate(45deg) !important;
+  transform-origin: center;
+  transition: transform 0.2s ease;
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+
+.task-additional-details[open] .task-additional-heading .task-additional-chevron {
+  transform: rotate(225deg) !important;
+}
+
+/* Bold Due Date label */
+.task-schedule-card .task-date-card > label {
+  font-weight: 700;
+}
+
+/* Consistent required field labels */
+.form.content > .field > span:first-child,
+.form.content > .field > label:first-child,
+.task-schedule-card .task-date-card > label {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+/* Keep required asterisks consistent */
+.required-star {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ef4444;
+}
+
+/* Match Reminder to other field labels */
+.task-additional-content .remind-heading {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+.task-additional-content .remind-heading em {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--ink-3);
 }
 
 /* Repeat interval dropdown */
@@ -1181,6 +1706,8 @@ button.task-body { border: 0; padding: 0; background: none; text-align: left; fo
 
 /* ---------- Shared bits ---------- */
 
+.appbar.center { text-align: center; }
+.appbar.center .appbar-row { justify-content: flex-start; }
 .icon-btn-brand { background: var(--brand); color: #fff; }
 .icon-btn-brand:hover { color: #fff; filter: brightness(1.06); }
 .form-actions { display: grid; grid-template-columns: 1fr 1.6fr; gap: 10px; margin-top: 6px; }
@@ -1196,6 +1723,7 @@ button.task-body { border: 0; padding: 0; background: none; text-align: left; fo
 
 .home-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 14px 4px 4px; }
 .home-head h1 { margin: 4px 0 0; font-size: 28px; font-weight: 800; letter-spacing: -.03em; line-height: 1.15; overflow-wrap: anywhere; }
+.home-actions { display: flex; align-items: center; gap: 8px; flex: none; }
 .tire-btn {
   flex: none; display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%;
   border: 0; cursor: pointer; background: #1f2530; color: #d7dde7;
@@ -1203,35 +1731,30 @@ button.task-body { border: 0; padding: 0; background: none; text-align: left; fo
   transition: transform .4s;
 }
 .tire-btn:hover { transform: rotate(60deg); }
-/* Profile + Settings buttons, top right of Home and the other main pages (app.js adds
-   them to those pages' headers). The page title sits on the same row, centered with
-   the buttons; a page action (Add Task) sits between them; the subtitle goes below. */
+/* Profile + Settings buttons at the top right of the other main pages (added by app.js),
+   matching Home's. The page title shares their row, centered with them; a page action
+   (Add Task, Add Vehicle) sits between; a back link (Profile only) sits above and the
+   subtitle below. */
 .appbar-tools { flex: none; display: flex; align-items: center; gap: 8px; }
-.profile-btn {
-  flex: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%;
-  background: var(--surface); color: var(--ink); border: 1px solid var(--line);
-  box-shadow: 0 2px 8px -4px rgba(0,0,0,.25); text-decoration: none;
-}
-.profile-btn:hover { color: var(--brand); text-decoration: none; }
-.home-head .appbar-tools { margin-top: 2px; }
 .appbar.has-settings {
   display: grid; grid-template-columns: minmax(0, 1fr) auto auto;
-  grid-template-areas: "title action tools" "sub sub sub";
+  grid-template-areas: "back back back" "title action tools" "sub sub sub";
   align-items: center; column-gap: 10px;
 }
 .appbar.has-settings .appbar-row { display: contents; }
-.appbar.has-settings .back { display: none; }
+.appbar.has-settings .back { grid-area: back; justify-self: start; margin-bottom: 6px; }
 .appbar.has-settings .appbar-action { grid-area: action; margin: 0; }
 .appbar.has-settings .appbar-action:empty { display: none; }
 .appbar.has-settings h1 { grid-area: title; margin: 0; min-width: 0; }
 .appbar.has-settings .sub { grid-area: sub; margin-top: 4px; }
 .appbar.has-settings .appbar-tools { grid-area: tools; }
 .appbar.has-settings .page-settings { width: 44px; height: 44px; }
-/* Narrow phones: the page action shows just its icon so the title keeps its room. */
-@media (max-width: 400px) {
+/* Narrow phones: buttons show just their icons so titles keep their room. */
+@media (max-width: 420px) {
   .appbar.has-settings h1 { font-size: 26px; }
-  .appbar.has-settings .appbar-action .btn span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-  .appbar.has-settings .appbar-action .btn { padding-inline: 10px; }
+  .profile-link span,
+  .appbar.has-settings .appbar-action .btn span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .profile-link, .appbar.has-settings .appbar-action .btn { padding-inline: 10px; }
   .home-head h1 { font-size: 24px; }
 }
 /* On Find Mechanic it sits in the map's floating top bar. */
@@ -1310,12 +1833,17 @@ button.task-body { border: 0; padding: 0; background: none; text-align: left; fo
 .setting { display: flex; flex-direction: column; gap: 8px; padding: 10px 0; border-top: 1px solid var(--line); }
 .setting-label { display: flex; align-items: center; gap: 8px; font-weight: 700; }
 .setting-label .icon { color: var(--brand); }
+.support-email { margin-left: 26px; }
 .segmented button[aria-checked="true"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
 .sheet .segmented button[aria-checked="true"] { background: var(--brand); color: #fff; }
 .privacy summary { display: flex; justify-content: space-between; align-items: center; cursor: pointer; list-style: none; }
 .privacy summary::-webkit-details-marker { display: none; }
 .privacy[open] summary > .icon { transform: rotate(90deg); }
 .privacy ul { margin: 6px 0 0; padding-left: 20px; color: var(--ink-2); font-size: 14px; display: flex; flex-direction: column; gap: 6px; }
+.sheet:has(.terms-copy) { max-height: 90dvh; overflow-y: auto; }
+.terms-copy { display: flex; flex-direction: column; gap: 8px; color: var(--ink-2); font-size: 13px; line-height: 1.5; }
+.terms-copy h3 { margin: 6px 0 0; color: var(--ink); font-size: 14px; }
+.terms-copy p { font-size: 13px; }
 .receipt-view img { width: 100%; max-height: 70vh; object-fit: contain; border-radius: 12px; background: var(--surface-2); }
 
 /* ---------- Task extras ---------- */
@@ -1730,9 +2258,8 @@ body.has-nav .map-screen { bottom: calc(var(--nav-h) + var(--safe-b)); }
 .guide-search + .guide-list {
   margin-top: 0 !important;
 }
-/* ---------- Profile (the "Your Account" section at the bottom of Home) ---------- */
+/* ---------- Profile ---------- */
 
-.profile-page { padding-top: 4px; }
 .profile { display: flex; flex-direction: column; gap: 14px; align-items: center; }
 .avatar-picker { position: relative; cursor: pointer; margin-top: 6px; }
 .avatar-lg {
@@ -2386,9 +2913,948 @@ button.menu-row { width: 100%; font: inherit; font-weight: 600; text-align: left
 .drive-exact { margin-top: 10px; }
 .drive-card p { margin: 6px 0 0; color: var(--ink-2); font-size: 14.5px; }
 .drive-card .drive-level { font-weight: 700; color: var(--ink); }
-.shop-source { display: block; font-size: 11.5px; color: var(--ink-3); line-height: 1.35; }
-.shop-pop .shop-source { color: #6b7280; }
-.price-pin span svg { display: block; }
+
+
+/* Find Mechanic redesign */
+
+.map-top.mechanic-toolbar {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  max-width: 480px;
+  right: auto;
+  width: calc(100% - 32px);
+  box-sizing: border-box;
+}
+
+.mechanic-heading h1 {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--ink);
+  margin: 0 0 4px;
+}
+
+.mechanic-heading p {
+  font-size: 13px;
+  color: var(--ink-3);
+  margin: 0;
+}
+
+.mechanic-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mechanic-search {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--brand);
+}
+
+.mechanic-search input {
+  width: 100%;
+  min-width: 0;
+  border: none;
+  outline: none;
+  padding: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.mechanic-toolbar .map-filter-tab {
+  flex: 0 0 auto;
+  width: auto;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--brand-soft);
+  color: var(--brand);
+  box-shadow: none;
+  font-size: 13px;
+}
+
+.mechanic-view-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  background: var(--brand-soft);
+  color: var(--brand);
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+/* Mechanic toolbar refinements */
+
+.map-top.mechanic-toolbar {
+  padding: 16px;
+  gap: 12px;
+  max-width: 440px;
+}
+
+.mechanic-heading {
+  padding-right: 48px;
+}
+
+.mechanic-heading h1 {
+  font-size: 22px;
+}
+
+.mechanic-search {
+  height: 44px;
+  padding: 0 12px;
+  box-sizing: border-box;
+}
+
+.mechanic-search svg {
+  flex-shrink: 0;
+  color: var(--brand);
+}
+
+.mechanic-search input {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  border-radius: 0;
+  padding: 0 !important;
+  min-height: 0;
+  height: auto;
+  font-size: 14px;
+}
+
+.mechanic-toolbar .map-filter-tab {
+  height: 44px;
+  min-height: 44px;
+  box-sizing: border-box;
+}
+
+.mechanic-view-toggle {
+  min-height: 40px;
+  padding: 10px;
+}
+
+/* Move settings to the top right */
+.mechanic-toolbar > :last-child:not(#toggle-list) {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  margin: 0;
+}
+
+
+/* =========================================
+   MECHANIC RESULTS PANEL
+   ========================================= */
+
+   .map-top.mechanic-toolbar {
+    max-height: calc(100% - 32px);
+  }
+
+  /* Results appear below the header */
+  
+  .mechanic-toolbar .map-list {
+    position: static;
+    width: 100%;
+    max-height: none;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 14px 0 0;
+    margin: 0;
+    border-radius: 0;
+    border-top: 1px solid var(--line);
+    background: transparent;
+    box-shadow: none;
+    box-sizing: border-box;
+  }
+  
+  .mechanic-toolbar .map-list[hidden] {
+    display: none;
+  }
+  
+  .mechanic-results-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  
+  .mechanic-results-heading strong {
+    font-size: 14px;
+    color: var(--ink);
+  }
+  
+  .mechanic-results-heading > span {
+    font-size: 12px;
+    color: var(--ink-3);
+  }
+  
+  /* Individual shop cards */
+  
+  .map-list .mechanic-shop-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+  
+  .map-list .mechanic-shop-card {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    width: 100%;
+    padding: 14px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    text-align: left;
+    cursor: pointer;
+    box-sizing: border-box;
+  }
+  
+  .map-list .mechanic-shop-card:hover {
+    border-color: var(--brand);
+    background: var(--surface);
+  }
+  
+  .mechanic-shop-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .mechanic-shop-icon {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--brand-soft);
+    color: var(--brand);
+    flex-shrink: 0;
+  }
+  
+  .mechanic-shop-info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .mechanic-shop-info strong {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  
+  .mechanic-shop-info small {
+    font-size: 12px;
+    color: var(--ink-3);
+    white-space: normal;
+  }
+  
+  .mechanic-shop-distance {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  
+  .mechanic-shop-distance svg {
+    color: var(--brand);
+  }
+  
+  /* Price and details */
+  
+  .mechanic-shop-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+  }
+  
+  .mechanic-shop-cost {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .mechanic-shop-cost small {
+    font-size: 11px;
+    color: var(--ink-3);
+  }
+  
+  .mechanic-shop-cost strong {
+    font-size: 18px;
+    color: var(--brand);
+  }
+  
+  .mechanic-shop-details {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: var(--brand-soft);
+    color: var(--brand);
+    font-size: 12px;
+    font-weight: 600;
+  }
+  
+  /* Mobile layout */
+  
+  @media (max-width: 699px) {
+    .map-top.mechanic-toolbar {
+      left: 12px;
+      right: 12px;
+      width: auto;
+      max-width: none;
+      max-height: calc(100% - 28px);
+      padding: 14px;
+    }
+  
+    .mechanic-toolbar .map-list {
+      max-height: 55dvh;
+    }
+  
+    .map-list .mechanic-shop-card {
+      padding: 12px;
+    }
+  
+    .mechanic-shop-info strong {
+      font-size: 14px;
+    }
+  }
+  
+  .mechanic-toolbar {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  
+  .mechanic-toolbar > :not(.map-list):not(.filter-panel) {
+    flex-shrink: 0;
+  }
+  
+  .mechanic-toolbar .map-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+
+/* Compact mechanic cards */
+
+.map-list .mechanic-shop-card .mechanic-shop-top {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.map-list .mechanic-shop-card .mechanic-shop-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+}
+
+.map-list .mechanic-shop-card .mechanic-shop-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  flex: 1;
+}
+
+.map-list .mechanic-shop-card {
+  padding: 12px;
+  gap: 10px;
+}
+
+.map-list .mechanic-shop-bottom {
+  padding-top: 10px;
+}
+
+/* Mechanic list dropdown arrow */
+
+.mechanic-view-toggle {
+  position: relative;
+  padding-right: 36px;
+  padding-left: 36px;
+}
+
+.mechanic-toggle-arrow {
+  position: absolute;
+  right: 18px;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 0.2s ease;
+}
+
+.mechanic-view-toggle[aria-expanded="true"]
+.mechanic-toggle-arrow {
+  transform: rotate(225deg);
+}
+
+
+/* =========================================
+   MECHANIC FILTER REDESIGN
+   ========================================= */
+/* =========================================
+   MECHANIC FILTERS
+   ========================================= */
+
+   .mechanic-toolbar > .filter-panel {
+    position: static;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    width: 100%;
+    max-height: none;
+    min-height: 0;
+    flex: 1 1 auto;
+    gap: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0;
+    margin: 0;
+    background: transparent;
+    border: none;
+    border-top: 1px solid var(--line);
+    border-radius: 0;
+    box-shadow: none;
+    box-sizing: border-box;
+  }
+  
+  .mechanic-toolbar > .filter-panel[hidden] {
+    display: none;
+  }
+  
+  /* Filters heading */
+  
+  .mechanic-toolbar .mechanic-filter-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 0 4px;
+    margin: 0;
+    flex-shrink: 0;
+  }
+  
+  .mechanic-filter-heading h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  
+  .mechanic-filter-heading .btn-text {
+    color: var(--brand);
+    font-size: 13px;
+    font-weight: 600;
+  }
+  
+  /* Filter sections */
+  
+  .mechanic-toolbar .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 0;
+    margin: 0;
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  
+  .mechanic-toolbar .filter-group:first-of-type {
+    padding-top: 6px;
+  }
+  
+  .mechanic-toolbar .mechanic-filter-heading + .filter-group {
+    padding-top: 6px;
+    padding-bottom: 16px;
+    gap: 8px;
+  }
+  
+  .mechanic-toolbar .filter-group > * {
+    margin: 0;
+  }
+  
+  .mechanic-toolbar .filter-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  
+  .mechanic-toolbar .filter-label svg {
+    color: var(--brand);
+    flex-shrink: 0;
+  }
+  
+  .mechanic-toolbar .filter-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 0;
+  }
+  
+  .mechanic-toolbar .filter-label-row output {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--brand);
+  }
+  
+  /* Warning light dropdown */
+  
+  .mechanic-toolbar .filter-select {
+    min-height: 40px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    margin: 0;
+  }
+  
+  .mechanic-toolbar #filter-problem {
+    margin: 0;
+  }
+  
+  /* Price and rating sliders */
+  
+  .mechanic-toolbar .filter-range {
+    height: 24px;
+    margin: 4px 0;
+  }
+  
+  .mechanic-toolbar .range-ends {
+    display: flex;
+    justify-content: space-between;
+    margin: 0;
+    font-size: 11px;
+    line-height: 1.2;
+  }
+  
+  /* Service selection buttons */
+  
+  .mechanic-toolbar .service-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin: 2px 0 0;
+  }
+  
+  .mechanic-toolbar .service-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    min-height: 34px;
+    padding: 6px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: var(--surface);
+    color: var(--ink-2);
+    font-size: 12px;
+    font-weight: 600;
+  }
+  
+  .mechanic-toolbar .service-check {
+    display: none;
+  }
+  
+  .mechanic-toolbar .service-toggle[aria-pressed="true"] {
+    background: var(--brand-soft);
+    border-color: var(--brand);
+    color: var(--brand);
+  }
+  
+  .mechanic-toolbar
+  .service-toggle[aria-pressed="true"] .service-check {
+    display: inline-flex;
+    width: 14px;
+    height: 14px;
+    border: none;
+    background: transparent;
+    color: var(--brand);
+  }
+  
+  /* Apply filters button */
+  
+  .mechanic-toolbar .filter-actions {
+    position: static;
+    bottom: 0;
+    z-index: 2;
+    flex-shrink: 0;
+    background: var(--surface);
+    padding: 16px 0 8px;
+    margin: 0;
+    border-top: none;
+  }
+  
+  .mechanic-toolbar #apply-filters {
+    width: 100%;
+    min-height: 44px;
+  }
+  
+  /* Mobile layout */
+  
+  @media (max-width: 699px) {
+    .mechanic-toolbar > .filter-panel {
+      max-height: 55dvh;
+    }
+  
+    .mechanic-toolbar .service-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  /* =========================================
+   MECHANIC MAP POPUP
+   ========================================= */
+
+.map-screen .leaflet-popup-content-wrapper {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, .12);
+}
+
+.map-screen .leaflet-popup-tip {
+  background: var(--surface);
+}
+
+.map-screen .leaflet-popup-content {
+  margin: 20px 16px 16px;
+  font-family: inherit;
+}
+
+.shop-pop {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 270px;
+  max-width: calc(100vw - 100px);
+}
+
+.shop-pop-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-right: 8px;
+}
+
+.shop-pop-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: 11px;
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.shop-pop-info {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.shop-pop-info strong {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.4;
+}
+
+.shop-pop-meta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.shop-pop-meta svg {
+  color: var(--brand);
+}
+
+.shop-pop-rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.shop-pop-pricing {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.shop-pop-pricing > span,
+.shop-pop-pricing > small {
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.shop-pop .shop-pop-price {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--brand);
+}
+
+.shop-pop-links {
+  display: flex;
+  gap: 8px;
+  margin: 0;
+}
+
+.shop-pop-links a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: 1;
+  min-height: 40px;
+  padding: 8px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.shop-pop-links .shop-pop-call {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.shop-pop-links .shop-pop-directions {
+  background: var(--brand);
+  color: white;
+}
+
+.map-screen .leaflet-popup-close-button {
+  color: var(--ink-3);
+}
+
+/* Selected mechanic map pin */
+
+.price-pin.selected span {
+  background: #1859ba;
+  border-color: #1859ba;
+  color: #ffffff;
+  opacity: 1;
+  box-shadow: 0 4px 12px rgba(24, 89, 186, 0.3);
+}
+
+.price-pin.selected span::after {
+  border-top-color: #1859ba;
+}
+
+.price-pin span {
+  transition: background-color 0.2s ease,
+              color 0.2s ease,
+              box-shadow 0.2s ease;
+}
+
+/* Mobile mechanic toolbar */
+@media (max-width: 699px) {
+  .map-top.mechanic-toolbar {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .mechanic-heading h1 {
+    font-size: 20px;
+  }
+
+  .mechanic-search {
+    min-width: 0;
+  }
+
+  .mechanic-view-toggle {
+    min-height: 38px;
+  }
+}
+
+/* Mechanic shop rating layout */
+
+.map-list .mechanic-shop-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.map-list .mechanic-shop-cost {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+}
+
+.map-list .mechanic-shop-rating {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.map-list .mechanic-shop-rating .stars {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 2px;
+  width: auto;
+  white-space: nowrap;
+}
+
+.map-list .mechanic-shop-rating .stars svg {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.map-list .mechanic-shop-rating .stars-num {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-left: 4px;
+}
+
+.map-list .shop-reviews {
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.map-list .open-now {
+  font-size: 12px;
+  margin: 0;
+}
+
+.map-list .mechanic-shop-details {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+
+/* ---------- Google map mode (js/mapKit.js) and real shops (js/places.js) ---------- */
+.gm-you-dot { width: 22px; height: 22px; transform: translate(-11px, -11px); }
+.price-pin { cursor: pointer; }
+.map-search-area {
+  position: absolute; z-index: 450; left: 50%; transform: translateX(-50%);
+  top: calc(env(safe-area-inset-top, 0px) + 150px); width: auto;
+  box-shadow: 0 4px 14px rgba(0,0,0,.2); border-radius: 999px;
+}
+@media (min-width: 700px) { .map-search-area { top: 96px; } }
+.shop-reviews { font-size: 12.5px; color: var(--ink-3); font-weight: 600; }
+.open-now { font-size: 12.5px; font-weight: 700; }
+.open-now.yes { color: #15803d; }
+.open-now.no { color: #b42318; }
+.shop-pop-details { width: 100%; justify-content: center; margin-top: 2px; }
+.mechanic-shop-rating { display: inline-flex; align-items: center; gap: 4px; }
+/* Google's info window around the same popup content (keep Google's own close button) */
+.gm-style .gm-style-iw-c { border-radius: 16px; }
+.gm-style .shop-pop { font-family: Inter, sans-serif; color: #121826; padding: 0 4px 6px; }
+
+/* ---------- Shop page (#/shops/:id) ---------- */
+.shop-page { display: flex; flex-direction: column; gap: 14px; }
+.shop-photo { margin: 0; border-radius: 16px; overflow: hidden; background: var(--surface-2, #eef1f6); }
+.shop-photo img { display: block; width: 100%; max-height: 260px; object-fit: cover; }
+.shop-photo figcaption { font-size: 11.5px; color: var(--ink-3); padding: 6px 10px; }
+.shop-photo figcaption a { color: inherit; }
+.shop-head { display: flex; flex-direction: column; gap: 8px; }
+.shop-head-rating { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.shop-head-rating strong { font-size: 16px; }
+.shop-head-rating span { color: var(--ink-3); font-size: 14px; }
+.shop-head-meta { display: flex; gap: 10px; flex-wrap: wrap; margin: 0; color: var(--ink-2); font-size: 14px; }
+.shop-address { display: flex; gap: 6px; align-items: flex-start; margin: 0; color: var(--ink-2); }
+.shop-address .icon { flex: none; margin-top: 2px; }
+.shop-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
+.shop-buttons .btn:first-child:nth-last-child(odd) { grid-column: 1 / -1; }
+.spec-list { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.spec-list li { display: flex; flex-direction: column; gap: 1px; padding: 10px 12px; border-radius: 12px; background: var(--brand-soft); }
+.spec-list strong { color: var(--ink); font-size: 15px; }
+.spec-list small { color: var(--ink-3); font-size: 12.5px; }
+.spec-brands { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 12px 0 0; font-size: 13.5px; color: var(--ink-2); }
+.chip { display: inline-block; padding: 3px 10px; border-radius: 999px; background: var(--surface-2, #eef1f6); border: 1px solid var(--line); font-size: 13px; color: var(--ink); }
+.shop-jobs { list-style: none; margin: 6px 0 0; padding: 0; }
+.shop-jobs li { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 14.5px; }
+.shop-jobs li:last-child { border-bottom: 0; }
+.shop-jobs strong { white-space: nowrap; color: var(--brand); }
+.shop-hours { list-style: none; margin: 6px 0 0; padding: 0; font-size: 14.5px; }
+.shop-hours li { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; color: var(--ink-2); }
+.shop-hours li.today { font-weight: 800; color: var(--ink); }
+.shop-reviews-list { list-style: none; margin: 6px 0 10px; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.shop-reviews-list li { display: flex; flex-direction: column; gap: 4px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.shop-reviews-list li:last-child { border-bottom: 0; }
+.shop-reviews-list p { margin: 2px 0 0; color: var(--ink-2); font-size: 14.5px; line-height: 1.5; }
+.review-head { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; }
+.review-head img { border-radius: 50%; }
+.review-head a { color: var(--ink); text-decoration: none; }
+.review-head small { color: var(--ink-3); font-weight: 500; margin-left: auto; }
+.google-attrib { text-align: center; font-size: 12.5px; color: var(--ink-3); margin: 4px 0 18px; }
+.google-attrib-mark { font-family: Roboto, Arial, sans-serif; font-weight: 500; color: var(--ink-2); }
+.shop-car { width: 100%; margin: 8px 0 2px; }
+.shop-head-rating .stars-num { font-weight: 800; color: var(--ink); }
+
+
+/* Find Mechanic: Profile + Settings at the toolbar's top right, centered on the title. */
+.mechanic-toolbar > .map-tools:not(#toggle-list) {
+  position: absolute; top: 14px; right: 16px; width: auto; height: auto; margin: 0; gap: 6px;
+}
+.mechanic-toolbar > .map-tools .map-settings { width: 38px; height: 38px; }
+.mechanic-toolbar > .map-tools .profile-link { min-height: 38px; height: 38px; }
+.mechanic-toolbar .mechanic-heading { padding-right: 150px; }
+@media (max-width: 420px) { .mechanic-toolbar .mechanic-heading { padding-right: 96px; } }
 
 /* Narrow phones: keep segmented labels ("Upcoming (3)") on one line. */
 @media (max-width: 400px) {

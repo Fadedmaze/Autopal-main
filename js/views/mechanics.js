@@ -4,14 +4,22 @@
 // Problem mode (#/mechanics?problem=<light slug>&vehicle=<id>, from the dashboard scanner
 // or a light's guide): a banner names the problem, and a results panel ranks the shops
 // most likely to fix it with a per-shop price estimate for the user's car (js/repairs.js).
+// Shops: real ones from Google Places on a Google map when a Google key is set in
+// js/config.js (js/places.js, js/mapKit.js). Without Google (no key, or Google can't be
+// reached) it shows the app's own shops plus real shops from OpenStreetMap (js/osmShops.js),
+// so the map still works anywhere, not just in Utah.
+// Tapping a Google shop opens its full page (#/shops/:id, js/views/shop.js).
 import { nearbyShops, listWarningLights, listVehicles, getProfile, hasNewColumns } from "../data.js";
+import { createMap, usesGoogle } from "../mapKit.js";
+import { searchShops } from "../places.js";
 import { escapeHtml, icon, stars, formatMoney, formatDistance, errorMessage, toast, titleCase } from "../ui.js";
 import {
   hasRepair, capability, estimate, rankShops, median, rangeText, money, midpoint, estimateWhy, problemSeverity,
 } from "../repairs.js";
 
 const DEFAULT_POINT = { lat: 40.2338, lng: -111.6585 }; // Provo
-const LEAFLET = "https://unpkg.com/leaflet@1.9.4/dist";
+const MAX_GOOGLE_PAGES = 3;   // 20 shops a page: up to 60 around each spot
+const SEARCH_AREA_MILES = 2;  // offer "Search This Area" after moving the map this far
 const SERVICES = ["Oil change", "Brakes", "Tires", "Engine", "Transmission", "Electrical", "Alignment", "Inspection"];
 // Filter sliders. The price slider's top stop means "any price"; the rating slider's
 // bottom stop means "any rating".
@@ -19,7 +27,6 @@ const PRICE_SLIDER = { min: 50, max: 500, step: 25 };
 const RATING_SLIDER = { min: 0, max: 5, step: 0.5 };
 const REFETCH_MILES = 0.5; // refresh shop distances after moving this far
 const FOLLOW_ZOOM = 14;
-const PAN_REFETCH_MILES = 3; // panning the map this far loads the new area's shops
 const SEVERITY = {
   stop: { label: "Stop Now", text: "Don't drive far. Call the shop first and ask about towing." },
   soon: { label: "Check Soon", text: "" },
@@ -29,51 +36,155 @@ const SEVERITY = {
 // Filters persist while moving around the app; location is kept in memory only.
 const filters = { maxPrice: null, rating: 0, services: new Set() };
 let lastPoint = null;
+// The last Google search, reused for a few minutes (e.g. coming back from a shop page)
+// so the same area isn't looked up again. Memory only: Google doesn't allow storing it.
+let googleCache = null; // { point, shops, at }
+const CACHE_MINUTES = 15;
 
 export default async function render(root, ctx) {
+  const google = usesGoogle();
   root.innerHTML = `
     <div class="map-screen">
       <div class="map-full" id="map" role="application" aria-label="Map of mechanic shops"></div>
 
-      <div class="map-top">
-        <button type="button" class="map-filter-tab" id="filter-tab" aria-expanded="false" aria-controls="filter-panel">
-          ${icon("filter", 18, 2.2)}<span>Filter</span><span class="filter-count" hidden></span>
-        </button>
-        <button type="button" class="map-fab" id="toggle-list" aria-label="Show list">${icon("tasks", 20, 2)}</button>
+
+      <div class="map-top mechanic-toolbar">
+      <div class="mechanic-heading">
+        <h1>Find a Mechanic</h1>
+        <p>Find the right shop for your car.</p>
       </div>
+    
+      <div class="mechanic-controls">
+        <label class="mechanic-search">
+          <svg width="18" height="18" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="7"/>
+            <path d="m16 16 5 5"/>
+          </svg>
+          <input type="search" id="mechanic-search"
+            placeholder="${window.innerWidth < 700
+          ? "Search mechanics"
+          : "Search mechanics or services"}">
+        </label>
+    
+        <button type="button" class="map-filter-tab"
+          id="filter-tab" aria-expanded="false"
+          aria-controls="filter-panel">
+          ${icon("filter", 18, 2)}
+          <span>Filters</span>
+          <span class="filter-count" hidden></span>
+        </button>
+      </div>
+    
+      <button type="button" class="mechanic-view-toggle"
+        id="toggle-list" aria-expanded="false"
+        aria-controls="map-list">
+        ${icon("tasks", 18, 2)}
+        <span class="mechanic-toggle-label">View Shops</span>
+        <span class="mechanic-toggle-arrow"></span>
+      </button>
+      
+      <div class="filter-panel" id="filter-panel" hidden>
+
+        <div class="mechanic-filter-heading">
+          <h3>Filters</h3>
+          <button type="button" class="btn-text" id="clear-filters">
+            Clear All
+          </button>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label" for="filter-problem">
+            ${icon("shield", 18, 2)}
+            Warning Light
+          </label>
+          <select class="filter-select" id="filter-problem">
+            <option value="">Any problem</option>
+          </select>
+        </div>
+
+        <div class="filter-group" ${google ? "hidden" : ""}>
+          <div class="filter-label-row">
+            <label class="filter-label" for="filter-price">
+              ${icon("dollar", 18, 2)}
+              Average Repair Price
+            </label>
+            <output id="price-out"></output>
+          </div>
+
+          <input type="range" class="filter-range"
+            id="filter-price"
+            min="${PRICE_SLIDER.min}"
+            max="${PRICE_SLIDER.max}"
+            step="${PRICE_SLIDER.step}">
+
+          <div class="range-ends">
+            <span>$${PRICE_SLIDER.min}</span>
+            <span>Any</span>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <div class="filter-label-row">
+            <label class="filter-label" for="filter-rating">
+              ${icon("star", 18, 2)}
+              Minimum Rating
+            </label>
+            <output id="rating-out"></output>
+          </div>
+
+          <input type="range" class="filter-range"
+            id="filter-rating"
+            min="${RATING_SLIDER.min}"
+            max="${RATING_SLIDER.max}"
+            step="${RATING_SLIDER.step}">
+
+          <div class="range-ends">
+            <span>Any</span>
+            <span>5 ★</span>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <span class="filter-label">
+            ${icon("wrench", 18, 2)}
+            Services
+          </span>
+
+          <div class="service-grid">
+            ${SERVICES.map((s) => `
+              <button type="button"
+                class="service-toggle"
+                data-service="${escapeHtml(s)}"
+                aria-pressed="false">
+                <span class="service-check" aria-hidden="true">
+                  ${icon("check", 14, 3)}
+                </span>
+                ${escapeHtml(titleCase(s))}
+              </button>
+            `).join("")}
+          </div>
+        </div>
+
+        <div class="filter-actions">
+          <button type="button" class="btn" id="apply-filters">
+            Show Shops
+          </button>
+        </div>
+
+      </div>
+
+        <div class="map-list" id="map-list" hidden></div>
+    </div>    
 
       <div class="problem-banner" id="problem-banner" hidden></div>
 
-      <div class="filter-panel" id="filter-panel" hidden>
-        <div class="filter-group">
-          <label class="filter-label" for="filter-problem">Fix a Warning Light</label>
-          <select class="filter-select" id="filter-problem"><option value="">Any problem</option></select>
-        </div>
-        <div class="filter-group">
-          <div class="filter-label-row"><label class="filter-label" for="filter-price">Average Repair Price</label><output id="price-out"></output></div>
-          <input type="range" class="filter-range" id="filter-price" min="${PRICE_SLIDER.min}" max="${PRICE_SLIDER.max}" step="${PRICE_SLIDER.step}">
-          <div class="range-ends"><span>$${PRICE_SLIDER.min}</span><span>Any</span></div>
-        </div>
-        <div class="filter-group">
-          <div class="filter-label-row"><label class="filter-label" for="filter-rating">Rating</label><output id="rating-out"></output></div>
-          <input type="range" class="filter-range" id="filter-rating" min="${RATING_SLIDER.min}" max="${RATING_SLIDER.max}" step="${RATING_SLIDER.step}">
-          <div class="range-ends"><span>Any</span><span>5 ★</span></div>
-        </div>
-        <div class="filter-group">
-          <span class="filter-label">Services</span>
-          <div class="service-grid">${SERVICES.map((s) => `<button type="button" class="service-toggle" data-service="${escapeHtml(s)}" aria-pressed="false"><span class="service-check" aria-hidden="true">${icon("check", 14, 3)}</span>${escapeHtml(titleCase(s))}</button>`).join("")}</div>
-        </div>
-        <div class="filter-actions">
-          <button type="button" class="btn btn-ghost btn-sm" id="clear-filters">Clear</button>
-          <button type="button" class="btn btn-sm" id="apply-filters">Show Shops</button>
-        </div>
-      </div>
-
       <button type="button" class="map-fab map-locate" id="locate" aria-label="Follow my location" aria-pressed="false">${icon("locate", 22, 2)}</button>
 
-      <div class="map-list" id="map-list" hidden></div>
       <section class="problem-results" id="problem-results" hidden aria-label="Shops for this problem"></section>
-      <p class="map-note">Shops from AutoPal and OpenStreetMap</p>
+      <button type="button" class="btn btn-sm map-search-area" id="search-area" hidden>${icon("search", 15, 2.2)}Search This Area</button>
+      ${google ? "" : `<p class="map-note">Shops from AutoPal and OpenStreetMap</p>`}
     </div>`;
 
   const mapEl = root.querySelector("#map");
@@ -88,15 +199,13 @@ export default async function render(root, ctx) {
   };
   const listEl = root.querySelector("#map-list");
   let shops = [];
+  let searchTerm = "";
   let map = null;
-  let layer = null;
-  let L = null;
 
   // Live location state
   const locateBtn = root.querySelector("#locate");
   let watchId = null;
   let me = null;          // latest { lat, lng, accuracy } from the GPS
-  let meLayer = null;     // blue dot + accuracy circle
   let following = false;  // map recenters on each update until the user pans
   let deniedNotice = false;
   let lastFetchPoint = null;
@@ -114,9 +223,21 @@ export default async function render(root, ctx) {
   let showAllShops = false; // results also list shops that can't do this repair
   let sheetSnap = "half";   // results sheet height: "peek" (header only), "half" or "full"
   let ranked = [];          // rankShops() output for the shops in view
+  let loadingMore = false;  // more Google pages still coming
+  const searchAreaBtn = root.querySelector("#search-area");
 
   const matches = (s) => {
-    if (filters.maxPrice != null && !(s.average_repair_price != null && Number(s.average_repair_price) <= filters.maxPrice)) return false;
+    const searchable = [
+      s.shop_name,
+      s.street_address,
+      s.city,
+      ...(s.services ?? [])
+    ].join(" ").toLowerCase();
+    
+    if (searchTerm && !searchable.includes(searchTerm)) {
+      return false;
+    }
+    if (filters.maxPrice != null && !(s.average_repair_price !== null && Number(s.average_repair_price) <= filters.maxPrice)) return false;
     if (filters.rating && !(Number(s.average_rating) >= filters.rating)) return false;
     for (const svc of filters.services) if (!s.services?.includes(svc)) return false;
     return true;
@@ -231,19 +352,20 @@ export default async function render(root, ctx) {
   });
 
   const telHref = (phone) => `tel:${String(phone).replace(/[^\d+]/g, "")}`;
-  // Address line, or "" for an OpenStreetMap shop with no address listed.
-  const placeText = (s) => [s.street_address, s.city].filter(Boolean).join(", ");
-  // Directions by address when we have one, else by the pin's coordinates.
-  const directionsHref = (s) => `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
-    s.street_address ? `${s.shop_name}, ${placeText(s)}` : `${s.latitude},${s.longitude}`)}`;
-  // A note under OpenStreetMap shops: no ratings or prices, and maybe guessed services.
-  const sourceNote = (s) => (s.source === "osm"
-    ? `<span class="shop-source">${s.services_estimated ? "General repair shop. Call to confirm services. " : ""}No ratings or prices yet · OpenStreetMap</span>`
-    : "");
+  const directionsHref = (s) => s.source === "google"
+    ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${s.shop_name}, ${s.address}`)}&destination_place_id=${encodeURIComponent(s.id)}`
+    : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(s.street_address
+      ? [s.street_address, s.city].filter(Boolean).join(", ")
+      : `${s.latitude},${s.longitude}`)}`;
+  const detailsHref = (s) => `#/shops/${encodeURIComponent(s.id)}${problem ? `?problem=${encodeURIComponent(problem.slug)}` : ""}`;
+  const ratingLine = (s) => s.average_rating != null
+    ? `${stars(s.average_rating)} <span class="shop-reviews">(${Number(s.review_count ?? 0).toLocaleString()})</span>`
+    : `<span class="shop-reviews">No reviews yet</span>`;
+  const openLine = (s) => (s.open_now == null ? "" : `<span class="open-now ${s.open_now ? "yes" : "no"}">${s.open_now ? "Open now" : "Closed now"}</span>`);
   // "Add to my tasks" carries the repair, the car, the shop and the estimate into a new task.
   const taskHref = (s, e) => {
     const q = new URLSearchParams({ name: `${problem.name} repair`.slice(0, 80), from: "mechanics" });
-    if (s.id > 0) q.set("shop", s.id); // only the app's own shops have a database id
+    if (!s.source) q.set("shop", s.id); // only the app's own shops are in the database (not Google or OpenStreetMap)
     if (vehicle) q.set("vehicle", vehicle.id);
     if (e) {
       q.set("cost", midpoint(e));
@@ -255,22 +377,72 @@ export default async function render(root, ctx) {
   const popupHtml = (s) => {
     const e = est(s);
     const cap = problemMode() ? capability(s, problem) : null;
+  
     return `
-    <div class="shop-pop">
-      <strong>${escapeHtml(s.shop_name)}</strong>
-      ${problemMode() ? (cap
-        ? `<span class="fix-badge ${cap}">${cap === "primary" ? "Can fix this" : "Can often handle this"}</span>`
-        : `<span class="shop-pop-meta">Doesn't list ${escapeHtml(problem.repair_service.toLowerCase())} work</span>`) : ""}
-      ${e ? `<span class="shop-pop-price">Est. ${rangeText(e)}</span>${e.diag ? `<span class="shop-pop-meta">+ diagnosis ${rangeText(e.diag)}</span>` : ""}` : ""}
-      ${!problemMode() && s.average_repair_price != null ? `<span class="shop-pop-price">Avg. repair ${formatMoney(s.average_repair_price)}</span>` : ""}
-      ${s.average_rating != null ? `<span class="shop-pop-meta">${stars(s.average_rating)}</span>` : ""}
-      <span class="shop-pop-meta">${escapeHtml([placeText(s), formatDistance(s.distance_miles)].filter(Boolean).join(" · "))}</span>
-      ${sourceNote(s)}
-      <span class="shop-pop-links">
-        ${s.phone ? `<a href="${telHref(s.phone)}">Call</a>` : ""}
-        <a href="${directionsHref(s)}" target="_blank" rel="noopener">Directions</a>
-      </span>
-    </div>`;
+      <div class="shop-pop">
+  
+        <div class="shop-pop-header">
+          <span class="shop-pop-icon">
+            ${icon("wrench", 22, 2)}
+          </span>
+  
+          <div class="shop-pop-info">
+            <strong>${escapeHtml(s.shop_name)}</strong>
+            <span class="shop-pop-meta">
+              ${icon("locate", 13, 2)}
+              ${escapeHtml(formatDistance(s.distance_miles))}
+            </span>
+          </div>
+        </div>
+  
+        <div class="shop-pop-rating">
+          ${s.source === "google" ? `${ratingLine(s)} ${openLine(s)}` : stars(s.average_rating)}
+        </div>
+  
+        ${problemMode() ? (cap
+          ? `<span class="fix-badge ${cap}">
+              ${cap === "primary" ? "Can fix this" : "Can often handle this"}
+            </span>`
+          : `<span class="shop-pop-meta">
+              Doesn't list ${escapeHtml(problem.repair_service.toLowerCase())} work
+            </span>`) : ""}
+  
+        ${e ? `
+          <div class="shop-pop-pricing">
+            <span>Estimated repair price</span>
+            <strong class="shop-pop-price">${rangeText(e)}</strong>
+            ${e.diag ? `<small>+ diagnosis ${rangeText(e.diag)}</small>` : ""}
+          </div>
+        ` : ""}
+  
+        ${!problemMode() && s.source !== "google" ? `
+          <div class="shop-pop-pricing">
+            <span>Average repair price</span>
+            <strong class="shop-pop-price">
+              ${s.average_repair_price !== null
+                ? formatMoney(s.average_repair_price)
+                : "Not available"}
+            </strong>
+          </div>
+        ` : ""}
+  
+        <div class="shop-pop-links">
+          ${s.phone ? `
+            <a class="shop-pop-call" href="${telHref(s.phone)}">
+              ${icon("phone", 16, 2)} Call
+            </a>
+          ` : ""}
+  
+          <a class="shop-pop-directions"
+             href="${directionsHref(s)}"
+             target="_blank"
+             rel="noopener">
+            ${icon("directions", 16, 2)} Directions
+          </a>
+        </div>
+        ${s.source === "google" ? `<a class="btn btn-sm shop-pop-details" href="${detailsHref(s)}">View Shop Details ${icon("chevron", 15, 2)}</a>` : ""}
+  
+      </div>`;
   };
 
   // Results panel: the shops most likely to fix the problem, best first.
@@ -400,8 +572,7 @@ export default async function render(root, ctx) {
           </button>
           ${e ? `<span class="shop-result-price">${rangeText(e)}</span>` : ""}
         </div>
-        <span class="shop-result-meta">${stars(s.average_rating)} <span>${s.average_rating != null ? "· " : ""}${escapeHtml(formatDistance(s.distance_miles))}</span></span>
-        ${sourceNote(s)}
+        <span class="shop-result-meta">${s.source === "google" ? ratingLine(s) : stars(s.average_rating)} <span>· ${escapeHtml(formatDistance(s.distance_miles))}</span></span>
         ${reasons.length ? `<span class="reason-chips">${reasons.map((x, i) => `<span class="reason ${i === 0 ? "lead" : ""}">${escapeHtml(x)}</span>`).join("")}</span>` : ""}
         ${!cap ? `<span class="shop-result-why">Doesn't list ${escapeHtml(problem.repair_service.toLowerCase())} work</span>` : ""}
         ${e ? `<span class="shop-result-why">${e.diag ? `Plus diagnosis ${rangeText(e.diag)}, often credited toward the repair. ` : ""}${escapeHtml(estimateWhy(e, vehicle))}.</span>` : ""}
@@ -409,6 +580,7 @@ export default async function render(root, ctx) {
           ${s.phone ? `<a class="btn btn-sm" href="${telHref(s.phone)}">${icon("phone", 15, 2)}Call</a>` : ""}
           <a class="btn btn-sm btn-soft" href="${directionsHref(s)}" target="_blank" rel="noopener">${icon("directions", 15, 2)}Directions</a>
           ${cap ? `<a class="btn btn-sm btn-ghost" href="${escapeHtml(taskHref(s, e))}">${icon("plus", 15, 2.4)}Add to Tasks</a>` : ""}
+          ${s.source === "google" ? `<a class="btn btn-sm btn-ghost" href="${detailsHref(s)}">Details</a>` : ""}
         </span>
       </li>`;
   };
@@ -419,16 +591,16 @@ export default async function render(root, ctx) {
       return drawResults();
     }
     const focus = ev.target.closest("[data-focus]");
-    if (focus) focusShop(Number(focus.dataset.focus));
+    if (focus) focusShop(focus.dataset.focus);
   });
 
   let markers = new Map();
   const focusShop = (id) => {
-    const m = markers.get(id);
+    const m = markers.get(String(id));
     if (!m || !map) return;
     // Lower the sheet so the shop's pin and popup aren't hidden behind it.
     if (sheetSnap !== "peek") setSheet("peek");
-    map.setView(m.getLatLng(), Math.max(map.getZoom(), 14));
+    map.setView(m.point, Math.max(map.getZoom(), 14));
     m.openPopup();
   };
 
@@ -438,44 +610,112 @@ export default async function render(root, ctx) {
     const canFix = (s) => problemMode() && Boolean(capability(s, problem));
     drawResults();
     // The plain list (normal mode only; problem mode has the results panel).
-    listEl.innerHTML = visible.length
-      ? `<ul>${visible.map((s) => `
-          <li><button type="button" data-shop="${s.id}">
-            <span><strong>${escapeHtml(s.shop_name)}</strong><small>${escapeHtml([placeText(s), formatDistance(s.distance_miles)].filter(Boolean).join(" · "))}</small></span>
-            <span class="map-list-price">${s.average_repair_price != null ? formatMoney(s.average_repair_price) : ""}</span>
-          </button></li>`).join("")}</ul>`
-      : `<p class="muted-box">No shops match these filters.</p>`;
+
+    listEl.innerHTML = `
+    <div class="mechanic-results-heading">
+      <strong>Nearby Mechanics</strong>
+      <span>${visible.length} shop${visible.length === 1 ? "" : "s"}${loadingMore ? " · finding more…" : ""}</span>
+    </div>
+  
+    ${visible.length ? `
+      <ul class="mechanic-shop-list">
+        ${visible.map((s) => `
+          <li>
+            <button type="button" class="mechanic-shop-card"
+              data-shop="${s.id}">
+  
+              <span class="mechanic-shop-top">
+                <span class="mechanic-shop-icon">
+                  ${icon("wrench", 22, 2)}
+                </span>
+  
+                <span class="mechanic-shop-info">
+                  <strong>${escapeHtml(s.shop_name)}</strong>
+  
+                  <small>
+                    ${escapeHtml([s.street_address, s.city].filter(Boolean).join(", "))}
+                  </small>
+  
+                  <small class="mechanic-shop-distance">
+                    ${icon("locate", 13, 2)}
+                    ${escapeHtml(formatDistance(s.distance_miles))}
+                  </small>
+                </span>
+              </span>
+  
+              <span class="mechanic-shop-bottom">
+                ${s.source === "google" ? `
+                <span class="mechanic-shop-cost">
+                  <small class="mechanic-shop-rating">${ratingLine(s)}</small>
+                  ${openLine(s)}
+                </span>` : `
+                <span class="mechanic-shop-cost">
+                  <small>Average repair price</small>
+                  <strong>
+                    ${s.average_repair_price != null
+                      ? formatMoney(s.average_repair_price)
+                      : "Not available"}
+                  </strong>
+                </span>`}
+  
+                <span class="mechanic-shop-details">
+                  View Details
+                  ${icon("chevron", 15, 2)}
+                </span>
+              </span>
+  
+            </button>
+          </li>
+        `).join("")}
+      </ul>
+    ` : `
+      <p class="muted-box">No shops match these filters.</p>
+    `}
+  `;
+  
     if (!map) return;
-    layer?.remove();
-    layer = L.layerGroup().addTo(map);
+    map.clearPins();
     markers = new Map();
     const bestId = ranked.find((r) => r.best)?.shop.id;
     for (const s of visible) {
       const e = est(s);
       const dim = problemMode() && !canFix(s);
       // In problem mode a shop that can't do the repair shows no price: its average would read like an estimate.
-      const price = e ? rangeText(e) : dim ? "—" : (s.average_repair_price != null ? `$${Math.round(Number(s.average_repair_price))}` : icon("wrench", 13, 2.2));
+      // Google shops have no prices, so their pins show the rating instead.
+      const label = e ? rangeText(e)
+        : dim ? "—"
+        : s.source === "google" ? (s.average_rating != null ? `★ ${Number(s.average_rating).toFixed(1)}` : "New")
+        : s.source === "osm" ? "Shop"
+        : (s.average_repair_price != null ? `$${Math.round(Number(s.average_repair_price))}` : "—");
       const cls = ["price-pin", dim && "dim", problemMode() && !dim && "fix", s.id === bestId && "best"].filter(Boolean).join(" ");
-      const marker = L.marker([Number(s.latitude), Number(s.longitude)], {
-        icon: L.divIcon({ className: cls, html: `<span>${s.id === bestId ? "★ " : ""}${price}</span>`, iconSize: null, iconAnchor: [0, 0] }),
-        keyboard: true,
+      const pin = map.addPin({ lat: Number(s.latitude), lng: Number(s.longitude) }, {
+        html: `<span>${s.id === bestId ? "★ " : ""}${escapeHtml(label)}</span>`,
+        className: cls,
         title: s.shop_name,
-        zIndexOffset: s.id === bestId ? 500 : dim ? -100 : 0,
-      }).bindPopup(popupHtml(s), { closeButton: true, offset: [0, -30] }).addTo(layer);
-      markers.set(s.id, marker);
+        z: s.id === bestId ? 50 : dim ? -10 : 0,
+        popup: () => popupHtml(s),
+      });
+      markers.set(String(s.id), pin);
     }
     listEl.querySelectorAll("[data-shop]").forEach((b) => b.addEventListener("click", () => {
+      const shop = visible.find((x) => String(x.id) === b.dataset.shop);
+      if (shop?.source === "google") return ctx.navigate(detailsHref(shop));
       listEl.hidden = true;
-      focusShop(Number(b.dataset.shop));
+    
+      const toggle = root.querySelector("#toggle-list");
+      toggle.querySelector(".mechanic-toggle-label").textContent = "View Shops";
+      toggle.setAttribute("aria-expanded", "false");
+    
+      focusShop(b.dataset.shop);
     }));
     if (fit) {
       // Problem mode frames the best few shops for the job; otherwise the nearest ones.
       const focusOn = problemMode() ? ranked.filter((r) => r.cap).slice(0, 3).map((r) => r.shop) : visible.slice(0, 8);
-      const pts = [[point.lat, point.lng], ...focusOn.map((s) => [Number(s.latitude), Number(s.longitude)])];
+      const pts = [point, ...focusOn.map((s) => ({ lat: Number(s.latitude), lng: Number(s.longitude) }))];
       const pad = problemMode()
-        ? { paddingTopLeft: [40, (bannerEl.offsetHeight || 120) + 80], paddingBottomRight: [40, 40 + resultsEl.offsetHeight] }
-        : { padding: [50, 50] };
-      map.fitBounds(pts, { ...pad, maxZoom: 14 });
+        ? { left: 40, top: (bannerEl.offsetHeight || 120) + 80, right: 40, bottom: 40 + resultsEl.offsetHeight }
+        : { top: 50, right: 50, bottom: 50, left: 50 };
+      map.fitPoints(pts, pad, 14);
     }
   };
 
@@ -483,12 +723,56 @@ export default async function render(root, ctx) {
     const seq = ++fetchSeq;
     lastPoint = point;
     lastFetchPoint = point;
-    const found = await nearbyShops(point.lat, point.lng, 100, { from: me ? { lat: me.lat, lng: me.lng } : null });
+    searchAreaBtn.hidden = true;
+    const fallback = async () => {
+      const found = await nearbyShops(point.lat, point.lng, 100, { from: me ? { lat: me.lat, lng: me.lng } : null });
+      if (!ctx.isCurrent() || seq !== fetchSeq) return;
+      shops = found;
+      medianPrice = median(shops.map((s) => s.average_repair_price));
+      syncFilterUi();
+      return drawPins(point, { fit });
+    };
+    if (!google) return fallback();
+    // Same area searched a few minutes ago: reuse it (no Google calls).
+    if (googleCache && Date.now() - googleCache.at < CACHE_MINUTES * 60000 && milesBetween(googleCache.point, point) < 1) {
+      shops = googleCache.shops.map((x) => ({ ...x, distance_miles: milesBetween(point, { lat: Number(x.latitude), lng: Number(x.longitude) }) }))
+        .sort((a, b) => a.distance_miles - b.distance_miles);
+      lastFetchPoint = googleCache.point;
+      medianPrice = null;
+      syncFilterUi();
+      return drawPins(point, { fit });
+    }
+    // Google: the nearest 20 first, then the next pages in the background.
+    let page;
+    try {
+      page = await searchShops(point);
+    } catch (err) {
+      // Google is down or not set up on the server: show OpenStreetMap shops instead.
+      if (!ctx.isCurrent() || seq !== fetchSeq) return;
+      return fallback();
+    }
     if (!ctx.isCurrent() || seq !== fetchSeq) return;
-    shops = found;
-    medianPrice = median(shops.map((s) => s.average_repair_price));
+    shops = page.shops;
+    medianPrice = null;
+    loadingMore = Boolean(page.nextPageToken);
     syncFilterUi();
     drawPins(point, { fit });
+    for (let n = 1; n < MAX_GOOGLE_PAGES && page.nextPageToken; n++) {
+      try {
+        page = await searchShops(point, page.nextPageToken);
+      } catch {
+        break;
+      }
+      if (!ctx.isCurrent() || seq !== fetchSeq) return;
+      const seen = new Set(shops.map((x) => x.id));
+      shops = [...shops, ...page.shops.filter((x) => !seen.has(x.id))].sort((a, b) => a.distance_miles - b.distance_miles);
+      loadingMore = Boolean(page.nextPageToken) && n + 1 < MAX_GOOGLE_PAGES;
+      syncFilterUi();
+      if (!map?.popupOpen()) drawPins(point, { fit: false });
+    }
+    loadingMore = false;
+    googleCache = { point, shops, at: Date.now() };
+    if (!map?.popupOpen()) drawPins(point, { fit: false });
   };
 
   const setFollowing = (on) => {
@@ -500,21 +784,7 @@ export default async function render(root, ctx) {
 
   // Draw or move the blue dot and its accuracy circle.
   const drawMe = () => {
-    if (!map || !me) return;
-    const ll = [me.lat, me.lng];
-    const radius = Math.min(me.accuracy || 0, 1500);
-    if (!meLayer) {
-      meLayer = {
-        circle: L.circle(ll, { radius, color: "#1f6feb", weight: 1, opacity: 0.35, fillColor: "#1f6feb", fillOpacity: 0.12, interactive: false }).addTo(map),
-        dot: L.marker(ll, {
-          icon: L.divIcon({ className: "you-dot", html: "<span></span>", iconSize: [22, 22], iconAnchor: [11, 11] }),
-          keyboard: false, zIndexOffset: 1000, title: "You are here",
-        }).addTo(map),
-      };
-    } else {
-      meLayer.circle.setLatLng(ll).setRadius(radius);
-      meLayer.dot.setLatLng(ll);
-    }
+    if (map && me) map.setMe(me);
   };
 
   const onPosition = async (pos) => {
@@ -527,8 +797,16 @@ export default async function render(root, ctx) {
       // nearest few shops are in view while the user stays in the middle.
       setFollowing(true);
       // Instant (not animated): Leaflet ignores a new zoom while a zoom animation runs.
-      map?.setView([me.lat, me.lng], FOLLOW_ZOOM, { animate: false });
-      await show({ lat: me.lat, lng: me.lng }, { fit: false }).catch((err) => toast(errorMessage(err), "error"));
+      map?.setView({ lat: me.lat, lng: me.lng }, FOLLOW_ZOOM, { animate: false });
+      // Already searched right around here (Google lookups count): just redraw distances.
+      if (google && lastFetchPoint && milesBetween(lastFetchPoint, me) < 1 && shops.length) {
+        shops = shops.map((x) => ({ ...x, distance_miles: milesBetween(me, { lat: Number(x.latitude), lng: Number(x.longitude) }) }))
+          .sort((a, b) => a.distance_miles - b.distance_miles);
+        lastPoint = { lat: me.lat, lng: me.lng };
+        drawPins(lastPoint, { fit: false });
+      } else {
+        await show({ lat: me.lat, lng: me.lng }, { fit: false }).catch((err) => toast(errorMessage(err), "error"));
+      }
       if (map && following && problemMode()) {
         // Frame the best shops for the job (and you), then keep following.
         drawPins({ lat: me.lat, lng: me.lng }, { fit: true });
@@ -538,18 +816,18 @@ export default async function render(root, ctx) {
           // Mirror each shop around the user so the bounds stay centered on them.
           const pts = near.flatMap((s) => {
             const lat = Number(s.latitude), lng = Number(s.longitude);
-            return [[lat, lng], [2 * me.lat - lat, 2 * me.lng - lng]];
+            return [{ lat, lng }, { lat: 2 * me.lat - lat, lng: 2 * me.lng - lng }];
           });
-          const zoom = map.getBoundsZoom(L.latLngBounds(pts), false, L.point(60, 120));
-          map.setView([me.lat, me.lng], Math.max(10, Math.min(zoom, 15)), { animate: false });
+          map.fitPoints(pts, { top: 60, bottom: 60, left: 30, right: 30 }, 15, 10);
         }
       }
       return;
     }
-    if (following) map?.panTo([me.lat, me.lng], { animate: true });
+    if (following) map?.panTo({ lat: me.lat, lng: me.lng });
     // Refresh distances once they've moved a meaningful amount, unless a popup is open.
     const moved = lastFetchPoint ? milesBetween(lastFetchPoint, me) : Infinity;
-    if (moved >= REFETCH_MILES && !root.querySelector(".leaflet-popup")) {
+    // (Google shops: only a big move re-searches, to keep lookups down.)
+    if (moved >= (google ? SEARCH_AREA_MILES : REFETCH_MILES) && !map?.popupOpen()) {
       await show({ lat: me.lat, lng: me.lng }, { fit: false }).catch(() => {});
     }
   };
@@ -561,8 +839,8 @@ export default async function render(root, ctx) {
     if (deniedNotice) return;
     deniedNotice = true;
     toast(err?.code === 1
-      ? "Location is off, so we're showing shops near Provo. Move the map anywhere to see that area's shops, or tap the target button to try again."
-      : "We couldn't find your location. Move the map anywhere to see that area's shops.", "error");
+      ? "Location is off, so we're showing shops near Provo. Tap the target button to try again."
+      : "We couldn't find your location. Showing shops near Provo.", "error");
   };
 
   const startTracking = () => {
@@ -581,12 +859,23 @@ export default async function render(root, ctx) {
     watchId = null;
   };
 
-  // Filter tab
-  tab.addEventListener("click", () => {
-    panel.hidden = !panel.hidden;
-    tab.setAttribute("aria-expanded", String(!panel.hidden));
-    listEl.hidden = true;
+  root.querySelector("#mechanic-search")
+  .addEventListener("input", (e) => {
+    searchTerm = e.target.value.trim().toLowerCase();
+    syncFilterUi();
+    drawPins(lastPoint ?? DEFAULT_POINT);
   });
+
+// Filter tab
+tab.addEventListener("click", () => {
+  panel.hidden = !panel.hidden;
+  tab.setAttribute("aria-expanded", String(!panel.hidden));
+  listEl.hidden = true;
+
+  const toggle = root.querySelector("#toggle-list");
+  toggle.querySelector(".mechanic-toggle-label").textContent = "View Shops";
+  toggle.setAttribute("aria-expanded", "false");
+});
   panel.addEventListener("click", (e) => {
     const b = e.target.closest("button");
     if (!b) return;
@@ -619,6 +908,13 @@ export default async function render(root, ctx) {
     tab.setAttribute("aria-expanded", "false");
     if (problemMode()) return setSheet(sheetSnap === "peek" ? "half" : "peek");
     listEl.hidden = !listEl.hidden;
+  
+    const toggle = root.querySelector("#toggle-list");
+  
+    toggle.querySelector(".mechanic-toggle-label").textContent =
+      listEl.hidden ? "View Shops" : "Hide Shops";
+  
+    toggle.setAttribute("aria-expanded", String(!listEl.hidden));
   });
 
   // Target button: re-center and follow again (and start tracking if it isn't running).
@@ -627,39 +923,25 @@ export default async function render(root, ctx) {
     startTracking();
     if (me) {
       setFollowing(true);
-      map?.setView([me.lat, me.lng], Math.max(map.getZoom(), FOLLOW_ZOOM), { animate: true });
+      map?.setView({ lat: me.lat, lng: me.lng }, Math.max(map.getZoom(), FOLLOW_ZOOM), { animate: true });
     }
   });
 
   try {
-    L = await loadLeaflet();
-    if (!ctx.isCurrent()) return;
-    map = L.map(mapEl, { zoomControl: false, attributionControl: true }).setView([DEFAULT_POINT.lat, DEFAULT_POINT.lng], 12);
-    L.control.zoom({ position: "bottomright" }).addTo(map);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 19,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    }).addTo(map);
+    map = await createMap(mapEl, { center: DEFAULT_POINT, zoom: 12 });
+    if (!ctx.isCurrent()) return map.remove();
     // Panning by hand stops following; the target button turns it back on.
-    map.on("dragstart", () => setFollowing(false));
-    // Moving the map to a new area (another city or state) loads that area's shops.
-    let panTimer = null;
-    map.on("moveend", () => {
-      clearTimeout(panTimer);
-      if (following) return;
-      panTimer = setTimeout(() => {
-        if (!ctx.isCurrent() || following || root.querySelector(".leaflet-popup")) return;
-        const c = map.getCenter();
-        const center = { lat: c.lat, lng: c.lng };
-        if (lastFetchPoint && milesBetween(lastFetchPoint, center) < PAN_REFETCH_MILES) return;
-        show(center, { fit: false }).catch(() => {});
-      }, 600);
+    map.onUserMove(() => setFollowing(false));
+    // Moved the map somewhere else? Offer to look for shops there (Google: each search counts).
+    map.onIdle(() => {
+      if (following || !lastFetchPoint) return;
+      searchAreaBtn.hidden = milesBetween(lastFetchPoint, map.center()) < SEARCH_AREA_MILES;
     });
     // The map can be created before the screen finishes laying out; re-measure on any
     // size change so "center" (and following) means the visible center.
     resizeObserver = new ResizeObserver(() => {
-      map.invalidateSize({ pan: false });
-      if (following && me) map.setView([me.lat, me.lng], map.getZoom(), { animate: false });
+      map.invalidate();
+      if (following && me) map.setView({ lat: me.lat, lng: me.lng }, map.getZoom(), { animate: false });
     });
     resizeObserver.observe(mapEl);
   } catch {
@@ -687,8 +969,23 @@ export default async function render(root, ctx) {
   drawBanner();
   syncFilterUi();
 
+  searchAreaBtn.addEventListener("click", () => {
+    searchAreaBtn.hidden = true;
+    show(map.center(), { fit: false }).catch((err) => toast(errorMessage(err), "error"));
+  });
+
   startTracking();
-  if (!me) await show(lastPoint ?? DEFAULT_POINT);
+  // With Google, give the location a moment so the first search is around the user
+  // instead of searching Provo and then searching again.
+  if (google && !me && watchId !== null) {
+    await new Promise((resolve) => {
+      const t0 = Date.now();
+      const tick = () => (me || watchId === null || Date.now() - t0 > 3000 || !ctx.isCurrent() ? resolve() : setTimeout(tick, 100));
+      tick();
+    });
+    if (!ctx.isCurrent()) return;
+  }
+  if (!me && !shops.length) await show(lastPoint ?? DEFAULT_POINT).catch((err) => toast(errorMessage(err), "error"));
   return () => {
     stopTracking();
     resizeObserver?.disconnect();
@@ -703,21 +1000,4 @@ function milesBetween(a, b) {
   const h = Math.sin(rad(b.lat - a.lat) / 2) ** 2 +
     Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(rad(b.lng - a.lng) / 2) ** 2;
   return 3958.8 * 2 * Math.asin(Math.sqrt(h));
-}
-
-let leafletPromise = null;
-function loadLeaflet() {
-  if (window.L) return Promise.resolve(window.L);
-  leafletPromise ??= new Promise((resolve, reject) => {
-    const css = document.createElement("link");
-    css.rel = "stylesheet";
-    css.href = `${LEAFLET}/leaflet.css`;
-    document.head.appendChild(css);
-    const js = document.createElement("script");
-    js.src = `${LEAFLET}/leaflet.js`;
-    js.onload = () => resolve(window.L);
-    js.onerror = () => { leafletPromise = null; js.remove(); reject(new Error("Map failed to load")); };
-    document.head.appendChild(js);
-  });
-  return leafletPromise;
 }

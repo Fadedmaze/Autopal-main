@@ -1,6 +1,5 @@
-// Home (first tab): welcome, the car on its circular platform (swipe between cars), the
-// next upcoming task (opens Tasks), Maintenance Estimator, and the Profile and Settings
-// buttons in the header. Old ?section=account / ?insurance=1 links go to Profile.
+// Home (first tab): welcome, the car on its circular platform (swipe between cars),
+// the next upcoming task (opens Tasks), Maintenance Estimator and Profile/Settings buttons.
 import { getProfile, getSettings, listVehicles, listTasks, listPhotos, setActiveVehicle } from "../data.js";
 import { openSettings } from "../settings.js";
 import {
@@ -10,6 +9,11 @@ import { mountCar3D } from "../car3d.js";
 import { announceReminders } from "../reminders.js";
 
 export default async function render(root, ctx) {
+  // Keep old account links working after moving the account panel to Profile.
+  if (ctx.query.get("section") === "account" || ctx.query.get("insurance") === "1") {
+    return ctx.navigate(ctx.query.get("insurance") === "1" ? "#/profile/insurance" : "#/profile", { replace: true });
+  }
+
   // 3D cars mounted on the platforms; disposed when the route changes (see cleanup below).
   const mounts = [];
   let disposed = false;
@@ -17,11 +21,6 @@ export default async function render(root, ctx) {
     disposed = true;
     mounts.splice(0).forEach((m) => m.destroy());
   };
-
-  // Old links to the account section on Home now go to Profile.
-  if (ctx.query.get("section") === "account" || ctx.query.get("insurance") === "1") {
-    return ctx.navigate(ctx.query.get("insurance") === "1" ? "#/profile?insurance=1" : "#/profile", { replace: true });
-  }
 
   root.innerHTML = loading();
   const [profile, settings, vehicles, openTasks] = await Promise.all([
@@ -46,8 +45,8 @@ export default async function render(root, ctx) {
         <p class="eyebrow">${greet()}</p>
         <h1>Welcome Back, ${escapeHtml(name)}</h1>
       </div>
-      <div class="appbar-tools">
-        <a class="profile-btn" href="#/profile" aria-label="Profile">${icon("user", 22, 2)}</a>
+      <div class="home-actions">
+        <a class="btn btn-sm profile-link" href="#/profile" aria-label="Profile">${icon("user", 16, 2)}<span>Profile</span></a>
         <button type="button" class="tire-btn" id="settings" aria-label="Settings">${icon("tire", 26, 1.7)}</button>
       </div>
     </header>
@@ -80,8 +79,7 @@ export default async function render(root, ctx) {
 
     <a class="next-task" href="#/tasks" id="next-task"></a>
 
-    <a class="btn btn-estimate" href="#/budget">${icon("dollar", 20, 2)}Maintenance Estimator</a>
-`;
+    <a class="btn btn-estimate" href="#/budget">${icon("dollar", 20, 2)}Maintenance Estimator</a>`;
 
   const nextTaskEl = root.querySelector("#next-task");
   const drawNextTask = () => {
@@ -139,7 +137,6 @@ export default async function render(root, ctx) {
   }
 
   root.querySelector("#settings").addEventListener("click", () => openSettings(profile));
-
 
   // Arrived from a Forgot Username email link: show the username first (and skip the
   // reminders sheet this time, so the two don't stack).

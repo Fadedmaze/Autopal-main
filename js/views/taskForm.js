@@ -29,6 +29,16 @@ export default async function render(root, ctx) {
   const backLink = !editing && fromGuide
     ? { href: `#/library/${fromGuide}`, label: "Guide" }
     : { href: "#/tasks", label: "Tasks" };
+    if (ctx.query.get("from") === "vehicle") {
+      const sourceVehicle = vehicles.find(
+        (v) => String(v.id) === ctx.query.get("vehicle")
+      );
+    
+      if (sourceVehicle) {
+        backLink.href = `#/vehicles/${sourceVehicle.id}`;
+        backLink.label = sourceVehicle.label;
+      }
+    }
   // From a mechanic shop (Find a Mechanic → "Add to my tasks"): the shop and the estimate.
   const presetShop = Number(ctx.query.get("shop")) || null;
   const costParam = ctx.query.get("cost");
@@ -58,20 +68,22 @@ export default async function render(root, ctx) {
     <form class="form content" novalidate>
       ${vehicles.length > 1 ? `
         <label class="field">
-          <span>Vehicle</span>
+          <span>Vehicle <span class="required-star">*</span></span>
           <select name="vehicle_id">
             ${vehicles.map((v) => `<option value="${v.id}" ${v.id === t.vehicle_id ? "selected" : ""}>${escapeHtml(v.label)}</option>`).join("")}
           </select>
         </label>` : `<input type="hidden" name="vehicle_id" value="${t.vehicle_id}">`}
       <label class="field">
-        <span>Task Name</span>
+        <span>Task Name <span class="required-star">*</span></span>
         <input name="task_name" required maxlength="80" placeholder="e.g. Replace Headlight Bulb" value="${escapeHtml(t.task_name)}">
       </label>
       
       
      <div class="task-schedule-card">
         <div class="field task-date-card">
-        <label for="task-due-date">Due Date</label>
+        <label for="task-due-date">
+          Due Date <span class="required-star">*</span>
+        </label>
 
         <div class="quick-dates">
           <button type="button" class="quick-date-btn" data-days="1">
@@ -164,14 +176,12 @@ export default async function render(root, ctx) {
           ${icon("wrench", 18, 2)}
           Additional Details
         </span>
-        <span class="task-additional-chevron" aria-hidden="true">
-          ${icon("chevron-down", 18, 2)}
-        </span>
+        <span class="task-additional-chevron" aria-hidden="true"></span>
       </summary>
 
   <div class="task-additional-content">
       <label class="field">
-        <span>Notes <em>(Optional)</em></span>
+        <span>Notes <em>(optional)</em></span>
         <textarea name="notes" rows="3" maxlength="1000" placeholder="Part numbers, which shop, anything to remember">${escapeHtml(t.notes ?? "")}</textarea>
       </label>
       <div class="field task-photos-field" id="task-photos"></div>
@@ -179,7 +189,7 @@ export default async function render(root, ctx) {
         <label for="remind-select">
         <span class="remind-heading">
           ${icon("bell", 18, 2)}
-          Reminder <em>(Optional)</em>
+          Reminder <em>(optional)</em>
         </span>
         </label>
 
@@ -230,9 +240,9 @@ export default async function render(root, ctx) {
         ` : ""}
       </div>
       <label class="field">
-        <span>Estimated Cost <em>(Optional)</em></span>
+        <span>Estimated Cost <em>(optional)</em></span>
         <span class="input-prefix"><span>$</span><input name="estimated_cost" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00" value="${t.estimated_cost ?? ""}"></span>
-        </div>
+        <p class="hint">This amount will be included in your Maintenance Estimator to help you budget for upcoming expenses.</p>        </div>
       </details>
         </label>
       <p class="form-error" role="alert" hidden></p>
@@ -417,7 +427,10 @@ export default async function render(root, ctx) {
           const failed = photos.hasStaged() ? await photos.uploadStaged(created) : 0;
           toast(failed ? `Task added, but ${failed} photo${failed === 1 ? "" : "s"} couldn't be saved. Open the task to try again.` : "Task added", failed ? "error" : "ok");
         }
-        ctx.navigate("#/tasks", { replace: true });
+        ctx.navigate(
+          ctx.query.get("from") === "vehicle" ? backLink.href : "#/tasks",
+          { replace: true }
+        );
       } catch (err) {
         fail(errorMessage(err));
       }
@@ -430,7 +443,10 @@ export default async function render(root, ctx) {
     try {
       await deleteTaskWithReceipt(task);
       toast("Task deleted", "ok");
-      ctx.navigate("#/tasks", { replace: true });
+      ctx.navigate(
+        ctx.query.get("from") === "vehicle" ? backLink.href : "#/tasks",
+        { replace: true }
+      );
     } catch (err) {
       toast(errorMessage(err), "error");
     }

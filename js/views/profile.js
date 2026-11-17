@@ -1,7 +1,6 @@
 // Profile: picture, name, Change Password, Notification Settings, Insurance Card
-// (a pop-up sheet) and Log Out. Opened from the profile button beside Settings on the
-// main pages. Sub-screens: /profile/password and /profile/notifications (ctx.mode).
-// /profile/insurance (and ?insurance=1) opens the insurance card right away.
+// (a pop-up sheet) and Log Out. Sub-screens: /profile/password and
+// /profile/notifications (ctx.mode); /profile/insurance opens the card sheet.
 import { getProfile, getSettings, updateSettings, uploadAvatar, avatarUrl, saveDisplayName, listTasks, listVehicles, getInsuranceCard, uploadInsuranceCard, removeInsuranceCard, insuranceCardUrl } from "../data.js";
 import {
   REMIND_CHOICES, remindLabel, deviceNotificationsOn, enableDeviceNotifications, disableDeviceNotifications, buildIcs, downloadIcs,
@@ -14,30 +13,20 @@ import { appBar, escapeHtml, icon, loading, toast, confirmDialog, errorMessage, 
 export default async function render(root, ctx) {
   if (ctx.mode === "password") return renderPassword(root, ctx);
   if (ctx.mode === "notifications") return renderNotifications(root, ctx);
-
-  root.innerHTML = loading();
   const profile = await getProfile();
   if (!ctx.isCurrent()) return;
-  root.innerHTML = `
-    ${appBar({ title: "Profile", back: { href: "#/home", label: "Back" } })}
-    <div class="content"><section class="profile-page" id="account"></section></div>`;
-  // Back returns to whichever page opened Profile (Home if opened directly).
-  root.querySelector(".appbar .back").addEventListener("click", (e) => {
-    e.preventDefault();
-    ctx.navigate(ctx.lastMainHash());
-  });
-  return renderAccount(root.querySelector("#account"), ctx, profile, {
-    openInsuranceNow: ctx.mode === "insurance" || ctx.query.get("insurance") === "1",
-  });
+  return renderProfile(root, ctx, profile, { openInsuranceNow: ctx.mode === "insurance" });
 }
 
-// Picture, name, Change Password, Notification Settings, Insurance Card (a pop-up
-// sheet) and Log Out. Returns a cleanup function that closes the insurance pop-up.
-export async function renderAccount(root, ctx, profile, { openInsuranceNow = false } = {}) {
+// Profile: picture, name, Change Password,
+// Notification Settings, Insurance Card (a pop-up sheet) and Log Out.
+// Returns a cleanup function that closes the insurance pop-up.
+async function renderProfile(root, ctx, profile, { openInsuranceNow = false } = {}) {
   const picture = await avatarUrl(profile.avatar_path).catch(() => null);
   if (!ctx.isCurrent()) return () => {};
 
   root.innerHTML = `
+    ${appBar({ title: "Profile", back: { href: "#/home", label: "Back" } })}
     <div class="profile">
       
     <div class="profile-avatar-section">
@@ -85,6 +74,12 @@ export async function renderAccount(root, ctx, profile, { openInsuranceNow = fal
 
       <button class="btn btn-ghost danger logout" type="button" id="logout">${icon("logout", 18, 2)}Log Out</button>
     </div>`;
+
+  // Back returns to the tab that opened Profile (Home if opened directly).
+  root.querySelector(".appbar .back")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    ctx.navigate(ctx.lastMainHash());
+  });
 
   const errEl = root.querySelector(".form-error");
   

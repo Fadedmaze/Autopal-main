@@ -1,6 +1,6 @@
 // Add Vehicle (/vehicles/new): make, model, year, trim and name, then Save or Cancel.
-// Edit Vehicle (/vehicles/:id/edit) adds mileage and Delete. Both ask how much the car
-// is driven, which times its mileage-based tasks (js/driving.js).
+// Edit Vehicle (/vehicles/:id/edit) adds Delete. Both forms accept current mileage and
+// ask how much the car is driven, which times its mileage-based tasks (js/driving.js).
 // Make (Honda), Model (Civic), Year and Trim (EX) are chosen from the vehicle catalog only
 // (js/vehicleCatalogData.js); each list narrows the next, and Trim shows only the trims
 // sold that year. The database checks the same catalog when a car is saved
@@ -43,10 +43,10 @@ export default async function render(root, ctx) {
   root.innerHTML = `
     ${appBar({
       title: editing ? "Edit Vehicle" : "Add Vehicle",
-      sub: editing ? "" : "Pick your car from the lists. You can change this later.",
+      sub: editing ? "" : "Pick your vehicle from the lists - You can edit this later",
       back: { href: cancelHref, label: "Back" },
     })}
-    <form class="form content" novalidate>
+      <form class="form content vehicle-form" novalidate>
       <label class="field">
         <span>Make</span>
         <select name="brand" required></select>
@@ -55,28 +55,32 @@ export default async function render(root, ctx) {
         <span>Model</span>
         <select name="make" required></select>
       </label>
+      <div class="vehicle-year-trim-card">
       <div class="field-row">
         <label class="field">
           <span>Year</span>
           <select name="model_year" required></select>
         </label>
+    
         <label class="field grow">
           <span>Trim</span>
           <select name="model"></select>
         </label>
       </div>
+    
       <p class="hint" id="car-hint" aria-live="polite"></p>
+    </div>
       <label class="field">
-        <span>Vehicle Name <em>optional</em></span>
+        <span>Vehicle Name <em>(optional)</em></span>
         <input name="vehicle_nickname" maxlength="40" placeholder="e.g. Daily Driver" value="${escapeHtml(v.vehicle_nickname ?? "")}">
         <small class="hint">Leave blank and it'll show as “Vehicle 1”, “Vehicle 2”, and so on.</small>
       </label>
+      <label class="field">
+        <span>Current Mileage (${distanceUnit() === "km" ? "km" : "miles"}) <em>(optional)</em></span>
+        <input name="current_mileage" type="number" inputmode="numeric" min="0" max="3000000" step="1" value="${fromStoredMiles(v.current_mileage)}">
+        <small class="hint">You can add or update this anytime</small>
+      </label>
       ${drivingField(editing ? v.miles_per_year : 12000)}
-      ${editing ? `
-        <label class="field">
-          <span>Current Mileage (${distanceUnit() === "km" ? "km" : "miles"}) <em>optional</em></span>
-          <input name="current_mileage" type="number" inputmode="numeric" min="0" max="3000000" step="1" value="${fromStoredMiles(v.current_mileage)}">
-        </label>` : ""}
       <p class="form-error" role="alert" hidden></p>
       <div class="form-actions">
         <a class="btn btn-ghost" href="${cancelHref}">Cancel</a>
@@ -89,16 +93,24 @@ export default async function render(root, ctx) {
   const errEl = root.querySelector(".form-error");
   const hintEl = root.querySelector("#car-hint");
   const { brand: brandSel, make: makeSel, model: modelSel, model_year: yearSel } = form.elements;
-
   const opt = (value, label, selected) => `<option value="${escapeHtml(value)}" ${selected ? "selected" : ""}>${escapeHtml(label)}</option>`;
-  // The old, non-catalog value of a field, offered only while editing that same car.
+  // Preserve an existing catalog value that is no longer listed while editing.
   const legacy = (field, list) => editing && saved[field] && !list.includes(saved[field])
     ? opt(saved[field], `${saved[field]} (current, not in list)`, state[field] === saved[field]) : "";
 
+  const chooseBrand = (brand) => {
+    state.brand = brand;
+    state.make = "";
+    state.model = NOT_SURE;
+    state.year = null;
+    draw();
+  };
+
   const make = () => findModel(state.brand, state.make, { exact: true });
   const draw = () => {
-    brandSel.innerHTML = opt("", "Choose a make", !state.brand) + legacy("brand", BRANDS)
-      + BRANDS.map((b) => opt(b, b, b === state.brand)).join("");
+    brandSel.innerHTML = opt("", "Choose a make", !state.brand)
+      + (editing && saved.brand && !BRANDS.includes(saved.brand) ? opt(saved.brand, `${saved.brand} (current, not in list)`, state.brand === saved.brand) : "")
+      + BRANDS.map((brand) => opt(brand, brand, brand === state.brand)).join("");
 
     const makes = makesFor(state.brand).map((m) => m.name);
     makeSel.disabled = !state.brand;
@@ -129,12 +141,7 @@ export default async function render(root, ctx) {
     hintEl.textContent = m ? `${state.brand} ${m.name} · ${BODY_NAMES[m.body]} · ${m.to >= LATEST_YEAR ? `sold since ${m.years.at(-1)[0]}${m.years.length > 1 ? ` (also ${yearsText({ years: m.years.slice(0, -1) })})` : ""}` : `sold ${yearsText(m)}`}` : "";
   };
 
-  brandSel.addEventListener("change", () => {
-    state.brand = brandSel.value;
-    state.make = "";
-    state.model = NOT_SURE;
-    draw();
-  });
+  brandSel.addEventListener("change", () => chooseBrand(brandSel.value));
   makeSel.addEventListener("change", () => {
     state.make = makeSel.value;
     state.model = NOT_SURE;
@@ -143,8 +150,8 @@ export default async function render(root, ctx) {
   modelSel.addEventListener("change", () => { state.model = modelSel.value; });
   yearSel.addEventListener("change", () => {
     state.year = Number(yearSel.value) || null;
-    draw(); // the trims list depends on the year
-  });
+    draw();
+ });
   draw();
   bindDrivingField(form);
 
@@ -160,11 +167,11 @@ export default async function render(root, ctx) {
       model_year: state.year,
       vehicle_nickname: form.elements.vehicle_nickname.value.trim() || null,
     };
-    if (editing) {
-      const raw = form.elements.current_mileage.value;
-      if (raw !== "" && !(Number(raw) >= 0)) return fail("Mileage must be a positive number.");
-      fields.current_mileage = raw === "" ? null : toStoredMiles(Number(raw));
+    const rawMileage = form.elements.current_mileage.value;
+    if (rawMileage !== "" && !(Number(rawMileage) >= 0 && Number(rawMileage) <= 3000000)) {
+      return fail("Mileage must be between 0 and 3,000,000.");
     }
+    fields.current_mileage = rawMileage === "" ? null : toStoredMiles(Number(rawMileage));
     const driving = readDrivingField(form);
     if (driving.error) return fail(driving.error);
     fields.miles_per_year = driving.miles;

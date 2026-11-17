@@ -46,7 +46,7 @@ export function drivingField(miles) {
       <p class="hint">AutoPal uses this to time oil changes, tire rotations, filters and brake checks, by miles or months, whichever comes first.</p>
       <div class="drive-options">
         ${DRIVING_LEVELS.map((l) => choice(l.key, l.name,
-          `${l.key === "very-heavy" ? `${shown(l.miles).toLocaleString()}+` : `About ${shown(l.miles).toLocaleString()}`} ${unit()} a year · ${l.detail}`,
+          `${l.key === "very-heavy" ? `${shown(l.miles).toLocaleString()}+` : `About ${shown(l.miles).toLocaleString()}`} ${unit()} a year - ${l.detail}`,
           level?.key === l.key)).join("")}
         ${choice("exact", "I Know My Number", "Type how far you drive in a year", exact)}
       </div>

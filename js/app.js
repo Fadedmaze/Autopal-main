@@ -26,17 +26,17 @@ const ROUTES = [
   { path: "/tasks/:id", view: () => import("./views/taskForm.js"), nav: false },
   { path: "/budget", view: () => import("./views/budget.js") },
   { path: "/mechanics", view: () => import("./views/mechanics.js"), tab: "mechanics", settings: true },
+  { path: "/shops/:id", view: () => import("./views/shop.js"), tab: "mechanics" },
   { path: "/discover", view: () => import("./views/discover.js"), tab: "library" }, // redirects to the Dashboard Lights tab
   { path: "/library", view: () => import("./views/library.js"), tab: "library", settings: true },
   { path: "/library/:slug", view: () => import("./views/library.js"), tab: "library" },
-  // Profile is part of Home now; these keep old links working (see views/profile.js).
-  { path: "/profile", view: () => import("./views/profile.js"), tab: "home" },
+  { path: "/profile", view: () => import("./views/profile.js"), tab: "home", settings: true },
   { path: "/profile/password", view: () => import("./views/profile.js"), tab: "home", mode: "password", nav: false },
   { path: "/profile/notifications", view: () => import("./views/profile.js"), tab: "home", mode: "notifications", nav: false },
   { path: "/profile/insurance", view: () => import("./views/profile.js"), tab: "home", mode: "insurance" },
 ];
 
-// Bottom bar, left to right. Home also holds the account details that used to be Profile.
+// Bottom bar, left to right. Profile is accessed from the Home header.
 const TABS = [
   { id: "home", label: "Home", icon: "home", href: "#/home" },
   { id: "garage", label: "Garage", icon: "garage", href: "#/garage" },
@@ -85,7 +85,7 @@ function renderNav(route) {
     return;
   }
   navEl.innerHTML = `
-    <a class="brand" href="#/home">${icon("wrench", 22, 2)}<span>AutoPal</span></a>
+    <a class="brand" href="#/home"><img class="brand-logo" src="icons/icon.svg" alt="" width="30" height="30"><span>AutoPal</span></a>
     ${TABS.map((t) => `
       <a href="${t.href}" class="tab ${t.id === route.tab ? "active" : ""}" ${t.id === route.tab ? 'aria-current="page"' : ""}>
         ${icon(t.icon, 22, 1.9)}<span>${t.label}</span>
@@ -107,23 +107,25 @@ function mountSettingsButton(page) {
     btn.setAttribute("aria-label", "Settings");
     btn.innerHTML = icon("tire", 24, 1.7);
     btn.addEventListener("click", () => openSettings());
-    // Profile sits just left of Settings.
-    const prof = document.createElement("a");
-    prof.href = "#/profile";
-    prof.className = "profile-btn";
-    prof.setAttribute("aria-label", "Profile");
-    prof.innerHTML = icon("user", 22, 2);
+    // Profile sits just left of Settings, the same button as on Home (not on Profile itself).
+    const tools = document.createElement("div");
+    tools.className = "appbar-tools";
+    if (!location.hash.startsWith("#/profile")) {
+      const prof = document.createElement("a");
+      prof.href = "#/profile";
+      prof.className = "btn btn-sm profile-link";
+      prof.setAttribute("aria-label", "Profile");
+      prof.innerHTML = `${icon("user", 16, 2)}<span>Profile</span>`;
+      tools.append(prof);
+    }
+    tools.append(btn);
     if (host.classList.contains("map-top")) {
       btn.classList.add("map-settings");
-      prof.classList.add("map-fab");
-      host.append(prof, btn);
+      tools.classList.add("map-tools");
     } else {
       host.classList.add("has-settings");
-      const tools = document.createElement("div");
-      tools.className = "appbar-tools";
-      tools.append(prof, btn);
-      host.append(tools);
     }
+    host.append(tools);
   };
   place();
   const watcher = new MutationObserver(place);
@@ -175,7 +177,7 @@ async function render() {
     currentHash = location.hash;
   }
   // Last main tab (Home, Garage...), so Profile's Back returns there even after a sub-page.
-  if (found.route.settings) lastMainHash = location.hash;
+  if (found.route.settings && !pathname.startsWith("/profile")) lastMainHash = location.hash;
 
   // A fresh element per route, so listeners from the previous screen can't linger.
   const page = document.createElement("div");
