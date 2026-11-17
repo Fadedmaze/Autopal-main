@@ -328,7 +328,7 @@ input[type=date] { min-height: 48px; }
 .car-meta { font-size: 13.5px; color: var(--ink-2); margin: 2px 0 0; }
 .car-stats { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 8px; font-size: 12.5px; color: var(--ink-3); }
 .radio {
-  width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--line-strong);
+  width: 24px; height: 24px; border-radius: 8px; border: 2px solid var(--line-strong);
   display: grid; place-items: center; color: transparent;
 }
 .car.selected .radio { background: var(--brand); border-color: var(--brand); color: #fff; }
