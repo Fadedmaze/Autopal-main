@@ -16,6 +16,10 @@ The diagram is our Step 1 design. While building, we kept the same core structur
 - `guides` holds the Discover tab's DIY guides: plain-language walkthroughs with difficulty, safety notes, step-by-step explanations and a YouTube search phrase.
 - `warning_lights` is the catalog of 47 dashboard warning lights (meaning, what to do, how urgent, and notes for specific car brands), and `light_scans` logs each camera scan so usage can be capped per user.
 - `receipt_path` on tasks, `avatar_path` and `distance_unit` on profiles, and `average_repair_price` / `services` on shops support the final screens.
+- `vehicle_catalog` is the list of real cars people can pick (every U.S. model since 1990); the database only accepts cars on it.
+- `vehicles.miles_per_year` (how much each car is driven) and `maintenance_catalog.interval_miles` time mileage-based tasks; `vehicles.appearance` stores the 3D car's look.
+- `push_subscriptions`, `reminder_log` and `notification_settings.email_reminders` power maintenance reminders by push notification and email.
+- `google_places_usage` counts Google shop lookups so usage stays inside Google's free allowance; `task_photos` and `app_sessions` hold task photos and time spent in the app.
 
 ## Tech Stack
 
@@ -28,14 +32,15 @@ The diagram is our Step 1 design. While building, we kept the same core structur
 | Database | Supabase Postgres | A real relational database that matches our ERD. Row Level Security rules in the database make sure each user can only see their own cars and tasks. |
 | Authentication | Supabase Auth + a small Edge Function for username sign-in | Secure password handling and sessions out of the box. The Edge Function lets people log in with a username, as our design called for. |
 | File storage | Supabase Storage (private buckets) | Vehicle photos, receipts and profile pictures are stored privately per user. |
-| Map | Leaflet + OpenStreetMap | A free, Google-Maps-style map with no API key or billing account. |
+| Map and repair shops | Google Maps + Google Places (API "New"), called from a Supabase Edge Function | The same shops, ratings, hours and reviews people see on Google Maps. The Places key stays on the server, and daily limits keep usage inside Google's free monthly allowance. Without a Google key (or if Google can't be reached), the map falls back to Leaflet + OpenStreetMap with shops from OpenStreetMap. |
+| Reminders | Web Push (from the browser) + Brevo email, sent by a daily Supabase job (pg_cron) | Reminders reach people even when AutoPal is closed, at no cost: Brevo's free plan covers 300 emails a day. |
 | Dashboard light scanner | On-device light detection in JavaScript, plus Anthropic's Claude Haiku 5.5 called from a Supabase Edge Function | Finding the glowing lights runs on the phone for free. Only the small cropped images are sent to the AI to name each light, and the API key stays on the server. Haiku keeps each scan to a fraction of a cent, with a cap of 40 scans per user per day. |
 | How-to videos | YouTube search links | Each DIY guide links to a YouTube search for that job on the user's exact car (for example "how to change oil 2013 Honda Civic"), with no API key needed. |
 | Hosting | Vercel (static site, connected to GitHub) | Pushes to `main` deploy automatically in under a minute. Free tier (which only auto-deploys the account owner's pushes; see the notes below). |
 
 Supabase and Vercel both have free tiers, and together they cover everything a "backend" would normally need. That lets a small student team spend its time on the app instead of on servers.
 
-The entire backend is also saved as code in this repo: `supabase/schema.sql` creates the original tables, triggers, views, security rules, storage buckets and starter data; `supabase/migrations/` holds every change made since (run in order); and `supabase/functions/` holds the two Edge Functions, `username-sign-in` and `identify-warning-lights`.
+The entire backend is also saved as code in this repo: `supabase/schema.sql` creates the original tables, triggers, views, security rules, storage buckets and starter data; `supabase/migrations/` holds every change made since (run in order); and `supabase/functions/` holds the four Edge Functions: `username-sign-in`, `identify-warning-lights`, `send-reminders` and `google-shops`.
 
 ## How to Get It Running
 
@@ -117,15 +122,23 @@ How it fits together:
 - `js/config.js` → `GOOGLE_MAPS_KEY` is the **browser key** that draws the map. Leave it empty and the app falls back to the original OpenStreetMap map with the demo shops.
 - `js/places.js` (fetching), `js/mapKit.js` (Google or Leaflet map), `js/shopSpecialties.js` (specialties), `js/shopJobs.js` (typical prices), `js/views/shop.js` (shop page).
 
-Cost: Google gives a free monthly allowance per product. Set daily quotas in Google Cloud (below) so the bill stays at $0.
+Cost: Google gives a free monthly allowance per product (about 1,000 searches, 1,000 shop pages and 10,000 map loads a month). The daily limits above keep AutoPal inside it. To lift the limits for a demo, replace `public.use_google_places` with a version that always returns true; re-running the migration turns them back on.
+
+### Car list (Make, Model, Year, Trim)
+
+Add/Edit Vehicle picks a car from real lists: **Make** (Honda) → **Model** (Civic) → **Year** → **Trim** (EX). Each list narrows the next. The list covers every car sold new in the U.S. since 1990, 63 makes and 909 models, including brands that have closed (Oldsmobile, Plymouth, Saturn, Pontiac, Isuzu and others). Years a model wasn't sold are left out (no 1998 Miata, no 2003–2009 Camaro), and for popular models the Trim list only shows trims offered that year.
+
+- The list lives in `js/vehicleCatalogData.js`, one line per model, e.g. `Bronco | u | 1990-1996, 2021 | | Big Bend [2021-], Eddie Bauer [1990-1996], ...`. `js/vehicleCatalog.js` reads it.
+- The database keeps its own copy in `vehicle_catalog` and refuses cars that aren't on it. After editing the list, run `node scripts/build-vehicle-catalog-sql.mjs`, then run `supabase/migrations/20261111_vehicle_catalog.sql` in the SQL Editor.
+- In the database the columns are still named `brand` (make), `make` (model) and `model` (trim).
 
 ## Verifying the Vertical Slice
 
 The working button is **Save Vehicle** on the Add Vehicle screen. It writes a new row to the `vehicles` table in Supabase, and a database trigger also creates that car's maintenance schedule in `maintenance_tasks`.
 
 1. Open the live app and log in.
-2. Tap **Garage** in the bottom bar, then **Add New Vehicle**.
-3. Fill in **Brand** (e.g. `Toyota`), **Make** (`RAV4`), **Model** (`XLE`), **Year** (`2021`) and optionally a **Vehicle name** (`Mom's SUV`).
+2. Tap **Garage** in the bottom bar, then **Add Vehicle**.
+3. Pick **Make** (e.g. `Toyota`), **Model** (`RAV4`), **Year** (`2021`) and **Trim** (`XLE`), optionally a **Vehicle name** (`Mom's SUV`), and how much you drive it.
 4. Tap **Save Vehicle**. You'll be taken to the new car's Vehicle screen, and a message confirms it was saved.
 5. **Refresh the page** (or close the tab and reopen the site). Go to **Garage**: the car is still listed, labeled with its name or "Vehicle N" if you left the name blank.
 6. To confirm the change survived the refresh, go **Home** and tap the **Next up** box to open **Tasks**: the new car already has its standard schedule (oil change, tire rotation, and so on). In the Supabase dashboard, **Table Editor → vehicles** shows the new row, and **maintenance_tasks** shows its tasks.
@@ -145,13 +158,27 @@ js/lightDetector.js   On-device detection of glowing dashboard lights (camera sc
 js/guideDiagrams.js   Labeled diagrams for the DIY guides
 js/usage.js           Records time spent in the app (app_sessions table)
 js/settings.js        Settings menu (tire button) on the main pages
-js/views/             One file per screen (library.js is the Discover tab; discover.js is its camera scanner)
+js/vehicleCatalog.js  Reads the car list (js/vehicleCatalogData.js: every U.S. model since 1990)
+js/driving.js         "How much do you drive?" choices on Add/Edit Vehicle
+js/reminders.js       Reminder timing, in-app reminders and calendar export
+js/push.js            Push notifications on this device
+js/mapKit.js          Map drawing: Google Maps, or Leaflet + OpenStreetMap without a key
+js/places.js          Real repair shops from Google (via the google-shops function)
+js/osmShops.js        Repair shops from OpenStreetMap (used without Google)
+js/shopSpecialties.js What a shop specializes in (name, Google description, reviews)
+js/shopJobs.js        Typical prices for common jobs on the shop page
+js/repairs.js         Matching a warning light to shops, with price estimates
+js/car3d.js, carLook.js, carCustomizer.js   The 3D car on Home and its customizer
+js/taskPhotos.js      Photos on a task
+js/views/             One file per screen (library.js is the Discover tab; discover.js is its camera scanner; shop.js is a shop's full page)
 sw.js                 Service worker (bump CACHE on each release)
 docs/erd.png          ERD
 docs/autopal-architecture.png   Architecture diagram
 docs/HANDOFF_finish_backend.md  Setup notes for the dashboard light scanner
 supabase/schema.sql   Full database: tables, triggers, views, security rules, storage, seed data
-supabase/functions/   Edge Functions (username sign-in, warning-light identification)
+supabase/functions/   Edge Functions (username sign-in, warning-light identification, daily reminders, Google shops)
+supabase/setup/       One-time setup: the daily reminder schedule and push-notification keys
+scripts/              build-vehicle-catalog-sql.mjs: turns the car list into its database migration
 supabase/migrations/  Database changes made after the initial schema; run each in the SQL Editor
 supabase/seed/        Source data for the warning-light catalog and the Library's DIY guides
 harness/              Local fake-backend test harness (not deployed)
