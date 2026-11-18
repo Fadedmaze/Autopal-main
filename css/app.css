@@ -1749,8 +1749,11 @@ button.task-body { border: 0; padding: 0; background: none; text-align: left; fo
 .appbar.has-settings .sub { grid-area: sub; margin-top: 4px; }
 .appbar.has-settings .appbar-tools { grid-area: tools; }
 .appbar.has-settings .page-settings { width: 44px; height: 44px; }
-/* Narrow phones: buttons show just their icons so titles keep their room. */
-@media (max-width: 420px) {
+/* Titles never break in the middle of a word ("Garag / e"); a long one trims with "…". */
+.appbar.has-settings h1 { overflow-wrap: normal; word-break: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Phones (every iPhone, up to the Pro Max at 430px): buttons show just their icons so
+   titles keep their room. */
+@media (max-width: 540px) {
   .appbar.has-settings h1 { font-size: 26px; }
   .profile-link span,
   .appbar.has-settings .appbar-action .btn span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
