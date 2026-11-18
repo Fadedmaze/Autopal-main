@@ -3869,3 +3869,25 @@ button.menu-row { width: 100%; font: inherit; font-weight: 600; text-align: left
 @media (max-width: 400px) {
   .segmented button { font-size: 13px; padding-inline: 4px; white-space: nowrap; letter-spacing: -.01em; }
 }
+
+/* Night mode: Google's shop popup goes dark too, so the shop name and details (which use
+   the app's light night-mode text colors) stay readable. Covers the popup box, its pointer
+   and Google's close button. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .gm-style .gm-style-iw-c,
+  :root:not([data-theme="light"]) .gm-style .gm-style-iw-d { background: var(--surface) !important; }
+  :root:not([data-theme="light"]) .gm-style .gm-style-iw-tc::after { background: var(--surface) !important; }
+  :root:not([data-theme="light"]) .gm-style .gm-style-iw-chr button span { background-color: var(--ink) !important; }
+  :root:not([data-theme="light"]) .gm-style .shop-pop { color: var(--ink); }
+}
+:root[data-theme="dark"] .gm-style .gm-style-iw-c,
+:root[data-theme="dark"] .gm-style .gm-style-iw-d { background: var(--surface) !important; }
+:root[data-theme="dark"] .gm-style .gm-style-iw-tc::after { background: var(--surface) !important; }
+:root[data-theme="dark"] .gm-style .gm-style-iw-chr button span { background-color: var(--ink) !important; }
+:root[data-theme="dark"] .gm-style .shop-pop { color: var(--ink); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .open-now.yes { color: var(--ok); }
+  :root:not([data-theme="light"]) .open-now.no { color: var(--danger-strong); }
+}
+:root[data-theme="dark"] .open-now.yes { color: var(--ok); }
+:root[data-theme="dark"] .open-now.no { color: var(--danger-strong); }
