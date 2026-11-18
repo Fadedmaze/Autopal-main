@@ -1731,10 +1731,9 @@ button.task-body { border: 0; padding: 0; background: none; text-align: left; fo
   transition: transform .4s;
 }
 .tire-btn:hover { transform: rotate(60deg); }
-/* Profile + Settings buttons at the top right of the other main pages (added by app.js),
-   matching Home's. The page title shares their row, centered with them; a page action
-   (Add Task, Add Vehicle) sits between; a back link (Profile only) sits above and the
-   subtitle below. */
+/* Settings button at the top right of the main pages (added by app.js). The page title
+   shares its row; a page action (Add Task, Add Vehicle) sits between; a back link sits
+   above and the subtitle below. */
 .appbar-tools { flex: none; display: flex; align-items: center; gap: 8px; }
 .appbar.has-settings {
   display: grid; grid-template-columns: minmax(0, 1fr) auto auto;
@@ -1752,9 +1751,9 @@ button.task-body { border: 0; padding: 0; background: none; text-align: left; fo
 /* Narrow phones: buttons show just their icons so titles keep their room. */
 @media (max-width: 420px) {
   .appbar.has-settings h1 { font-size: 26px; }
-  .profile-link span,
+  .home-actions .profile-link span,
   .appbar.has-settings .appbar-action .btn span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-  .profile-link, .appbar.has-settings .appbar-action .btn { padding-inline: 10px; }
+  .home-actions .profile-link, .appbar.has-settings .appbar-action .btn { padding-inline: 10px; }
   .home-head h1 { font-size: 24px; }
 }
 /* On Find Mechanic it sits in the map's floating top bar. */
@@ -3847,14 +3846,12 @@ button.menu-row { width: 100%; font: inherit; font-weight: 600; text-align: left
 .shop-head-rating .stars-num { font-weight: 800; color: var(--ink); }
 
 
-/* Find Mechanic: Profile + Settings at the toolbar's top right, centered on the title. */
+/* Find Mechanic: Settings at the toolbar's top right, centered on the title. */
 .mechanic-toolbar > .map-tools:not(#toggle-list) {
   position: absolute; top: 14px; right: 16px; width: auto; height: auto; margin: 0; gap: 6px;
 }
 .mechanic-toolbar > .map-tools .map-settings { width: 38px; height: 38px; }
-.mechanic-toolbar > .map-tools .profile-link { min-height: 38px; height: 38px; }
-.mechanic-toolbar .mechanic-heading { padding-right: 150px; }
-@media (max-width: 420px) { .mechanic-toolbar .mechanic-heading { padding-right: 96px; } }
+.mechanic-toolbar .mechanic-heading { padding-right: 60px; }
 
 /* Narrow phones: keep segmented labels ("Upcoming (3)") on one line. */
 @media (max-width: 400px) {
