@@ -107,17 +107,8 @@ function mountSettingsButton(page) {
     btn.setAttribute("aria-label", "Settings");
     btn.innerHTML = icon("tire", 24, 1.7);
     btn.addEventListener("click", () => openSettings());
-    // Profile sits just left of Settings, the same button as on Home (not on Profile itself).
     const tools = document.createElement("div");
     tools.className = "appbar-tools";
-    if (!location.hash.startsWith("#/profile")) {
-      const prof = document.createElement("a");
-      prof.href = "#/profile";
-      prof.className = "btn btn-sm profile-link";
-      prof.setAttribute("aria-label", "Profile");
-      prof.innerHTML = `${icon("user", 16, 2)}<span>Profile</span>`;
-      tools.append(prof);
-    }
     tools.append(btn);
     if (host.classList.contains("map-top")) {
       btn.classList.add("map-settings");
