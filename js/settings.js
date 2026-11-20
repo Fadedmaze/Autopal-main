@@ -48,7 +48,7 @@ export function openSettings(profile = null) {
       <details class="setting privacy">
         <summary><span class="setting-label">${icon("info", 18, 2)}Terms of Use</span>${icon("chevron", 16, 2)}</summary>
         <div class="terms-copy">
-          <p><strong>Effective date:</strong> November 17, 2026 · <strong>Operated by:</strong> Team 04 · <strong>Contact:</strong> autopalsupport@gmail.com</p>
+          <p><strong>Effective date:</strong> November 17, 2026 · <strong>Operated by:</strong> Team 9 · <strong>Contact:</strong> autopalsupport@gmail.com</p>
           <p>By creating an account or using AutoPal, you agree to these terms. If you don’t agree, don’t use the service.</p>
 
           <h3>What AutoPal does</h3>
@@ -70,7 +70,7 @@ export function openSettings(profile = null) {
           <p>Don’t misuse AutoPal, interfere with its operation, access another person’s account or data, or use it unlawfully.</p>
 
           <h3>Disclaimers and liability</h3>
-          <p>To the extent permitted by law, AutoPal is provided “as is.” To the extent permitted by law, Team 04 is not responsible for indirect or consequential losses arising from use of the service. These terms don’t limit rights that can’t legally be limited.</p>
+          <p>To the extent permitted by law, AutoPal is provided “as is.” To the extent permitted by law, Team 9 is not responsible for indirect or consequential losses arising from use of the service. These terms don’t limit rights that can’t legally be limited.</p>
 
           <h3>Changes and contact</h3>
           <p>We may update these terms by posting a new version with an updated effective date. Questions? Contact autopalsupport@gmail.com.</p>
